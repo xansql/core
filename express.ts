@@ -6,7 +6,8 @@ import { db, ProductModel, UserModel } from './example/DBServer'
 import WhereArgsQuery from './src/model/Args/WhereArgs';
 import SelectArgs from './src/model/Executer/Find/SelectArgs';
 import UpdateDataArgs from './src/model/Executer/Update/UpdateDataArgs';
-import XansqlBridgeServer from './src/dialect/XansqlBridge/XansqlBridgeServer';
+import XansqlBridgeServer from '@xansql/bridge/server';
+
 import { XansqlFileMeta } from './src';
 import fs from 'fs'
 import path from 'path'

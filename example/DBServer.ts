@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import { Xansql } from '../src'
-import SqliteDialect from '../src/dialect/SqliteDialect'
-import MysqlDialect from '../src/dialect/MysqlDialect'
+import SqliteDialect from '@xansql/sqlite-dialect'
+import MysqlDialect from '@xansql/mysql-dialect'
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
 
 dotenv.config()

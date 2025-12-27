@@ -1,5 +1,5 @@
 import { Xansql } from '../src'
-import XansqlBridge from '../src/dialect/XansqlBridge';
+import XansqlBridge from '@xansql/bridge';
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
 
 export const db = new Xansql({
