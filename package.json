@@ -1,15 +1,21 @@
 {
-   "name": "xansql",
-   "version": "1.0.20",
-   "main": "./index.cjs",
+   "name": "@xansql/core",
+   "version": "1.0.21",
+   "main": "./index.js",
    "module": "./index.mjs",
    "types": "./index.d.ts",
    "type": "module",
-   "description": "",
+   "description": "XanSQL Core Library",
+   "author": "Devnax",
+   "publishConfig": {
+      "access": "public"
+   },
    "keywords": [],
-   "sideEffects": [
-      "src/utils.ts"
-   ],
+   "sideEffects": [],
+   "repository": {
+      "type": "git",
+      "url": "https://github.com/xansql/core"
+   },
    "scripts": {
       "start": "makepack start",
       "build": "makepack build",
