@@ -4,7 +4,6 @@ import DistinctArgs from "./DistinctArgs";
 import LimitArgs from "./LimitArgs";
 import OrderByArgs from "./OrderByArgs";
 import WhereArgs from "../../Args/WhereArgs";
-import ValueFormatter from "../../include/ValueFormatter";
 import XqlEnum from "../../../xt/fields/Enum";
 import XqlArray from "../../../xt/fields/Array";
 import XqlObject from "../../../xt/fields/Object";
@@ -74,6 +73,14 @@ class SelectArgs {
 
    constructor(model: Model, args: SelectArgsType) {
       this.model = model
+
+      if (!args || Object.keys(args).length === 0) {
+         for (let column in model.schema) {
+            if (!Foreign.is(model.schema[column])) {
+               args[column] = true
+            }
+         }
+      }
 
       for (let column in args) {
          if (!(column in this.model.schema)) {
@@ -160,20 +167,11 @@ class SelectArgs {
             }
 
          } else {
+
             if (iof(field, XqlFile, XqlEnum, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlUnion)) {
                this.formatable_columns.push(column)
             }
             this.columns.push(column)
-         }
-      }
-
-      // if no columns are selected, select all columns
-      if (this.columns.length === 0) {
-         for (let column in model.schema) {
-            let field = model.schema[column]
-            if (!Foreign.is(field)) {
-               this.columns.push(column)
-            }
          }
       }
 
@@ -184,8 +182,6 @@ class SelectArgs {
 
       this.sql = this.columns.map(col => `${this.model.table}.${col}`).join(', ')
    }
-
-
 }
 
 export default SelectArgs

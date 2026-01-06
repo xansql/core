@@ -3,7 +3,6 @@ import Foreign, { ForeignInfoType } from "../../../core/classes/ForeignInfo";
 import { RowObject } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { chunkArray, chunkNumbers } from "../../../utils/chunker";
-import RelationExecuteArgs from "../../Args/RelationExcuteArgs";
 import WhereArgs from "../../Args/WhereArgs";
 import { FindArgsAggregate, FindArgsType } from "../../types";
 import AggregateExecuter from "../Aggregate";

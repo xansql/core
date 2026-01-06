@@ -48,26 +48,26 @@ const App = () => {
             where: {
               // name: "John Doe"
             },
-            // select: {
-            //   name: true,
-            //   photo: true,
-            //   password: true,
-            //   products: {
-            //     aggregate: {
-            //       categories: {
-            //         pcid: {
-            //           count: true,
-            //         },
-            //         name: {
-            //           count: true,
-            //         }
-            //       }
-            //     },
-            //     select: {
-            //       categories: true
-            //     }
-            //   }
-            // }
+            select: {
+              // name: true,
+              // photo: true,
+              // password: true,
+              // products: {
+              //   aggregate: {
+              //     categories: {
+              //       pcid: {
+              //         count: true,
+              //       },
+              //       name: {
+              //         count: true,
+              //       }
+              //     }
+              //   },
+              //   select: {
+              //     categories: true
+              //   }
+              // }
+            }
           })
           console.log(result);
 
@@ -99,7 +99,7 @@ const App = () => {
                 // username: "jane.doe",
                 photo: file,
                 password: "asdasdasd",
-                email: "najrul@gmail.com",
+                email: "najsrul@gmail.com",
               }
             })
             console.log(result);
@@ -111,9 +111,7 @@ const App = () => {
         }} />
         <Button label="Delete" onClick={async () => {
           const result = await UserModel.delete({
-            where: {
-
-            }
+            where: {}
           })
           console.log(result);
         }} />
