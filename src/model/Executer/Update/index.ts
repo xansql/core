@@ -46,8 +46,10 @@ class UpdateExecuter {
          if (existing_file_rows.length > 0) {
             for (let file_col of fileColumns) {
                const filemeta = await xansql.uploadFile(upArgs.files[file_col])
-               uploadedFileIds.push(filemeta.fileId)
-               upArgs.data[file_col] = `'${JSON.stringify(filemeta)}'`
+               if (filemeta?.fileId) {
+                  uploadedFileIds.push(filemeta.fileId)
+                  upArgs.data[file_col] = `'${JSON.stringify(filemeta)}'`
+               }
             }
          }
          const keys = Object.keys(upArgs.data)

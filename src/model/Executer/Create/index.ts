@@ -31,9 +31,10 @@ class CreateExecuter {
                if (fileColumns.length > 0) {
                   for (let file_col of fileColumns) {
                      const filemeta = await xansql.uploadFile(arg.files[file_col])
-
-                     uploadedFileIds.push(filemeta.fileId)
-                     arg.data[file_col] = `'${JSON.stringify(filemeta)}'`
+                     if (filemeta?.fileId) {
+                        uploadedFileIds.push(filemeta.fileId)
+                        arg.data[file_col] = `'${JSON.stringify(filemeta)}'`
+                     }
                   }
                }
 
