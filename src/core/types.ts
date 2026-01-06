@@ -53,7 +53,7 @@ export type XansqlFileConfig = {
    checkFileType?: boolean;
    chunkSize?: number; // in KB
    upload: (file: File, xansql: Xansql) => Promise<XansqlFileMeta>;
-   delete: (filename: string, xansql: Xansql) => Promise<void>;
+   delete: (fileId: string, xansql: Xansql) => Promise<void>;
 }
 
 

@@ -88,11 +88,11 @@ class Xansql {
       return await this.dialect.file.upload(file, this);
    }
 
-   async deleteFile(filename: string) {
+   async deleteFile(fileId: string) {
       if (!this.dialect.file?.delete) {
          throw new XansqlError(`File delete is not supported by the current dialect.`);
       }
-      return await this.dialect.file.delete(filename, this);
+      return await this.dialect.file.delete(fileId, this);
    }
 
    async transaction(callback: () => Promise<any>) {
