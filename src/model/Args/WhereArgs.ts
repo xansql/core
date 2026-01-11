@@ -46,8 +46,44 @@ class WhereArgs {
          }
       } else {
          for (let column in where) {
+
+            // check is OR or AND
+            if (column === "OR" || column === "AND" || column === "NOT") {
+               const value = where[column]
+               if (Array.isArray(value)) {
+                  let _subs = []
+                  for (let v of value) {
+                     const whereArgs = new WhereArgs(model, v as any, meta)
+                     if (whereArgs.sql) {
+                        if (whereArgs.wheres.length > 1) {
+                           _subs.push(`(${whereArgs.wheres.join(" AND ")})`)
+                        } else {
+                           _subs.push(`${whereArgs.wheres.join(" AND ")}`)
+                        }
+                     }
+                  }
+                  if (_subs.length) {
+                     if (column === "OR") {
+                        wheres.push(`(${_subs.join(" OR ")})`)
+                     } else if (column === "AND") {
+                        wheres.push(`(${_subs.join(" AND ")})`)
+                     } else if (column === "NOT") {
+                        wheres.push(`NOT (${_subs.join(" AND ")})`)
+                     }
+                  }
+               } else {
+                  throw new XansqlError({
+                     message: `${column} value must be an array in WHERE clause in table ${model.table}`,
+                     model: model.table,
+                     column
+                  });
+               }
+               continue
+            }
+
+
             this.checkIsAllowed(column)
-            const value: any = where[column]
+            const value: any = (where as any)[column]
             const field = schema[column]
 
             if (Foreign.is(field)) {

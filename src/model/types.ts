@@ -24,10 +24,15 @@ export interface WhereSubCondition {
 }
 
 export type WhereArgsTypeValue = string | number | boolean | WhereSubCondition | null | Date | WhereArgsType
+export type WhereLogicalOperators = {
+   AND?: WhereArgsType[];
+   OR?: WhereArgsType[];
+   NOT?: WhereArgsType[];
+}
 
 export type WhereArgsType = {
    [column: string]: WhereArgsTypeValue | WhereArgsTypeValue[];
-} | WhereArgsType[];
+} | WhereArgsType[] | WhereLogicalOperators
 
 export type LimitArgsType = "all" | {
    take?: number;
