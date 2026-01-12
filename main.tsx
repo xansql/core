@@ -111,7 +111,9 @@ const App = () => {
         }} />
         <Button label="Delete" onClick={async () => {
           const result = await UserModel.delete({
-            where: {}
+            where: {
+              uid: 2
+            }
           })
           console.log(result);
         }} />

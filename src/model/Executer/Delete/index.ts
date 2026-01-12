@@ -49,9 +49,11 @@ class DeleteExecuter {
          }
       })
 
+
       if (results.length === 0) {
          return []
       }
+
 
       for (let column in foreignFields) {
          const field = foreignFields[column]
@@ -72,6 +74,8 @@ class DeleteExecuter {
          }
       }
 
+
+
       let fileRows: any[] = []
       if (fileColumns.length) {
          let fileWhere: WhereArgsType = [
@@ -91,9 +95,13 @@ class DeleteExecuter {
                return acc
             }, {} as any)
          })
+
+
       }
 
+
       const Where = new WhereArgs(model, args.where)
+
       const sql = `DELETE FROM ${model.table} ${Where.sql}`.trim()
       const { affectedRows } = await model.execute(sql)
       if (!affectedRows || affectedRows === 0) {

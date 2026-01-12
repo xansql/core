@@ -82,9 +82,9 @@ class WhereArgs {
             }
 
 
-            this.checkIsAllowed(column)
             const value: any = (where as any)[column]
             const field = schema[column]
+            this.checkIsAllowed(column, value)
 
             if (Foreign.is(field)) {
                if (!isArray(value) && !isObject(value)) {
@@ -259,18 +259,21 @@ class WhereArgs {
       return `${generate.join(' AND ')}`;
    }
 
-   private checkIsAllowed(column: string) {
+   private checkIsAllowed(column: string, value: any) {
       const field = this.model.schema[column]
-      if (Foreign.isArray(field)) return true
-      const isNotAllowed = iof(field, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlFile)
+      if (Foreign.is(field)) return true
 
-      if (isNotAllowed) {
-         throw new XansqlError({
-            message: `Field ${column} of type ${field.constructor.name} is not allowed in WHERE clause in table ${this.model.table}`,
-            model: this.model.table,
-            column
-         });
+      if (iof(field, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlFile)) {
+         const isValueObjectOfSubConditions = isObject(value) && Object.keys(value).some(k => this.condition_keys.includes(k))
+         if (!isValueObjectOfSubConditions) {
+            throw new XansqlError({
+               message: `Column ${column} of table ${this.model.table} does not support direct comparison in WHERE clause.`,
+               model: this.model.table,
+               column
+            });
+         }
       }
+
    }
 }
 
