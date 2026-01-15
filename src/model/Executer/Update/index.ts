@@ -136,19 +136,14 @@ class UpdateExecuter {
          if (relArgs.create && relArgs.create.data) {
             for (let { chunk } of chunkArray(ids)) {
                for (let id of chunk) {
-                  if (Array.isArray(relArgs.create.data)) {
-                     for (let item of relArgs.create.data) {
-                        await FModel.create(new RelationExecuteArgs({
-                           data: {
-                              ...item,
-                              [foreign.column]: id
-                           }
-                        }) as any)
-                     }
-                  } else {
+                  let data: any[] = relArgs.create.data as any
+                  if (!Array.isArray(data)) {
+                     data = [relArgs.create.data]
+                  }
+                  for (let item of data) {
                      await FModel.create(new RelationExecuteArgs({
                         data: {
-                           ...relArgs.create.data,
+                           ...item,
                            [foreign.column]: id
                         }
                      }) as any)
@@ -160,13 +155,12 @@ class UpdateExecuter {
          // handle upsert
          if (relArgs.upsert && relArgs.upsert.where && relArgs.upsert.create && relArgs.upsert.update) {
             for (let { chunk } of chunkArray(ids)) {
+
                const has = await FModel.count({
-                  where: {
-                     ...relArgs.upsert.where,
-                     [foreign.column]: {
-                        in: chunk
-                     }
-                  },
+                  ...relArgs.upsert.where,
+                  [foreign.column]: {
+                     in: chunk
+                  }
                })
 
                if (has) {

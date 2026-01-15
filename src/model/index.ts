@@ -266,7 +266,7 @@ class Model extends ModelBase {
    }
 
    async exists(where: WhereArgsType): Promise<boolean> {
-      return !!(await this.count({ where }))
+      return !!(await this.count(where))
    }
 
    async addColumn(column: string) {

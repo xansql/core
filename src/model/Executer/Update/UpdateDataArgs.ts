@@ -75,9 +75,9 @@ class UpdateDataArgs {
                      });
                   }
 
-                  if (value.update && (!isObject(value.update.where) || !isObject(value.update.data))) {
+                  if (value.update && !isObject(value.update.data)) {
                      throw new XansqlError({
-                        message: `Invalid value for relation update operation in column ${model.table}.${column}. 'where' and 'data' fields are required and must be objects.`,
+                        message: `Invalid value for relation update operation in column ${model.table}.${column}. 'where' and 'data' field is required and must be objects.`,
                         model: model.table,
                         column: column
                      });

@@ -26,7 +26,7 @@ const App = () => {
       }} />
       <div style={{ marginTop: "50px" }}>
         <Button label="Find" onClick={async () => {
-          const result = await UserModel.find({
+          const result = await UserModel.findOne({
             // aggregate: {
             //   products: {
             //     price: {
@@ -46,12 +46,14 @@ const App = () => {
             //   }
             // },
             where: {
+              uid: 4,
               // name: "John Doe"
             },
             select: {
-              // name: true,
-              // photo: true,
-              // password: true,
+              name: true,
+              photo: true,
+              password: true,
+              metas: true
               // products: {
               //   aggregate: {
               //     categories: {
@@ -109,10 +111,40 @@ const App = () => {
           }
 
         }} />
+        <Button label="Update" onClick={async () => {
+          const result = await UserModel.update({
+            data: {
+              name: "hello",
+              metas: {
+                create: {
+                  data: {
+                    meta_key: "well",
+                    meta_value: "done"
+                  }
+                },
+                update: {
+                  where: {
+                    meta_key: "text"
+                  },
+                  // update: {
+                  //   meta_value: "nice"
+                  // },
+                  data: {
+                    meta_value: "nicasefserfwes"
+                  }
+                }
+              }
+            },
+            where: {
+              uid: 4
+            }
+          })
+          console.log(result);
+        }} />
         <Button label="Delete" onClick={async () => {
           const result = await UserModel.delete({
             where: {
-              uid: 2
+              uid: 4
             }
           })
           console.log(result);
