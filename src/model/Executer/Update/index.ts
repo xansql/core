@@ -5,6 +5,7 @@ import RelationExecuteArgs from "../../Args/RelationExcuteArgs"
 import UpdateDataArgs from "./UpdateDataArgs"
 import { chunkArray } from "../../../utils/chunker"
 import XansqlError from "../../../core/XansqlError"
+import { iof } from "../../../utils"
 
 
 class UpdateExecuter {
@@ -42,13 +43,14 @@ class UpdateExecuter {
       }
 
       try {
-
          if (existing_file_rows.length > 0) {
             for (let file_col of fileColumns) {
-               const filemeta = await xansql.uploadFile(upArgs.files[file_col])
-               if (filemeta?.fileId) {
-                  uploadedFileIds.push(filemeta.fileId)
-                  upArgs.data[file_col] = `'${JSON.stringify(filemeta)}'`
+               if (iof(upArgs.files[file_col], File)) {
+                  const filemeta = await xansql.uploadFile(upArgs.files[file_col])
+                  if (filemeta?.fileId) {
+                     uploadedFileIds.push(filemeta.fileId)
+                     upArgs.data[file_col] = `'${JSON.stringify(filemeta)}'`
+                  }
                }
             }
          }

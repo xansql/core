@@ -5,6 +5,7 @@ import XqlDate from "../../../xt/fields/Date"
 import { iof, isArray, isNumber, isObject } from "../../../utils"
 import ValueFormatter from "../../include/ValueFormatter"
 import { DataArgsType, UpdateDataRelationArgs } from "../../types"
+import XqlFile from "../../../xt/fields/File"
 
 
 type DataObject = { [column: string]: any }
@@ -115,13 +116,10 @@ class UpdateDataArgs {
                   });
                }
 
-               if (iof(value, File)) {
+               if (iof(field, XqlFile)) {
                   this.files[column] = value
-                  this.data[column] = ""
-                  ValueFormatter.toSql(model, column, value) // for validation
-               } else {
-                  this.data[column] = ValueFormatter.toSql(model, column, value)
                }
+               this.data[column] = ValueFormatter.toSql(model, column, value)
             }
          } catch (error: any) {
             if (iof(error, XansqlError)) {

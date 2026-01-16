@@ -101,7 +101,7 @@ const App = () => {
                 // username: "jane.doe",
                 photo: file,
                 password: "asdasdasd",
-                email: "najsrul@gmail.com",
+                email: `${Math.random()}@gmail.com`
               }
             })
             console.log(result);
@@ -115,28 +115,14 @@ const App = () => {
           const result = await UserModel.update({
             data: {
               name: "hello",
-              metas: {
-                create: {
-                  data: {
-                    meta_key: "well",
-                    meta_value: "done"
-                  }
-                },
-                update: {
-                  where: {
-                    meta_key: "text"
-                  },
-                  // update: {
-                  //   meta_value: "nice"
-                  // },
-                  data: {
-                    meta_value: "nicasefserfwes"
-                  }
-                }
-              }
+              photo: null
             },
             where: {
-              uid: 4
+              uid: 8
+            },
+            select: {
+              name: true,
+              photo: true
             }
           })
           console.log(result);
