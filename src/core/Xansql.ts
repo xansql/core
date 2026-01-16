@@ -1,5 +1,5 @@
 import Model from "../model";
-import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
+import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired, XansqlHooks } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
 import ModelFactory from "./classes/ModelFactory";
@@ -73,9 +73,31 @@ class Xansql {
    }
 
    async execute(sql: string): Promise<ExecuterResult> {
-      sql = sql.trim().replace(/\s+/g, ' ');
-      return await this.dialect.execute(sql, this) as any
+      const query = sql.trim().replace(/\s+/g, ' ');
+
+      if (this.config.debug) {
+         console.log(`[DB] Executing → ${query}`);
+      }
+
+      try {
+         const result = await this.dialect.execute(query, this) as ExecuterResult;
+
+         if (this.config.debug) {
+            console.log(`[DB] Executed ✓`);
+            console.dir(result, { depth: null });
+         }
+
+         return result;
+      } catch (error) {
+         if (this.config.debug) {
+            console.error(`[DB] Execution failed ✗`);
+            console.error(query);
+         }
+
+         throw error; // never swallow DB errors
+      }
    }
+
 
    async getRawSchema() {
       return await this.dialect.getSchema(this);

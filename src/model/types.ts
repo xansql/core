@@ -1,4 +1,4 @@
-import { ResultData, RowObject } from "../core/types";
+import { ExecuterResult, ResultData, RowObject } from "../core/types";
 
 export interface WhereSubCondition {
    equals?: string | number | boolean;
@@ -137,19 +137,18 @@ export type DeleteArgsType = {
    select?: SelectArgsType;
 }
 
-
 export type XansqlModelHooks = {
-   beforeFind?: (args: FindArgsType) => Promise<FindArgsType>
-   afterFind?: (result: ResultData, args: FindArgsType) => Promise<ResultData>
-   beforeCreate?: (args: CreateArgsType) => Promise<CreateArgsType> | void
-   afterCreate?: (result: ResultData, args: CreateArgsType) => Promise<ResultData>
-   beforeUpdate?: (args: UpdateArgsType) => Promise<UpdateArgsType>
-   afterUpdate?: (result: ResultData, args: UpdateArgsType) => Promise<ResultData>
-   beforeDelete?: (args: DeleteArgsType) => Promise<DeleteArgsType>
-   afterDelete?: (result: ResultData, args: DeleteArgsType) => Promise<ResultData>
-   beforeAggregate?: (args: AggregateArgsType) => Promise<AggregateArgsType>
-   afterAggregate?: (result: ResultData, args: AggregateArgsType) => Promise<ResultData>
-   transform?: (row: RowObject) => Promise<RowObject>
+   beforeExcute?: (sql: string) => Promise<string | void>
+   afterExcute?: (result: ExecuterResult) => Promise<ExecuterResult | void>
+   beforeFind?: (args: FindArgsType) => Promise<FindArgsType | void>
+   afterFind?: (result: ResultData, args: FindArgsType) => Promise<ResultData | void>
+   beforeCreate?: (args: CreateArgsType) => Promise<CreateArgsType | void>
+   afterCreate?: (result: ResultData, args: CreateArgsType) => Promise<ResultData | void>
+   beforeUpdate?: (args: UpdateArgsType) => Promise<UpdateArgsType | void>
+   afterUpdate?: (result: ResultData, args: UpdateArgsType) => Promise<ResultData | void>
+   beforeDelete?: (args: DeleteArgsType) => Promise<DeleteArgsType | void>
+   afterDelete?: (result: ResultData, args: DeleteArgsType) => Promise<ResultData | void>
+   beforeAggregate?: (args: AggregateArgsType) => Promise<AggregateArgsType | void>
+   afterAggregate?: (result: ResultData, args: AggregateArgsType) => Promise<ResultData | void>
+   transform?: (row: RowObject) => Promise<RowObject | void>
 }
-
-export type XansqlModelHookNames = keyof XansqlModelHooks;

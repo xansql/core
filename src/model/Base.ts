@@ -5,9 +5,8 @@ import XansqlError from "../core/XansqlError";
 import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import { XansqlSchemaObject } from "../xt/types";
-import Migrations from "./Migrations";
 import Schema from "./Schema";
-import { XansqlModelHookNames, XansqlModelHooks } from "./types";
+import { XansqlModelHooks } from "./types";
 
 type Relation = {
    type: "array" | "schema",
@@ -65,10 +64,12 @@ abstract class ModelBase {
 
    async execute(sql: string) {
       const xansql = this.xansql;
-      return await xansql.execute(sql) as any
+      sql = await this.callHook("beforeExcute", sql) || sql
+      const res = await xansql.execute(sql) as any
+      return await this.callHook("afterExcute", res) || res
    }
 
-   protected async callHook(hook: XansqlModelHookNames, ...args: any): Promise<any> {
+   protected async callHook(hook: keyof XansqlModelHooks, ...args: any): Promise<any> {
       const xansql = this.xansql;
       const config = xansql.config;
 
