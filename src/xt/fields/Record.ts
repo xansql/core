@@ -1,6 +1,7 @@
 import { XVRecord } from "xanv"
+import { XqlFieldInstance, XqlFields } from "../types";
 
-class XqlRecord extends XVRecord {
+class XqlRecord<K extends XqlFields, V extends XqlFields> extends XVRecord<XqlFieldInstance<K>, XqlFieldInstance<V>> {
    optional() {
       super.optional()
       return super.nullable();

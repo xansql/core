@@ -1,6 +1,7 @@
 import { XVObject } from "xanv"
+import { XVObjectShape } from "xanv/types/Object";
 
-class XqlObject extends XVObject {
+class XqlObject<O extends XVObjectShape = any> extends XVObject<O> {
    optional() {
       super.optional()
       return super.nullable();

@@ -22,21 +22,22 @@
       "release": "makepack release"
    },
    "dependencies": {
-      "xanv": "^1.1.11"
+      "@xansql/bridge": "^1.0.2",
+      "securequ": "^1.1.19",
+      "xanv": "^1.1.13"
    },
    "devDependencies": {
       "@faker-js/faker": "^9.7.0",
       "@types/express": "^5.0.5",
       "@types/react": "^19.0.2",
       "@types/react-dom": "^19.0.2",
-      "@xansql/bridge": "^1.0.1",
       "@xansql/core": "^1.0.22",
       "@xansql/mysql-dialect": "^1.0.1",
       "@xansql/sqlite-dialect": "^1.0.0",
       "dotenv": "^16.5.0",
       "express": "^5.1.0",
       "faker": "^6.6.6",
-      "makepack": "^1.7.27",
+      "makepack": "^1.7.28",
       "react": "^19.1.0",
       "react-dom": "^19.1.0",
       "tslib": "^2.8.1",

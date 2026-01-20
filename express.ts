@@ -6,11 +6,18 @@ import { db, ProductModel, UserModel } from './example/DBServer'
 import WhereArgsQuery from './src/model/Args/WhereArgs';
 import SelectArgs from './src/model/Executer/Find/SelectArgs';
 import UpdateDataArgs from './src/model/Executer/Update/UpdateDataArgs';
-import XansqlBridgeServer from '@xansql/bridge/server';
+import XansqlBridgeServer from './src/bridge/server';
 
-import { XansqlFileMeta } from './src';
+import { XansqlFileMeta, xt } from './src';
 import fs from 'fs'
 import path from 'path'
+import { Infer } from 'xanv';
+
+
+const o = xt.array(xt.number())
+
+type T = Infer<typeof o>
+
 
 let dir = 'uploads';
 
@@ -44,7 +51,7 @@ const server = async (app: Express) => {
    app.use(express.urlencoded({ extended: true }));
    app.disable('etag');
 
-   app.use('/data/*', express.raw({ type: bridge.XANFETCH_CONTENT_TYPE, limit: "10mb" }), async (req: any, res: any) => {
+   app.use('/data/*', express.raw({ type: bridge.REQUEST_CONTENT_TYPE, limit: "10mb" }), async (req: any, res: any) => {
       const response = await bridge.listen(req.originalUrl, {
          body: req.body,
          headers: req.headers

@@ -1,10 +1,10 @@
 import { XanvType } from "xanv";
 import { isObject } from "../../utils";
 
-class XqlSchema extends XanvType<any> {
+class XqlSchema<T extends string, C extends string> extends XanvType<{ table: T, column: C }, unknown> {
    type = "schema";
-   readonly table: string;
-   readonly column: string;
+   readonly table: T;
+   readonly column: C;
    dynamic = false;
 
    relation = {
@@ -12,7 +12,7 @@ class XqlSchema extends XanvType<any> {
       target: ""
    }
 
-   constructor(table: string, column: string) {
+   constructor(table: T, column: C) {
       super();
       this.table = table;
       this.column = column;
@@ -37,6 +37,7 @@ class XqlSchema extends XanvType<any> {
       } else {
          throw new Error(msg);
       }
+      return value
    }
 
    optional() {

@@ -1,6 +1,10 @@
+import { XqlFields } from "@xansql/core";
 import { XVUnion } from "xanv"
 
-class XqlUnion extends XVUnion {
+class XqlUnion<T extends XqlFields[]> extends XVUnion<any> {
+   constructor(types: T) {
+      super(types as any)
+   }
    optional() {
       super.optional()
       return super.nullable();
