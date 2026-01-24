@@ -1,8 +1,8 @@
+import { XVType } from "xanv";
 import Model from "../../model";
 import { iof } from "../../utils";
 import XqlArray from "../../xt/fields/Array";
 import XqlSchema from "../../xt/fields/Schema";
-import { XqlFields } from "../../xt/types";
 import XansqlError from "../XansqlError";
 
 
@@ -24,15 +24,15 @@ export type ForeignInfoType = {
  */
 class Foreign {
 
-   static is(field: XqlFields) {
+   static is(field: XVType<any>) {
       return this.isArray(field) || this.isSchema(field)
    }
 
-   static isArray(field: XqlFields) {
-      return iof(field, XqlArray) && this.isSchema((field as any).type)
+   static isArray(field: XVType<any>) {
+      return iof(field, XqlArray) && this.isSchema((field as XqlArray<any>).type)
    }
 
-   static isSchema(field: XqlFields) {
+   static isSchema(field: XVType<any>) {
       return iof(field, XqlSchema)
    }
 
@@ -42,7 +42,7 @@ class Foreign {
       let field: any = schema[column]
 
       if (this.isArray(field)) {
-         const foreignType = field.type as XqlSchema;
+         const foreignType = field.type as XqlSchema<any, any>;
          return {
             table: foreignType.table,
             column: foreignType.column,

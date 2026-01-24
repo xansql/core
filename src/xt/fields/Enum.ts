@@ -1,6 +1,6 @@
 import { XVEnum } from "xanv"
 
-class XqlEnum<T extends readonly (string | number)[]> extends XVEnum<T> {
+class XqlEnum<const T extends string | number> extends XVEnum<T> {
    optional() {
       super.optional()
       return super.nullable();

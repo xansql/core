@@ -1,7 +1,7 @@
 import { XqlFields } from "@xansql/core";
-import { XVUnion } from "xanv"
+import { XVType, XVUnion } from "xanv"
 
-class XqlUnion<T extends XqlFields[]> extends XVUnion<any> {
+class XqlUnion<T extends XVType<any>[] = XVType<any>[]> extends XVUnion<T> {
    constructor(types: T) {
       super(types as any)
    }

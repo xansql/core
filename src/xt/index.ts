@@ -1,4 +1,3 @@
-import { XVInstanceType } from "xanv";
 import XqlString from "./fields/String";
 import XqlBoolean from "./fields/Boolean";
 import XqlArray from "./fields/Array";
@@ -12,7 +11,6 @@ import XqlUnion from "./fields/Union";
 import XqlIDField from "./fields/IDField";
 import XqlFile from "./fields/File";
 import XqlSchema from "./fields/Schema";
-import { XqlFields } from "./types";
 import XqlName from "./additional/Name";
 import XqlPassword from "./additional/Password";
 import XqlUsername from "./additional/Username";
@@ -21,20 +19,20 @@ import XqlUrl from "./additional/Url";
 import XqlPhoto from "./additional/Photo";
 import XqlPhone from "./additional/Phone";
 import XqlIP from "./additional/IP";
-import { XVObjectShape } from "xanv/types/Object";
+import { XVType } from "xanv";
 
 const xt = {
    id: () => new XqlIDField(),
-   array: <T extends XqlFields>(type: T, length?: number) => new XqlArray(type, length),
+   array: <T extends XVType<any>>(type: T) => new XqlArray(type),
    boolean: () => new XqlBoolean(),
    date: () => new XqlDate(),
-   enum: <T extends readonly (string | number)[]>(...values: T) => new XqlEnum<T>(values),
+   enum: <const T extends string | number>(input: readonly T[] | Record<string, T>) => new XqlEnum<T>(input),
    number: (length?: number) => new XqlNumber(length),
-   object: <T extends XVObjectShape>(arg?: T) => new XqlObject<T>(arg),
-   record: <K extends XVInstanceType, V extends XVInstanceType>(key: K, value: V) => new XqlRecord(key as any, value as any),
+   object: <const T extends Record<string, XVType<any>>>(shape: T) => new XqlObject<T>(shape),
+   record: <K extends XVType<any>, V extends XVType<any>>(key: K, value: V) => new XqlRecord(key as any, value as any),
    string: (length?: number) => new XqlString(length),
-   tuple: (type: XqlFields[]) => new XqlTuple(type),
-   union: <T extends XqlFields[]>(types: T) => new XqlUnion(types as any),
+   tuple: <T extends XVType<any>[]>(type: T) => new XqlTuple(type),
+   union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
    schema: <T extends string, C extends string>(table: T, column: C) => new XqlSchema(table, column),
 
@@ -44,9 +42,9 @@ const xt = {
    name: () => new XqlName,
    password: () => new XqlPassword,
    email: () => xt.string().email().index().unique(),
-   status: <T extends readonly (string | number)[]>(...values: T) => xt.enum<T>(...values).index(),
-   gender: () => xt.enum('male', 'female', 'other').index(),
-   role: (roles: string[]) => xt.enum(...roles).index(),
+   gender: () => xt.enum(['male', 'female', 'other'] as const).index(),
+   status: <const T extends string | number>(input: readonly T[] | Record<string, T>) => xt.enum(input).index(),
+   role: <const T extends string | number>(input: readonly T[] | Record<string, T>) => xt.enum(input).index(),
    username: () => new XqlUsername,
    slug: () => new XqlSlug,
    url: () => new XqlUrl,
@@ -55,7 +53,6 @@ const xt = {
    phone: () => new XqlPhone,
    title: () => xt.string().min(1).max(200),
    description: () => xt.string().max(1000),
-   type: (types: string[]) => xt.enum(...types).index(),
    metadata: () => xt.record(
       xt.string(),
       xt.union([

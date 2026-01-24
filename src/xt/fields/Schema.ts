@@ -1,7 +1,7 @@
-import { XanvType } from "xanv";
+import { XVType } from "xanv";
 import { isObject } from "../../utils";
 
-class XqlSchema<T extends string, C extends string> extends XanvType<{ table: T, column: C }, unknown> {
+class XqlSchema<T extends string, C extends string> extends XVType<{ table: T, column: C }> {
    type = "schema";
    readonly table: T;
    readonly column: C;

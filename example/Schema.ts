@@ -1,4 +1,4 @@
-import { Infer, xt } from "../src";
+import { xt } from "../src";
 import Schema from "../src/model/Schema";
 
 export const ProductCategorySchema = new Schema("categories", {
@@ -15,7 +15,7 @@ export const UserModelMetaSchema = new Schema("user_metas", {
 })
 
 
-const UserModelSchemaObject = {
+export const UserModelSchema = new Schema("users", {
    uid: xt.id(),
    name: xt.string(),
    username: xt.username().optional(),
@@ -24,16 +24,9 @@ const UserModelSchemaObject = {
    password: xt.password(),
    metas: xt.array(xt.schema("user_metas", "user")),
    array: xt.array(xt.boolean()),
-   m: xt.schema("user_metas", "user"),
    created_at: xt.createdAt(),
    updated_at: xt.updatedAt(),
-}
-
-const ob = xt.object(UserModelSchemaObject)
-
-type T = Infer<typeof ob>
-
-export const UserModelSchema = new Schema("users", UserModelSchemaObject)
+})
 
 export const ProductModelSchema = new Schema("products", {
    pid: xt.id(),

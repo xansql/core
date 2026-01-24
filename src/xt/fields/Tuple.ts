@@ -1,7 +1,7 @@
 import { XqlFields } from "@xansql/core";
-import { XVTuple } from "xanv"
+import { XVTuple, XVType } from "xanv"
 
-class XqlTuple<T extends XqlFields[]> extends XVTuple<any> {
+class XqlTuple<T extends XVType<any>[] = any> extends XVTuple<T> {
    optional() {
       super.optional()
       return super.nullable();
