@@ -119,7 +119,7 @@ class CreateDataArgs {
                   if (iof(value, File)) {
                      this.files[column] = value
                      this.data[column] = ''
-                     ValueFormatter.toSql(model, column, value) // for validation
+                     // ValueFormatter.toSql(model, column, value) // for validation
                   } else {
                      this.data[column] = ValueFormatter.toSql(model, column, value)
                   }

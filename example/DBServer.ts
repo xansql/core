@@ -1,13 +1,15 @@
 import dotenv from 'dotenv'
-import { Xansql } from '../src'
+import { Xansql, XansqlFileMeta } from '../src'
 import SqliteDialect from '@xansql/sqlite-dialect'
 import MysqlDialect from '@xansql/mysql-dialect'
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
-
+import fs from 'fs'
+import path from 'path'
 dotenv.config()
 
 const mysqlConn: string = (typeof process !== 'undefined' ? process.env.MYSQL_DB : 'mysql://root:root1234@localhost:3306/xansql') as string
 const sqliteConn: string = 'db.sqlite'
+let dir = 'uploads';
 
 const mysql = MysqlDialect({
    host: "localhost",
@@ -15,6 +17,19 @@ const mysql = MysqlDialect({
    user: 'root',
    password: 'root1234',
    database: "xansql",
+   // file: {
+   //    upload: async (file: File, xansql: Xansql) => {
+
+   //    },
+   //    delete: async (fileId: string) => {
+   //       const fs = await import('fs');
+   //       const path = await import('path');
+   //       const filePath = path.join(process.cwd(), dir, fileId);
+   //       if (fs.existsSync(filePath)) {
+   //          fs.unlinkSync(filePath);
+   //       }
+   //    }
+   // }
 })
 
 const sqlite = SqliteDialect(sqliteConn)

@@ -23,9 +23,10 @@ export const UserModelSchema = new Schema("users", {
    email: xt.email(),
    password: xt.password(),
    metas: xt.array(xt.schema("user_metas", "user")),
-   array: xt.array(xt.boolean()),
    created_at: xt.createdAt(),
    updated_at: xt.updatedAt(),
+   // autor: xt.schema("users", "athors").optional(),
+   // agents: xt.array(xt.schema("users", "agent").optional())
 })
 
 export const ProductModelSchema = new Schema("products", {

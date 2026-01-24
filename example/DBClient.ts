@@ -1,9 +1,9 @@
 import { Xansql } from '../src'
-import XansqlBridge from '@xansql/bridge';
+import { XansqlBridgeDialect } from '@xansql/bridge';
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
 
 export const db = new Xansql({
-   dialect: XansqlBridge("http://localhost:4000/data"),
+   dialect: XansqlBridgeDialect("http://localhost:4000/data"),
 })
 
 export const UserModel = db.model(UserModelSchema)

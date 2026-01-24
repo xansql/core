@@ -228,6 +228,7 @@ const server = async (app: Express) => {
       const file = new File([longText], 'hello.txt', { type: 'text/plain' });
 
       try {
+
          const result = await UserModel.create({
             select: {
                name: true,
@@ -246,31 +247,31 @@ const server = async (app: Express) => {
                }
             },
             data: {
-               names: "John Doe",
+               name: "John Doe",
                email: `john${Math.floor(Math.random() * 10000)}@doe.com`,
                password: "password",
                // photo: file,
                // created_at: new Date(),
-               products: {
-                  name: "Hello World",
-                  description: "This is my first post",
-                  price: "19.99",
-                  // user: 3,
-                  categories: [
-                     {
-                        name: "Tech",
-                     },
-                     { name: "News" },
-                  ],
-               }
+               // products: {
+               //    name: "Hello World",
+               //    description: "This is my first post",
+               //    price: "19.99",
+               //    // user: 3,
+               //    categories: [
+               //       {
+               //          name: "Tech",
+               //       },
+               //       { name: "News" },
+               //    ],
+               // }
             }
          })
-
-         console.log(result);
 
          res.json(result)
 
       } catch (error: any) {
+         // console.log(error);
+
          res.json({ error: error.message })
       }
 

@@ -73,7 +73,7 @@ class ModelFactgory {
          const foreignCol = FModel.schema[field.column];
 
          if (Foreign.isArray(foreignCol)) {
-            const foreignType = (foreignCol as any).type as XqlSchema;
+            const foreignType = (foreignCol as any).type as XqlSchema<any, any>;
             if (foreignType.table !== model.table || foreignType.column !== column) {
                throw new XansqlError({
                   message: `Foreign column ${field.table}.${field.column} does not reference back to ${model.table}.${column}`,
@@ -99,7 +99,7 @@ class ModelFactgory {
    private formatIsArray(model: Model, column: string) {
       const models = this.models;
       const field: any = model.schema[column];
-      const FSchemaField = (field as any).type as XqlSchema;
+      const FSchemaField = (field as any).type as XqlSchema<any, any>;
 
       const FModel = models.get(FSchemaField.table);
       if (!FModel) {

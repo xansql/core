@@ -58,10 +58,10 @@ export type XansqlFileConfig = {
 
 
 export type XansqlDialect = {
-   engine: XansqlDialectEngine;
-   file?: XansqlFileConfig
    execute: (sql: string, xansql: Xansql) => Promise<ExecuterResult | null>;
    getSchema: (xansql: Xansql) => Promise<XansqlDialectSchemaType | void>;
+   engine: XansqlDialectEngine;
+   file?: XansqlFileConfig
 }
 
 export type XansqlSocket = {
