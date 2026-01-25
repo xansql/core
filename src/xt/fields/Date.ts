@@ -1,4 +1,4 @@
-import { XVDate } from "xanv"
+import { XVDate, XVOptional } from "xanv"
 
 class XqlDate extends XVDate {
    optional() {
@@ -18,12 +18,12 @@ class XqlDate extends XVDate {
       return this.set("unique", () => { }, true)
    }
 
-   update() {
-      return this.set("update", () => { }, true).default(() => new Date())
+   update(): XVOptional<this> & { meta: { update: true } } {
+      return this.set("update", () => { }, true).default(() => new Date()) as any
    }
 
-   create() {
-      return this.index().default(() => new Date()).set("create", () => { }, true)
+   create(): XVOptional<this> & { meta: { create: true } } {
+      return this.index().default(() => new Date()).set("create", () => { }, true) as any
    }
 }
 

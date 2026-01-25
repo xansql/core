@@ -9,20 +9,21 @@ import { escapeSqlValue, iof, isArray, isObject } from "../../utils";
 import ValueFormatter from "../include/ValueFormatter";
 import { WhereArgsType, WhereSubCondition } from "../types";
 import XqlFile from "../../xt/fields/File";
+import { ModelType } from "../../core/types";
 
 type Meta = {
    parentTable: string
 }
 
 class WhereArgs {
-   private model: Model
+   private model: ModelType
    // private where: WhereArgsType
    // private meta: Meta | undefined
    readonly wheres: string[]
    readonly sql: string = ''
    private condition_keys = ["equals", "not", "lt", "lte", "gt", "gte", "in", "notIn", "between", "notBetween", "contains", "notContains", "startsWith", "endsWith", "isNull", "isNotNull", "isEmpty", "isNotEmpty", "isTrue", "isFalse"]
 
-   constructor(model: Model, where: WhereArgsType | WhereArgsType[], meta?: Meta) {
+   constructor(model: ModelType, where: WhereArgsType | WhereArgsType[], meta?: Meta) {
       this.model = model
 
       let schema = model.schema

@@ -6,7 +6,7 @@ import { db, ProductModel, UserModel } from './example/DBServer'
 import WhereArgsQuery from './src/model/Args/WhereArgs';
 import SelectArgs from './src/model/Executer/Find/SelectArgs';
 import UpdateDataArgs from './src/model/Executer/Update/UpdateDataArgs';
-// import XansqlBridgeServer from '@xansql/bridge/server';
+import XansqlBridgeServer from '@xansql/bridge/server';
 
 import { XansqlFileMeta, xt } from './src';
 import fs from 'fs'
@@ -21,29 +21,29 @@ type T = Infer<typeof o>
 
 let dir = 'uploads';
 
-// const bridge = new XansqlBridgeServer(db, {
-//    basepath: "/data",
-//    mode: "development",
-//    file: {
-//       upload: async (chunk: Uint8Array, filemeta: XansqlFileMeta) => {
-//          const uploadDir = path.join(process.cwd(), dir);
-//          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-//          const filePath = path.join(uploadDir, filemeta.fileId);
-//          fs.appendFileSync(filePath, Buffer.from(chunk));
-//       },
-//       delete: async (fileId: string) => {
-//          const fs = await import('fs');
-//          const path = await import('path');
-//          const filePath = path.join(process.cwd(), dir, fileId);
-//          if (fs.existsSync(filePath)) {
-//             fs.unlinkSync(filePath);
-//          }
-//       }
-//    },
-//    isAuthorized: async (info) => {
-//       return true;
-//    }
-// })
+const bridge = new XansqlBridgeServer(db as any, {
+   basepath: "/data",
+   mode: "development",
+   file: {
+      upload: async (chunk: Uint8Array, filemeta: XansqlFileMeta) => {
+         const uploadDir = path.join(process.cwd(), dir);
+         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+         const filePath = path.join(uploadDir, filemeta.fileId);
+         fs.appendFileSync(filePath, Buffer.from(chunk));
+      },
+      delete: async (fileId: string) => {
+         const fs = await import('fs');
+         const path = await import('path');
+         const filePath = path.join(process.cwd(), dir, fileId);
+         if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+         }
+      }
+   },
+   isAuthorized: async (info) => {
+      return true;
+   }
+})
 
 const server = async (app: Express) => {
    app.use('/static', express.static('public'));
@@ -51,13 +51,13 @@ const server = async (app: Express) => {
    app.use(express.urlencoded({ extended: true }));
    app.disable('etag');
 
-   // app.use('/data/*', express.raw({ type: bridge.REQUEST_CONTENT_TYPE, limit: "10mb" }), async (req: any, res: any) => {
-   //    const response = await bridge.listen(req.originalUrl, {
-   //       body: req.body,
-   //       headers: req.headers
-   //    })
-   //    res.status(response.status).end(response.value);
-   // })
+   app.use('/data/*', express.raw({ type: bridge.REQUEST_CONTENT_TYPE, limit: "10mb" }), async (req: any, res: any) => {
+      const response = await bridge.listen(req.originalUrl, {
+         body: req.body,
+         headers: req.headers
+      })
+      res.status(response.status).end(response.value);
+   })
 
 
    app.get('/select', async (req: any, res: any) => {
@@ -247,7 +247,7 @@ const server = async (app: Express) => {
                }
             },
             data: {
-               name: "John Doe",
+               name: "asd",
                email: `john${Math.floor(Math.random() * 10000)}@doe.com`,
                password: "password",
                // photo: file,

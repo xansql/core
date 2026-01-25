@@ -1,5 +1,6 @@
 import Model from "../..";
 import Foreign from "../../../core/classes/ForeignInfo";
+import { ModelType } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { iof } from "../../../utils";
 import XqlIDField from "../../../xt/fields/IDField";
@@ -7,11 +8,11 @@ import XqlNumber from "../../../xt/fields/Number";
 import { AggregateSelectArgsColumnType, AggregateSelectArgsType } from "../../types";
 
 class SelectArgs {
-   model: Model
+   model: ModelType
 
    readonly sql: string;
 
-   constructor(model: Model, args: AggregateSelectArgsType) {
+   constructor(model: ModelType, args: AggregateSelectArgsType) {
       this.model = model
       const sqls = []
 

@@ -4,7 +4,6 @@ import Foreign from "./core/classes/ForeignInfo";
 import XansqlError from "./core/XansqlError";
 import xt from "./xt";
 
-
 export {
    Xansql,
    Model,

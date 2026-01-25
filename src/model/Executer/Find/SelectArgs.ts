@@ -14,6 +14,7 @@ import Foreign, { ForeignInfoType } from "../../../core/classes/ForeignInfo";
 import XqlFile from "../../../xt/fields/File";
 import XansqlError from "../../../core/XansqlError";
 import { iof } from "../../../utils";
+import { ModelType } from "../../../core/types";
 
 export type SelectArgsRelationInfo = {
    args: {
@@ -36,7 +37,7 @@ type SelectArgsRelations = {
 }
 
 class SelectArgs {
-   private model: Model
+   private model: ModelType
 
    /**
     * Get Columns
@@ -71,7 +72,7 @@ class SelectArgs {
    readonly sql: string = ''
 
 
-   constructor(model: Model, args: SelectArgsType) {
+   constructor(model: ModelType, args: SelectArgsType) {
       this.model = model
 
       if (!args || Object.keys(args).length === 0) {

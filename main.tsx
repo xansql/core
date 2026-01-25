@@ -46,7 +46,7 @@ const App = () => {
             //   }
             // },
             where: {
-              uid: 4,
+              // uid: 4,
               // name: "John Doe"
             },
             select: {

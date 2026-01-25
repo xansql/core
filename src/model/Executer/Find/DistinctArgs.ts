@@ -1,4 +1,5 @@
 import Model from "../.."
+import { ModelType } from "../../../core/types"
 import XansqlError from "../../../core/XansqlError"
 import WhereArgs from "../../Args/WhereArgs"
 import { DistinctArgsType, OrderByArgsType } from "../../types"
@@ -10,7 +11,7 @@ class DistinctArgs {
     */
    readonly sql: string = ''
 
-   constructor(model: Model, args: DistinctArgsType, where: WhereArgs, orderBy?: OrderByArgsType) {
+   constructor(model: ModelType, args: DistinctArgsType, where: WhereArgs, orderBy?: OrderByArgsType) {
       const distinct = args || []
       if (distinct && distinct.length) {
          let dcols: string[] = []

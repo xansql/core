@@ -22,7 +22,7 @@
       "release": "makepack release"
    },
    "dependencies": {
-      "@xansql/bridge": "^1.0.4",
+      "@xansql/bridge": "^1.0.7",
       "xanv": "^1.1.19"
    },
    "devDependencies": {
@@ -30,7 +30,7 @@
       "@types/express": "^5.0.5",
       "@types/react": "^19.0.2",
       "@types/react-dom": "^19.0.2",
-      "@xansql/core": "^1.1.7",
+      "@xansql/core": "^1.1.8",
       "@xansql/mysql-dialect": "^1.0.1",
       "@xansql/sqlite-dialect": "^1.0.0",
       "dotenv": "^16.5.0",

@@ -6,11 +6,12 @@ import UpdateDataArgs from "./UpdateDataArgs"
 import { chunkArray } from "../../../utils/chunker"
 import XansqlError from "../../../core/XansqlError"
 import { iof } from "../../../utils"
+import { ModelType } from "../../../core/types"
 
 
 class UpdateExecuter {
-   model: Model
-   constructor(model: Model) {
+   model: ModelType
+   constructor(model: ModelType) {
       this.model = model
    }
 

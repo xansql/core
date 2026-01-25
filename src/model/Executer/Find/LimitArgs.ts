@@ -1,4 +1,5 @@
 import Model from "../..";
+import { ModelType } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { LimitArgsType } from "../../types";
 
@@ -12,7 +13,7 @@ class LimitArgs {
     */
    readonly sql: string;
 
-   constructor(model: Model, args: LimitArgsType) {
+   constructor(model: ModelType, args: LimitArgsType) {
       const xansql = model.xansql
       const maxLimit = xansql.config.maxLimit.find
       if (args === "all") {

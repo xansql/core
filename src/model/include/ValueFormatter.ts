@@ -1,4 +1,5 @@
 import Model from "..";
+import { ModelType } from "../../core/types";
 import XansqlError from "../../core/XansqlError";
 import { iof } from "../../utils";
 import XqlArray from "../../xt/fields/Array";
@@ -37,7 +38,7 @@ class ValueFormatter {
       return s
    }
 
-   static toSql(model: Model, column: string, value: any) {
+   static toSql(model: ModelType, column: string, value: any) {
       const field = model.schema[column];
       if (!field) throw new XansqlError({
          message: `Column ${column} does not exist in model ${model.table}`,
@@ -87,7 +88,7 @@ class ValueFormatter {
       }
    }
 
-   static fromSql(model: Model, column: string, value: any) {
+   static fromSql(model: ModelType, column: string, value: any) {
       const field = model.schema[column];
       if (!field) throw new Error(`Column ${column} does not exist in model ${model.table}`);
       if (value === null || value === undefined) return null
@@ -105,7 +106,7 @@ class ValueFormatter {
       return value;
    }
 
-   static getDefaultSql(model: Model, column: string) {
+   static getDefaultSql(model: ModelType, column: string) {
       const field = model.schema[column];
       if (!field) throw new XansqlError({
          message: `Column ${column} does not exist in model ${model.table}`,

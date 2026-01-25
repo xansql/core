@@ -1,4 +1,5 @@
 import Model from "../..";
+import { ModelType } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { chunkArray } from "../../../utils/chunker";
 import WhereArgs from "../../Args/WhereArgs";
@@ -9,9 +10,9 @@ import SelectArgs from "./SelectArgs";
 
 class AggregateExecuter {
 
-   private model: Model
+   private model: ModelType
    private removeGroupByColumns: boolean
-   constructor(model: Model, removeGroupByColumns: boolean = true) {
+   constructor(model: ModelType, removeGroupByColumns: boolean = true) {
       this.model = model
       this.removeGroupByColumns = removeGroupByColumns
    }

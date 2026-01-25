@@ -1,5 +1,10 @@
+import { XqlField } from "@xansql/core";
 import { ExecuterResult, ResultData, RowObject } from "../core/types";
-import { InferSchema, XqlSchemaShape } from "../xt/types";
+import { XqlSchemaShape } from "../xt/types";
+import XqlIDField from "../xt/fields/IDField";
+import XqlSchema from "../xt/fields/Schema";
+import XqlArray from "../xt/fields/Array";
+import { Infer } from "xanv";
 
 export interface WhereSubCondition {
    equals?: string | number | boolean;
@@ -159,7 +164,105 @@ export type XansqlModelHooks = {
 
 // NEW
 
-export type CreateArgs<T extends XqlSchemaShape> = {
-   data: InferSchema<T> | InferSchema<T>[];
-   select?: SelectArgsType;
+
+type Simplify<T> = T extends object ? { [K in keyof T]: T[K] } : T
+export type IsIDField<T extends XqlField> = T extends XqlIDField ? true : false
+export type IsRelation<T extends XqlField> = T extends XqlSchema<any, any> ? true : T extends XqlArray<XqlSchema<any, any>> ? true : false;
+export type IsSchema<T extends XqlField> = T extends XqlSchema<any, any> ? true : false;
+export type IsArraySchema<T extends XqlField> = T extends XqlArray<XqlSchema<any, any>> ? true : false;
+
+// SELECT Args ==========================
+export type SelectRelationArgs = {
+   select: {
+      [column: string]: boolean | SelectRelationArgs
+   }
+}
+
+export type SelectArgs<T extends XqlSchemaShape> = {
+   [K in keyof T]?: IsRelation<T[K]> extends true ? SelectRelationArgs : boolean
+}
+
+
+// Create Args ==================================
+export type IsCreateAutoFill<T extends XqlField> =
+   IsIDField<T> extends true ? true :
+   T['meta'] extends { create: true } ? true :
+   T['meta'] extends { update: true } ? true : false
+
+export type CreateRelationArgs = {
+   [key: string]: any | CreateRelationArgs
+}
+
+export type CreateDataArgsObject<S extends XqlSchemaShape> = {
+   [K in keyof S as
+   IsRelation<S[K]> extends true ? never :
+   IsCreateAutoFill<S[K]> extends true ? never :
+   K]: S[K]
+}
+
+export type CreateDataArgs<S extends XqlSchemaShape> =
+   Infer<CreateDataArgsObject<S>> &
+   {
+      [K in keyof S as
+      IsArraySchema<S[K]> extends true ? K :
+      never]?: CreateRelationArgs | CreateRelationArgs[]
+   } &
+   {
+      [K in keyof S as
+      IsSchema<S[K]> extends true ? K :
+      never]?: number
+   }
+
+export type CreateArgs<S extends XqlSchemaShape> = {
+   data: Simplify<CreateDataArgs<S>> | Simplify<CreateDataArgs<S>>[]
+   select?: Simplify<SelectArgs<S>>
+}
+
+
+// Where Args ===============
+
+
+export interface WhereArgsSubCondition {
+   equals?: string | number | boolean;
+   not?: string | number | boolean;
+   lt?: string | number;
+   lte?: string | number;
+   gt?: string | number;
+   gte?: string | number;
+   in?: (string | number)[];
+   notIn?: (string | number)[];
+   between?: [string | number, string | number];
+   notBetween?: [string | number, string | number];
+   contains?: string;
+   notContains?: string;
+   startsWith?: string;
+   endsWith?: string;
+   isNull?: boolean;
+   isNotNull?: boolean;
+   isEmpty?: boolean;
+   isNotEmpty?: boolean;
+   isTrue?: boolean;
+   isFalse?: boolean;
+}
+
+export type WhereArgsLogicalOperators = {
+   AND?: WhereArgsType[];
+   OR?: WhereArgsType[];
+   NOT?: WhereArgsType[];
+}
+
+export type WhereArgs<S extends XqlSchemaShape> = Partial<Infer<S>> & {
+   AND?: Simplify<WhereArgs<S>>[];
+   OR?: Simplify<WhereArgs<S>>[];
+   NOT?: Simplify<WhereArgs<S>>[];
+}
+
+// Find Args
+export type FindArgs<S extends XqlSchemaShape> = {
+   distinct?: DistinctArgsType;
+   where?: Simplify<WhereArgs<S>> | Simplify<WhereArgs<S>>[];
+   select?: SelectArgs<S>
+   limit?: LimitArgsType
+   orderBy?: OrderByArgsType;
+   aggregate?: FindArgsAggregate;
 }

@@ -6,6 +6,7 @@ import { iof, isArray, isNumber, isObject } from "../../../utils"
 import ValueFormatter from "../../include/ValueFormatter"
 import { DataArgsType, UpdateDataRelationArgs } from "../../types"
 import XqlFile from "../../../xt/fields/File"
+import { ModelType } from "../../../core/types"
 
 
 type DataObject = { [column: string]: any }
@@ -40,7 +41,7 @@ class UpdateDataArgs {
 
    private errors: XansqlError[] = []
 
-   constructor(model: Model, data: DataArgsType) {
+   constructor(model: ModelType, data: DataArgsType) {
 
       for (let column in data) {
          const field = model.schema[column]

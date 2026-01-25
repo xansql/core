@@ -5,6 +5,7 @@ import XqlDate from "../../../xt/fields/Date"
 import { iof, isArray, isNumber, isObject } from "../../../utils"
 import ValueFormatter from "../../include/ValueFormatter"
 import { DataArgsType } from "../../types"
+import { ModelType } from "../../../core/types"
 
 
 type DataObject = { [column: string]: any }
@@ -50,7 +51,7 @@ class CreateDataArgs {
    private errors: XansqlError[] = []
 
 
-   constructor(model: Model, data: DataArgsType | DataArgsType[]) {
+   constructor(model: ModelType, data: DataArgsType | DataArgsType[]) {
 
       if (Array.isArray(data)) {
          for (let item of data) {

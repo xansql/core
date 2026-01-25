@@ -1,12 +1,10 @@
 import { EventHandler, EventPayloads } from "../core/classes/EventManager";
 import Foreign from "../core/classes/ForeignInfo";
-import { XqlSchemaShape } from "../core/types";
 import Xansql from "../core/Xansql";
 import XansqlError from "../core/XansqlError";
 import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
-import { XansqlSchemaObject } from "../xt/types";
-import Schema from "./Schema";
+import { XqlSchemaShape } from "../xt/types";
 import { XansqlModelHooks } from "./types";
 
 type Relation = {

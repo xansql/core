@@ -7,9 +7,10 @@ import XqlFile from "../../../xt/fields/File"
 import { chunkArray } from "../../../utils/chunker"
 import XansqlError from "../../../core/XansqlError"
 import { iof } from "../../../utils"
+import { ModelType } from "../../../core/types"
 
 class DeleteExecuter {
-   constructor(readonly model: Model) {
+   constructor(readonly model: ModelType) {
    }
 
    async execute(args: DeleteArgsType) {

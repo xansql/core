@@ -1,4 +1,5 @@
 import Model from "../.."
+import { ModelType } from "../../../core/types"
 import XansqlError from "../../../core/XansqlError"
 import { OrderByArgsType } from "../../types"
 
@@ -9,7 +10,7 @@ class OrderByArgs {
     */
    readonly sql: string = ''
 
-   constructor(model: Model, args: OrderByArgsType) {
+   constructor(model: ModelType, args: OrderByArgsType) {
       const items = []
       for (let column in args) {
          const val = args[column]

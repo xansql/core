@@ -1,6 +1,6 @@
 import Model from "../..";
 import Foreign, { ForeignInfoType } from "../../../core/classes/ForeignInfo";
-import { RowObject } from "../../../core/types";
+import { ModelType, RowObject } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { chunkArray, chunkNumbers } from "../../../utils/chunker";
 import WhereArgs from "../../Args/WhereArgs";
@@ -12,9 +12,9 @@ import OrderByArgs from "./OrderByArgs";
 import SelectArgs, { SelectArgsRelationInfo } from "./SelectArgs";
 
 class FindExecuter {
-   model: Model
+   model: ModelType
    transformer: ((row: RowObject) => Promise<RowObject>) | null = null
-   constructor(model: Model, transformer: ((row: RowObject) => Promise<RowObject>) | null = null) {
+   constructor(model: ModelType, transformer: ((row: RowObject) => Promise<RowObject>) | null = null) {
       this.model = model
       this.transformer = transformer
    }
@@ -292,7 +292,7 @@ class FindExecuter {
       }
    }
 
-   private async aggregate(model: Model, aggregate: FindArgsAggregate, results: any[]) {
+   private async aggregate(model: ModelType, aggregate: FindArgsAggregate, results: any[]) {
       const xansql = model.xansql
       const agg_results: {
          [column: string]: {

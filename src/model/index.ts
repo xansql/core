@@ -10,7 +10,7 @@ import DeleteExecuter from "./Executer/Delete";
 import FindExecuter from "./Executer/Find";
 import UpdateExecuter from "./Executer/Update";
 import Migrations from "./Migrations";
-import { AggregateArgsType, CreateArgs, DeleteArgsType, FindArgsType, UpdateArgsType, WhereArgsType } from "./types";
+import { AggregateArgsType, CreateArgs, DeleteArgsType, FindArgs, FindArgsType, UpdateArgsType, WhereArgsType } from "./types";
 
 class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> extends ModelBase<Xql, T, S> {
    readonly migrations: Migrations
@@ -30,10 +30,10 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
          args = await this.callHook("beforeCreate", args) || args
 
          // event emit BEFORE_CREATE
-         const executer = new CreateExecuter(this);
-         await xansql.EventManager.emit("BEFORE_CREATE", { model: this, args });
-         let results: any = await executer.execute(args);
-         await xansql.EventManager.emit("CREATE", { model: this, results, args });
+         const executer = new CreateExecuter(this as any);
+         await xansql.EventManager.emit("BEFORE_CREATE", { model: this, args } as any);
+         let results: any = await executer.execute(args as any);
+         await xansql.EventManager.emit("CREATE", { model: this, results, args } as any);
 
          results = await this.callHook("afterCreate", results, args) || results
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
@@ -106,7 +106,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       }
    }
 
-   async find(args: FindArgsType): Promise<any[]> {
+   async find(args: FindArgs<S>): Promise<any[]> {
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
 

@@ -4,10 +4,11 @@ import { CreateArgsType } from "../../types"
 import SelectArgs from "../Find/SelectArgs"
 import { chunkArray } from "../../../utils/chunker"
 import RelationExecuteArgs from "../../Args/RelationExcuteArgs"
+import { ModelType } from "../../../core/types"
 
-class CreateExecuter {
-   model: Model
-   constructor(model: Model) {
+class CreateExecuter<M extends ModelType> {
+   model: M
+   constructor(model: M) {
       this.model = model
    }
    async execute(args: CreateArgsType) {
