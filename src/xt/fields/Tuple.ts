@@ -3,8 +3,8 @@ import { XVTuple, XVType } from "xanv"
 
 class XqlTuple<T extends XVType<any>[] = any> extends XVTuple<T> {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

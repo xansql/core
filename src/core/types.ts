@@ -1,15 +1,12 @@
+import { Infer, XVType } from "xanv";
 import Model from "../model";
 import { AggregateArgsType, CreateArgsType, DeleteArgsType, FindArgsType, UpdateArgsType } from "../model/types";
+import XqlSchema from "../xt/fields/Schema";
+import { XqlSchemaShape } from "../xt/types";
 import Xansql from "./Xansql";
+import XqlArray from "../xt/fields/Array";
 
-export type XansqlConnectionOptions = {
-   host: string,
-   user: string,
-   password: string,
-   database: string,
-   port: number;
-}
-
+export type ModelType = Model<Xansql, string, XqlSchemaShape>
 
 export type RowObject = {
    [key: string]: any;
@@ -71,30 +68,30 @@ export type XansqlSocket = {
 }
 
 export type XansqlCache<Row = object> = {
-   cache: (sql: string, model: Model) => Promise<Row[] | void>;
-   clear: (model: Model) => Promise<void>;
-   onFind: (sql: string, model: Model, data: Row) => Promise<void>;
-   onCreate: (model: Model, insertId: number) => Promise<void>;
-   onUpdate: (model: Model, rows: Row[]) => Promise<void>;
-   onDelete: (model: Model, rows: Row[]) => Promise<void>;
+   cache: (sql: string, model: ModelType) => Promise<Row[] | void>;
+   clear: (model: ModelType) => Promise<void>;
+   onFind: (sql: string, model: ModelType, data: Row) => Promise<void>;
+   onCreate: (model: ModelType, insertId: number) => Promise<void>;
+   onUpdate: (model: ModelType, rows: Row[]) => Promise<void>;
+   onDelete: (model: ModelType, rows: Row[]) => Promise<void>;
 }
 
 
 export type XansqlHooks = {
-   beforeExcute?: (model: Model, sql: string) => Promise<string | void>
-   afterExcute?: (model: Model, result: ExecuterResult) => Promise<ExecuterResult | void>
-   beforeFind?: (model: Model, args: FindArgsType) => Promise<FindArgsType | void>;
-   afterFind?: (model: Model, result: ResultData, args: FindArgsType) => Promise<ResultData | void>;
-   beforeCreate?: (model: Model, args: CreateArgsType) => Promise<CreateArgsType | void>
-   afterCreate?: (model: Model, result: ResultData, args: CreateArgsType) => Promise<ResultData | void>;
-   beforeUpdate?: (model: Model, args: UpdateArgsType) => Promise<UpdateArgsType | void>;
-   afterUpdate?: (model: Model, result: ResultData, args: UpdateArgsType) => Promise<ResultData | void>;
-   beforeDelete?: (model: Model, args: DeleteArgsType) => Promise<DeleteArgsType | void>;
-   afterDelete?: (model: Model, result: ResultData, args: DeleteArgsType) => Promise<ResultData | void>;
-   beforeAggregate?: (model: Model, args: AggregateArgsType) => Promise<AggregateArgsType | void>;
-   afterAggregate?: (model: Model, result: ResultData, args: AggregateArgsType) => Promise<ResultData | void>;
+   beforeExcute?: (model: ModelType, sql: string) => Promise<string | void>
+   afterExcute?: (model: ModelType, result: ExecuterResult) => Promise<ExecuterResult | void>
+   beforeFind?: (model: ModelType, args: FindArgsType) => Promise<FindArgsType | void>;
+   afterFind?: (model: ModelType, result: ResultData, args: FindArgsType) => Promise<ResultData | void>;
+   beforeCreate?: (model: ModelType, args: CreateArgsType) => Promise<CreateArgsType | void>
+   afterCreate?: (model: ModelType, result: ResultData, args: CreateArgsType) => Promise<ResultData | void>;
+   beforeUpdate?: (model: ModelType, args: UpdateArgsType) => Promise<UpdateArgsType | void>;
+   afterUpdate?: (model: ModelType, result: ResultData, args: UpdateArgsType) => Promise<ResultData | void>;
+   beforeDelete?: (model: ModelType, args: DeleteArgsType) => Promise<DeleteArgsType | void>;
+   afterDelete?: (model: ModelType, result: ResultData, args: DeleteArgsType) => Promise<ResultData | void>;
+   beforeAggregate?: (model: ModelType, args: AggregateArgsType) => Promise<AggregateArgsType | void>;
+   afterAggregate?: (model: ModelType, result: ResultData, args: AggregateArgsType) => Promise<ResultData | void>;
 
-   transform?: (model: Model, row: RowObject) => Promise<RowObject | void>
+   transform?: (model: ModelType, row: RowObject) => Promise<RowObject | void>
 }
 
 export type XansqlConfigType = {

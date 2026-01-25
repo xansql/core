@@ -2,8 +2,8 @@ import { XVDate } from "xanv"
 
 class XqlDate extends XVDate {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

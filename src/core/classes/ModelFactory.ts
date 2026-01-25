@@ -1,15 +1,15 @@
 import xt from "../../xt";
-import Model from "../../model";
 import XqlSchema from "../../xt/fields/Schema";
 import Foreign from "./ForeignInfo";
 import XansqlError from "../XansqlError";
+import { ModelType } from "../types";
 
 /**
  * this class will format the models and assign relationships
  */
 class ModelFactgory {
    private restricted_columns: string[] = [];
-   readonly models: Map<string, Model> = new Map();
+   readonly models: Map<string, ModelType> = new Map();
    readonly aliases: Map<string, string> = new Map();
    private timer: any = null;
 
@@ -17,13 +17,13 @@ class ModelFactgory {
       return this.restricted_columns.includes(column.toUpperCase());
    }
 
-   set(model: Model) {
+   set(model: ModelType) {
       this.models.set(model.table, model);
       clearTimeout(this.timer);
       this.timer = setTimeout(() => this.format(), 5);
    }
 
-   get(table: string): Model | undefined {
+   get(table: string): ModelType | undefined {
       return this.models.get(table);
    }
 
@@ -55,7 +55,7 @@ class ModelFactgory {
       return models;
    }
 
-   private formatIsSchema(model: Model, column: string) {
+   private formatIsSchema(model: ModelType, column: string) {
       const models = this.models;
       const field: any = model.schema[column];
 
@@ -96,7 +96,7 @@ class ModelFactgory {
       }
    }
 
-   private formatIsArray(model: Model, column: string) {
+   private formatIsArray(model: ModelType, column: string) {
       const models = this.models;
       const field: any = model.schema[column];
       const FSchemaField = (field as any).type as XqlSchema<any, any>;

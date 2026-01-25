@@ -1,7 +1,7 @@
 import { XVType } from "xanv";
 import { isObject } from "../../utils";
 
-class XqlSchema<T extends string, C extends string> extends XVType<{ table: T, column: C }> {
+class XqlSchema<T extends string, C extends string> extends XVType<T> {
    type = "schema";
    readonly table: T;
    readonly column: C;
@@ -41,8 +41,8 @@ class XqlSchema<T extends string, C extends string> extends XVType<{ table: T, c
    }
 
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

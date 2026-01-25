@@ -2,8 +2,8 @@ import { XVEnum } from "xanv"
 
 class XqlEnum<const T extends string | number> extends XVEnum<T> {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

@@ -2,11 +2,11 @@ import { XVNumber } from "xanv"
 
 class XqlIDField extends XVNumber {
    optional() {
-      super.optional()
-      return super.nullable();
+      throw new Error("Optional not allowed")
+      return super.optional()
    }
    nullable() {
-      super.optional()
+      throw new Error("nullable not allowed")
       return super.nullable();
    }
 }

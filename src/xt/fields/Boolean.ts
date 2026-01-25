@@ -2,8 +2,8 @@ import { XVBoolean } from "xanv"
 
 class XqlBoolean extends XVBoolean {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

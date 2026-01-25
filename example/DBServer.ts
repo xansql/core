@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { Xansql, XansqlFileMeta } from '../src'
+import { InferSchema, Xansql, XansqlFileMeta, xt } from '../src'
 import SqliteDialect from '@xansql/sqlite-dialect'
 import MysqlDialect from '@xansql/mysql-dialect'
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
@@ -33,12 +33,23 @@ const mysql = MysqlDialect({
 })
 
 const sqlite = SqliteDialect(sqliteConn)
+
 export const db = new Xansql({
-   dialect: mysql,
+   dialect: mysql as any,
 })
 
-export const UserModel = db.model(UserModelSchema)
-export const ProductModel = db.model(ProductModelSchema)
-export const ProductCategory = db.model(ProductCategorySchema)
-export const UserModelMeta = db.model(UserModelMetaSchema)
-export const ProductMetaModel = db.model(ProductMetaSchema)
+
+export const UserModel = db.model("users", UserModelSchema)
+export const ProductModel = db.model("products", ProductModelSchema)
+export const ProductCategory = db.model("categories", ProductCategorySchema)
+export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)
+export const ProductMetaModel = db.model("metas", ProductMetaSchema)
+
+// type T = InferSchema<typeof ProductModelSchema>
+
+// const a = await ProductModel.create({
+//    data: {
+//       description: "string",
+//       price: "string"
+//    }
+// })

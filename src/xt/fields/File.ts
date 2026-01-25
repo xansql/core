@@ -2,8 +2,8 @@ import { XVFile } from "xanv"
 
 class XqlFile extends XVFile {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

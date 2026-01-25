@@ -1,20 +1,21 @@
 import Model from "../../model";
 import { CreateArgsType, DeleteArgsType, FindArgsType, UpdateArgsType } from "../../model/types";
+import { ModelType } from "../types";
 
 type Result = { [key: string]: any };
 
 export type EventPayloads = {
-   BEFORE_CREATE: { model: Model; args: CreateArgsType };
-   BEFORE_UPDATE: { model: Model; args: UpdateArgsType };
-   BEFORE_DELETE: { model: Model; args: DeleteArgsType };
-   BEFORE_FIND: { model: Model; args: FindArgsType };
-   BEFORE_AGGREGATE: { model: Model; args: any };
+   BEFORE_CREATE: { model: ModelType; args: CreateArgsType };
+   BEFORE_UPDATE: { model: ModelType; args: UpdateArgsType };
+   BEFORE_DELETE: { model: ModelType; args: DeleteArgsType };
+   BEFORE_FIND: { model: ModelType; args: FindArgsType };
+   BEFORE_AGGREGATE: { model: ModelType; args: any };
 
-   CREATE: { model: Model; results: Result[]; args: CreateArgsType };
-   UPDATE: { model: Model; results: Result[], args: UpdateArgsType };
-   DELETE: { model: Model; results: Result[], args: DeleteArgsType };
-   FIND: { model: Model; results: Result[], args: FindArgsType };
-   AGGREGATE: { model: Model; results: any; args: any };
+   CREATE: { model: ModelType; results: Result[]; args: CreateArgsType };
+   UPDATE: { model: ModelType; results: Result[], args: UpdateArgsType };
+   DELETE: { model: ModelType; results: Result[], args: DeleteArgsType };
+   FIND: { model: ModelType; results: Result[], args: FindArgsType };
+   AGGREGATE: { model: ModelType; results: any; args: any };
 
 };
 

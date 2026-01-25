@@ -19,10 +19,13 @@ import XqlUrl from "./additional/Url";
 import XqlPhoto from "./additional/Photo";
 import XqlPhone from "./additional/Phone";
 import XqlIP from "./additional/IP";
-import { XVType } from "xanv";
+import { XVOptional, XVType } from "xanv";
 
 const xt = {
-   id: () => new XqlIDField(),
+   id: () => {
+      const i = new XqlIDField()
+      return i as XVOptional<typeof i>
+   },
    array: <T extends XVType<any>>(type: T) => new XqlArray(type),
    boolean: () => new XqlBoolean(),
    date: () => new XqlDate(),
@@ -34,7 +37,7 @@ const xt = {
    tuple: <T extends XVType<any>[]>(type: T) => new XqlTuple(type),
    union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
-   schema: <T extends string, C extends string>(table: T, column: C) => new XqlSchema(table, column),
+   schema: <T extends string, C extends string>(table: T, column: C) => new XqlSchema<T, C>(table, column),
 
    createdAt: () => xt.date().create(),
    updatedAt: () => xt.date().update(),

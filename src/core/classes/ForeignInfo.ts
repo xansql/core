@@ -4,6 +4,7 @@ import { iof } from "../../utils";
 import XqlArray from "../../xt/fields/Array";
 import XqlSchema from "../../xt/fields/Schema";
 import XansqlError from "../XansqlError";
+import { ModelType } from "../types";
 
 
 export type ForeignInfoType = {
@@ -36,7 +37,7 @@ class Foreign {
       return iof(field, XqlSchema)
    }
 
-   static get(model: Model, column: string): ForeignInfoType {
+   static get(model: ModelType, column: string): ForeignInfoType {
       let table = model.table
       let schema = model.schema
       let field: any = schema[column]

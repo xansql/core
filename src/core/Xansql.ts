@@ -1,13 +1,12 @@
 import Model from "../model";
-import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired, XansqlHooks } from "./types";
+import { ExecuterResult, ModelType, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
 import ModelFactory from "./classes/ModelFactory";
 import XansqlMigration from "./classes/XansqlMigrartion";
 import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
-import Schema from "../model/Schema";
-import { XansqlModelHooks } from "../model/types";
+import { XqlSchemaShape } from "../xt/types";
 
 class Xansql {
    private ModelFactory: ModelFactory;
@@ -41,35 +40,31 @@ class Xansql {
    clone(config?: Partial<XansqlConfigType>) {
       const self = new XansqlClone({ ...this.config, ...(config || {}) });
       for (let [table, model] of this.models) {
-         const schema = new Schema(table, model.schema)
-         for (let hook in model.hooks) {
-            schema.addHook(hook as any, model.hooks[hook as keyof XansqlModelHooks] as any)
-         }
-         self.model(schema);
+         self.model(table, model.schema);
       }
       return self;
    }
 
-   model(schema: Schema): Model {
-      const model = new Model(this, schema);
-      if (this.ModelFactory.models.has(schema.table)) {
+   model<T extends string, S extends XqlSchemaShape>(table: T, schema: S): Model<this, T, S> {
+      const model = new Model(this, table, schema);
+      if (this.ModelFactory.models.has(table)) {
          throw new XansqlError({
-            message: `Model for table ${schema.table} already exists.`,
-            model: schema.table,
+            message: `Model for table ${table} already exists.`,
+            model: table,
          });
       }
       this.ModelFactory.set(model);
       return model
    }
 
-   getModel(table: string): Model {
+   getModel<T extends string>(table: T) {
       if (!this.models.has(table)) {
          throw new XansqlError({
             message: `Model for table ${table} does not exist.`,
             model: table,
          });
       }
-      return this.models.get(table) as Model;
+      return this.models.get(table) as Model<this, T, XqlSchemaShape>
    }
 
    async execute(sql: string): Promise<ExecuterResult> {

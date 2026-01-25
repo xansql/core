@@ -2,8 +2,8 @@ import { XVType, XVRecord } from "xanv"
 
 class XqlRecord<K extends XVType<any>, V extends XVType<any>> extends XVRecord<K, V> {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

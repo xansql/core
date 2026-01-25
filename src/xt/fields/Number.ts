@@ -2,8 +2,8 @@ import { XVNumber } from "xanv"
 
 class XqlNumber extends XVNumber {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

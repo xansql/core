@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-// import { db, ProductModel, UserModel } from './example/DBClient'
+import { db, ProductModel, UserModel } from './example/DBClient'
 
 
 const Button = ({ label, onClick }: any) => {
@@ -26,52 +26,52 @@ const App = () => {
       }} />
       <div style={{ marginTop: "50px" }}>
         <Button label="Find" onClick={async () => {
-          // const result = await UserModel.findOne({
-          //   // aggregate: {
-          //   //   products: {
-          //   //     price: {
-          //   //       sum: {
-          //   //         alias: "total_price"
-          //   //       },
-          //   //       avg: {
-          //   //         alias: "avg_price",
-          //   //         round: 2
-          //   //       },
-          //   //     }
-          //   //   },
-          //   //   metas: {
-          //   //     meta_value: {
-          //   //       count: true
-          //   //     }
-          //   //   }
-          //   // },
-          //   where: {
-          //     uid: 4,
-          //     // name: "John Doe"
-          //   },
-          //   select: {
-          //     name: true,
-          //     photo: true,
-          //     password: true,
-          //     metas: true
-          //     // products: {
-          //     //   aggregate: {
-          //     //     categories: {
-          //     //       pcid: {
-          //     //         count: true,
-          //     //       },
-          //     //       name: {
-          //     //         count: true,
-          //     //       }
-          //     //     }
-          //     //   },
-          //     //   select: {
-          //     //     categories: true
-          //     //   }
-          //     // }
-          //   }
-          // })
-          // console.log(result);
+          const result = await UserModel.findOne({
+            // aggregate: {
+            //   products: {
+            //     price: {
+            //       sum: {
+            //         alias: "total_price"
+            //       },
+            //       avg: {
+            //         alias: "avg_price",
+            //         round: 2
+            //       },
+            //     }
+            //   },
+            //   metas: {
+            //     meta_value: {
+            //       count: true
+            //     }
+            //   }
+            // },
+            where: {
+              uid: 4,
+              // name: "John Doe"
+            },
+            select: {
+              name: true,
+              photo: true,
+              password: true,
+              metas: true,
+              products: {
+                aggregate: {
+                  categories: {
+                    pcid: {
+                      count: true,
+                    },
+                    name: {
+                      count: true,
+                    }
+                  }
+                },
+                select: {
+                  categories: true
+                }
+              }
+            }
+          })
+          console.log(result);
 
         }} />
         <Button label="Create" onClick={async () => {

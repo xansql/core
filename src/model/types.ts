@@ -1,4 +1,5 @@
 import { ExecuterResult, ResultData, RowObject } from "../core/types";
+import { InferSchema, XqlSchemaShape } from "../xt/types";
 
 export interface WhereSubCondition {
    equals?: string | number | boolean;
@@ -151,4 +152,14 @@ export type XansqlModelHooks = {
    beforeAggregate?: (args: AggregateArgsType) => Promise<AggregateArgsType | void>
    afterAggregate?: (result: ResultData, args: AggregateArgsType) => Promise<ResultData | void>
    transform?: (row: RowObject) => Promise<RowObject | void>
+}
+
+
+
+
+// NEW
+
+export type CreateArgs<T extends XqlSchemaShape> = {
+   data: InferSchema<T> | InferSchema<T>[];
+   select?: SelectArgsType;
 }

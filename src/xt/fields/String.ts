@@ -2,8 +2,8 @@ import { XVString } from "xanv"
 
 class XqlString extends XVString {
    optional() {
-      super.optional()
-      return super.nullable();
+      super.nullable()
+      return super.optional()
    }
    nullable() {
       super.optional()

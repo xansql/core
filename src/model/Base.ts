@@ -1,5 +1,6 @@
 import { EventHandler, EventPayloads } from "../core/classes/EventManager";
 import Foreign from "../core/classes/ForeignInfo";
+import { XqlSchemaShape } from "../core/types";
 import Xansql from "../core/Xansql";
 import XansqlError from "../core/XansqlError";
 import { iof } from "../utils";
@@ -13,23 +14,23 @@ type Relation = {
    column: string,
 }
 
-abstract class ModelBase {
-   readonly schema: XansqlSchemaObject;
-   readonly table: string;
+abstract class ModelBase<Xql extends Xansql, T extends string, S extends XqlSchemaShape> {
+   readonly schema: S;
+   readonly table: T;
+   readonly xansql: Xql;
    readonly IDColumn: string = '';
    readonly columns: string[] = [];
    readonly relations: Relation[] = [];
    readonly hooks: XansqlModelHooks = {};
-   readonly xansql: Xansql;
 
-   constructor(xansql: Xansql, schema: Schema) {
+   constructor(xansql: Xql, table: T, schema: S) {
       this.xansql = xansql;
-      this.table = schema.table;
-      this.schema = schema.schema;
-      this.hooks = schema.hooks;
+      this.table = table;
+      this.schema = schema;
+      // this.hooks = schema.hooks;
 
-      for (let column in schema.schema) {
-         const field = schema.schema[column];
+      for (let column in schema) {
+         const field = schema[column];
          if (iof(field, XqlIDField)) {
             if (this.IDColumn) {
                throw new XansqlError({

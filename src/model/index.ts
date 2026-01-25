@@ -1,6 +1,7 @@
 import Xansql from "../core/Xansql";
 import XansqlError from "../core/XansqlError";
 import { iof } from "../utils";
+import { XqlSchemaShape } from "../xt/types";
 import RelationExecuteArgs from "./Args/RelationExcuteArgs";
 import ModelBase from "./Base";
 import AggregateExecuter from "./Executer/Aggregate";
@@ -9,18 +10,17 @@ import DeleteExecuter from "./Executer/Delete";
 import FindExecuter from "./Executer/Find";
 import UpdateExecuter from "./Executer/Update";
 import Migrations from "./Migrations";
-import Schema from "./Schema";
-import { AggregateArgsType, CreateArgsType, DeleteArgsType, FindArgsType, UpdateArgsType, WhereArgsType } from "./types";
+import { AggregateArgsType, CreateArgs, DeleteArgsType, FindArgsType, UpdateArgsType, WhereArgsType } from "./types";
 
-class Model extends ModelBase {
+class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> extends ModelBase<Xql, T, S> {
    readonly migrations: Migrations
 
-   constructor(xansql: Xansql, schema: Schema) {
-      super(xansql, schema);
+   constructor(xansql: Xql, table: T, schema: S) {
+      super(xansql, table, schema);
       this.migrations = new Migrations(this);
    }
 
-   async create(args: CreateArgsType): Promise<any[]> {
+   async create(args: CreateArgs<S>): Promise<any[]> {
       const xansql = this.xansql;
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
