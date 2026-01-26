@@ -1,6 +1,6 @@
 {
    "name": "@xansql/core",
-   "version": "1.1.8",
+   "version": "1.1.9",
    "main": "./index.cjs",
    "module": "./index.js",
    "types": "./index.d.ts",
@@ -22,7 +22,6 @@
       "release": "makepack release"
    },
    "dependencies": {
-      "@xansql/bridge": "^1.0.7",
       "xanv": "^1.1.19"
    },
    "devDependencies": {
@@ -30,6 +29,7 @@
       "@types/express": "^5.0.5",
       "@types/react": "^19.0.2",
       "@types/react-dom": "^19.0.2",
+      "@xansql/bridge": "^1.0.7",
       "@xansql/core": "^1.1.8",
       "@xansql/mysql-dialect": "^1.0.1",
       "@xansql/sqlite-dialect": "^1.0.0",

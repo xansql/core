@@ -1,4 +1,3 @@
-import { XqlFields } from "@xansql/core";
 import { XVTuple, XVType } from "xanv"
 
 class XqlTuple<T extends XVType<any>[] = any> extends XVTuple<T> {

@@ -53,7 +53,7 @@ class Xansql {
             model: table,
          });
       }
-      this.ModelFactory.set(model);
+      this.ModelFactory.set(model as any);
       return model
    }
 

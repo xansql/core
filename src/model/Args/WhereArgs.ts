@@ -32,6 +32,7 @@ class WhereArgs {
       if (Array.isArray(where)) {
          let _ors = []
          for (let w of where) {
+            if (!Object.keys(w).length) continue
             const whereArgs = new WhereArgs(model, w, meta)
             if (whereArgs.sql) {
                if (whereArgs.wheres.length > 1) {
@@ -53,8 +54,9 @@ class WhereArgs {
                const value = where[column]
                if (Array.isArray(value)) {
                   let _subs = []
-                  for (let v of value) {
-                     const whereArgs = new WhereArgs(model, v as any, meta)
+                  for (let w of value) {
+                     if (!Object.keys(w as any).length) continue
+                     const whereArgs = new WhereArgs(model, w as any, meta)
                      if (whereArgs.sql) {
                         if (whereArgs.wheres.length > 1) {
                            _subs.push(`(${whereArgs.wheres.join(" AND ")})`)
@@ -133,9 +135,13 @@ class WhereArgs {
                let v = ''
                if (Array.isArray(value)) {
                   const sub = value.map((_v: any) => {
-                     return isObject(_v)
-                        ? this.condition(column, _v)
-                        : `${model.table}.${column} = ${ValueFormatter.toSql(model, column, _v)}`
+                     if (isObject(_v)) {
+                        return this.condition(column, Object.keys(_v).length ? _v : {
+                           isNotNull: true
+                        })
+                     } else {
+                        return `${model.table}.${column} = ${ValueFormatter.toSql(model, column, _v, false)}`
+                     }
                   })
                   if (sub.length > 1) {
                      v = `(${sub.join(" OR ")})`
@@ -143,9 +149,11 @@ class WhereArgs {
                      v = sub.join(" OR ")
                   }
                } else if (isObject(value)) {
-                  v = this.condition(column, value)
+                  v = this.condition(column, Object.keys(value).length ? value : {
+                     isNotNull: true
+                  })
                } else {
-                  v = `${model.table}.${column} = ${ValueFormatter.toSql(model, column, value)}`
+                  v = `${model.table}.${column} = ${ValueFormatter.toSql(model, column, value, false)}`
                }
                wheres.push(v)
             }
@@ -170,7 +178,7 @@ class WhereArgs {
          let val: string = value;
          if (Array.isArray(val)) {
             if (['in', 'notIn'].includes(subKey)) {
-               val = val.map((item) => ValueFormatter.toSql(model, column, item)).join(", ");
+               val = val.map((item) => ValueFormatter.toSql(model, column, item, false)).join(", ");
             } else if (['between', 'notBetween'].includes(subKey)) {
                if (val.length !== 2) {
                   throw new XansqlError({
@@ -179,7 +187,7 @@ class WhereArgs {
                      column
                   });
                }
-               val = val.map((item) => ValueFormatter.toSql(model, column, item)).join(" AND ");
+               val = val.map((item) => ValueFormatter.toSql(model, column, item, false)).join(" AND ");
             } else {
                throw new XansqlError({
                   message: `Array value is not supported for operator ${subKey} on column ${column} in table ${model.table}.`,
@@ -190,7 +198,7 @@ class WhereArgs {
          } else if (typeof val === 'boolean') {
             val = val ? "1" : "0";
          } else {
-            val = ValueFormatter.toSql(model, column, val);
+            val = ValueFormatter.toSql(model, column, val, false);
          }
 
          let col = model.table + "." + column;

@@ -29,10 +29,10 @@ class DeleteExecuter {
          select: {
             [model.IDColumn]: true,
             ...(args.select || {})
-         }
-      })
+         } as any
+      }) as any
 
-      if (results.length === 0) {
+      if (results?.length === 0) {
          return []
       }
 

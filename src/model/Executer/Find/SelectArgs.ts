@@ -1,5 +1,5 @@
 import Model from "../..";
-import { FindArgsAggregate, FindArgsType, SelectArgsType } from "../../types";
+import { FindArgs, FindArgsAggregate, FindArgsType, SelectArgs } from "../../types";
 import DistinctArgs from "./DistinctArgs";
 import LimitArgs from "./LimitArgs";
 import OrderByArgs from "./OrderByArgs";
@@ -14,7 +14,8 @@ import Foreign, { ForeignInfoType } from "../../../core/classes/ForeignInfo";
 import XqlFile from "../../../xt/fields/File";
 import XansqlError from "../../../core/XansqlError";
 import { iof } from "../../../utils";
-import { ModelType } from "../../../core/types";
+import Xansql from "../../../core/Xansql";
+import { XqlSchemaShape } from "../../../xt/types";
 
 export type SelectArgsRelationInfo = {
    args: {
@@ -25,7 +26,7 @@ export type SelectArgsRelationInfo = {
          relations?: SelectArgsRelations,
       },
       where: string,
-      limit: Required<LimitArgs>,
+      limit: Required<LimitArgs<any>>,
       orderBy: string
       aggregate: FindArgsAggregate,
    },
@@ -36,8 +37,8 @@ type SelectArgsRelations = {
    [column: string]: SelectArgsRelationInfo
 }
 
-class SelectArgs {
-   private model: ModelType
+class Select<M extends Model<Xansql, string, XqlSchemaShape>, A extends SelectArgs<any>> {
+   private model: M
 
    /**
     * Get Columns
@@ -72,13 +73,13 @@ class SelectArgs {
    readonly sql: string = ''
 
 
-   constructor(model: ModelType, args: SelectArgsType) {
+   constructor(model: M, args: A) {
       this.model = model
 
       if (!args || Object.keys(args).length === 0) {
          for (let column in model.schema) {
             if (!Foreign.is(model.schema[column])) {
-               args[column] = true
+               (args as any)[column] = true as any
             }
          }
       }
@@ -93,7 +94,7 @@ class SelectArgs {
          }
 
          const field = model.schema[column]
-         let value: boolean | FindArgsType = args[column]
+         let value: boolean | FindArgs<any> = args[column] as any
 
          if (Foreign.is(field)) {
 
@@ -109,11 +110,11 @@ class SelectArgs {
 
             // ====== Prepare select args for relation ======
             let fargs: any = {}
-            const Select = new SelectArgs(FModel, relArgs.select || {})
+            const _select = new Select(FModel, relArgs.select || {} as any)
 
             // ====== Prevent circular reference ======
-            for (let rcol in Select.relations) {
-               if (Select.relations[rcol].foreign.table === model.table) {
+            for (let rcol in _select.relations) {
+               if (_select.relations[rcol].foreign.table === model.table) {
                   throw new XansqlError({
                      message: `Circular reference detected in relation ${column} of model ${model.table}`,
                      model: model.table,
@@ -124,19 +125,19 @@ class SelectArgs {
 
             // ====== Make sure main column of relation is selected ======
 
-            let columns = Select.columns
+            let columns = _select.columns
             if (!columns.includes(foreign.relation.main)) {
                columns.unshift(foreign.relation.main)
             }
-            let sql = Select.sql
+            let sql = _select.sql
             let relcol = `${foreign.table}.${foreign.relation.main}`
             sql = sql.includes(relcol) ? sql : `${sql}, ${relcol}`
 
             fargs.select = {
                sql,
                columns,
-               formatable_columns: Select.formatable_columns,
-               relations: Select.relations,
+               formatable_columns: _select.formatable_columns,
+               relations: _select.relations,
             }
 
             // ==== Where =====
@@ -185,4 +186,4 @@ class SelectArgs {
    }
 }
 
-export default SelectArgs
+export default Select

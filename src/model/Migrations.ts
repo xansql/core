@@ -1,5 +1,6 @@
 import Model from ".";
 import Foreign from "../core/classes/ForeignInfo";
+import Xansql from "../core/Xansql";
 import XansqlError from "../core/XansqlError";
 import { escapeSqlValue, iof, quote } from "../utils";
 import XqlArray from "../xt/fields/Array";
@@ -15,12 +16,13 @@ import XqlSchema from "../xt/fields/Schema";
 import XqlString from "../xt/fields/String";
 import XqlTuple from "../xt/fields/Tuple";
 import XqlUnion from "../xt/fields/Union";
+import { XqlSchemaShape } from "../xt/types";
 import ValueFormatter from "./include/ValueFormatter";
 
-class Migrations {
-   model: Model;
+class Migrations<M extends Model<Xansql, string, XqlSchemaShape>> {
+   model: M;
    TableMigration: any;
-   constructor(model: Model) {
+   constructor(model: M) {
       this.model = model;
    }
 

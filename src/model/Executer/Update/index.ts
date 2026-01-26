@@ -40,7 +40,7 @@ class UpdateExecuter {
                acc[col] = true
                return acc
             }, {} as any)
-         })
+         }) as any
       }
 
       try {
@@ -92,7 +92,7 @@ class UpdateExecuter {
       })
 
 
-      if (!updated_rows.length) {
+      if (!updated_rows?.length) {
          return []
       }
 
@@ -202,7 +202,7 @@ class UpdateExecuter {
                limit: "all",
                select: args.select || {
                   [model.IDColumn]: true
-               },
+               } as any,
                aggregate: args.aggregate || {},
                distinct: args.select ? undefined : [model.IDColumn],
                orderBy: args.orderBy || {}

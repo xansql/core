@@ -1,33 +1,37 @@
 import Model from "../..";
 import Foreign, { ForeignInfoType } from "../../../core/classes/ForeignInfo";
 import { ModelType, RowObject } from "../../../core/types";
+import Xansql from "../../../core/Xansql";
 import XansqlError from "../../../core/XansqlError";
 import { chunkArray, chunkNumbers } from "../../../utils/chunker";
+import { XqlSchemaShape } from "../../../xt/types";
 import WhereArgs from "../../Args/WhereArgs";
-import { FindArgsAggregate, FindArgsType } from "../../types";
+import { FindArgs, FindArgsAggregate } from "../../types";
 import AggregateExecuter from "../Aggregate";
 import DistinctArgs from "./DistinctArgs";
 import LimitArgs from "./LimitArgs";
 import OrderByArgs from "./OrderByArgs";
 import SelectArgs, { SelectArgsRelationInfo } from "./SelectArgs";
 
-class FindExecuter {
-   model: ModelType
+class FindExecuter<M extends Model<Xansql, string, XqlSchemaShape>> {
+   model: M
    transformer: ((row: RowObject) => Promise<RowObject>) | null = null
-   constructor(model: ModelType, transformer: ((row: RowObject) => Promise<RowObject>) | null = null) {
+   constructor(model: M, transformer: ((row: RowObject) => Promise<RowObject>) | null = null) {
       this.model = model
       this.transformer = transformer
    }
 
-   async execute(args: FindArgsType) {
+   async execute<A extends FindArgs<any>>(args: A) {
       const model = this.model
       const Select = new SelectArgs(model, args.select || {})
       const Where = new WhereArgs(model, args.where || {})
       const Limit = new LimitArgs(model, args.limit || {})
-      const OrderBy = new OrderByArgs(model, args.orderBy || {})
-      const Distinct = new DistinctArgs(model, args.distinct || [], Where, args.orderBy)
+      const OrderBy = new OrderByArgs(model, args.orderBy || {} as any)
+      const Distinct = new DistinctArgs(model, args.distinct || [] as any, Where, args.orderBy as any)
 
       let where_sql = Where.sql
+      console.log(where_sql);
+
       if (Distinct.sql) {
          where_sql = where_sql ? `${where_sql} AND ${Distinct.sql}` : `WHERE ${Distinct.sql}`
       }

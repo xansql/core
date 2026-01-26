@@ -1,4 +1,3 @@
-import Model from "..";
 import { ModelType } from "../../core/types";
 import XansqlError from "../../core/XansqlError";
 import { iof } from "../../utils";
@@ -38,53 +37,57 @@ class ValueFormatter {
       return s
    }
 
-   static toSql(model: ModelType, column: string, value: any) {
+   static toSql(model: ModelType, column: string, value: any, _throw = true) {
       const field = model.schema[column];
       if (!field) throw new XansqlError({
          message: `Column ${column} does not exist in model ${model.table}`,
          model: model.table,
          column: column
       });
+
       try {
          value = field.parse(value);
-         if (value === undefined || value === null) {
-            return 'NULL';
-         } else if (iof(field, XqlIDField, XqlNumber, XqlSchema)) {
-            return value
-         } else if (iof(field, XqlFile)) {
-            return `'${value.name}'`;
-         } else if (iof(field, XqlString, XqlEnum)) {
-            return `'${this.escape(value)}'`;
-         } else if (iof(field, XqlObject, XqlRecord, XqlArray, XqlTuple, XqlUnion)) {
-            value = JSON.stringify(value);
-            return `'${this.escape(value)}'`;
-         } else if (iof(field, XqlDate)) {
-            if (iof(value, String)) {
-               value = new Date(value as any)
-            }
-            if (!iof(value, Date) || isNaN(value.getTime())) {
-               throw new Error(`Invalid date value for column ${column}: ${value}`);
-            }
-
-            const pad = (n: number) => n.toString().padStart(2, '0');
-            let date = value as Date;
-            const year = date.getUTCFullYear();
-            const month = pad(date.getUTCMonth() + 1); // months are 0-indexed
-            const day = pad(date.getUTCDate());
-            const hours = pad(date.getUTCHours());
-            const minutes = pad(date.getUTCMinutes());
-            const seconds = pad(date.getUTCSeconds());
-            value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-            return `'${value}'`;
-         } else if (iof(model, column, XqlBoolean)) {
-            return value ? 1 : 0;
-         }
       } catch (error: any) {
-         throw new XansqlError({
-            message: `${model.table}.${column}: ${error.message.toLowerCase()}`,
-            model: model.table,
-            column: column
-         });
+         if (_throw) {
+            throw new XansqlError({
+               message: `${model.table}.${column}: ${error.message.toLowerCase()}`,
+               model: model.table,
+               column: column
+            });
+         }
+      }
+
+      if (value === undefined || value === null) {
+         return 'NULL';
+      } else if (iof(field, XqlIDField, XqlNumber, XqlSchema)) {
+         return value
+      } else if (iof(field, XqlFile)) {
+         return `'${value.name}'`;
+      } else if (iof(field, XqlString, XqlEnum)) {
+         return `'${this.escape(value)}'`;
+      } else if (iof(field, XqlObject, XqlRecord, XqlArray, XqlTuple, XqlUnion)) {
+         value = JSON.stringify(value);
+         return `'${this.escape(value)}'`;
+      } else if (iof(field, XqlDate)) {
+         if (iof(value, String)) {
+            value = new Date(value as any)
+         }
+         if (!iof(value, Date) || isNaN(value.getTime())) {
+            throw new Error(`Invalid date value for column ${column}: ${value}`);
+         }
+
+         const pad = (n: number) => n.toString().padStart(2, '0');
+         let date = value as Date;
+         const year = date.getUTCFullYear();
+         const month = pad(date.getUTCMonth() + 1); // months are 0-indexed
+         const day = pad(date.getUTCDate());
+         const hours = pad(date.getUTCHours());
+         const minutes = pad(date.getUTCMinutes());
+         const seconds = pad(date.getUTCSeconds());
+         value = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+         return `'${value}'`;
+      } else if (iof(model, column, XqlBoolean)) {
+         return value ? 1 : 0;
       }
    }
 

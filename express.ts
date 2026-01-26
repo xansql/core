@@ -64,9 +64,7 @@ const server = async (app: Express) => {
       let select;
       select = new SelectArgs(UserModel, {
          name: true,
-         products: {
 
-         }
       })
 
       // select = new SelectArgs(ProductModel, {
@@ -130,29 +128,83 @@ const server = async (app: Express) => {
             }
          },
          limit: {
-            // take: 1000,
+            take: 1000,
          },
-         where: {
+         orderBy: {
+            email: "asc"
          },
-         select: {
-            name: true,
-            photo: true,
-            products: {
-               aggregate: {
-                  categories: {
-                     pcid: {
-                        count: true,
-                     },
-                     name: {
-                        count: true,
+         // distinct: ["email"],
+         where: [
+            {
+               // name: {
+               //    contains: "john"
+               // },
+               OR: [
+                  {
+                     email: {
+                        contains: "@gmail"
+                     }
+                  },
+                  {
+                     email: {
+                        startsWith: "@gmail"
                      }
                   }
-               },
-               select: {
-                  categories: true
-               }
+               ]
             }
-         }
+         ],
+         // select: {
+         //    name: true
+         // }
+         // where: {
+         //    products: {
+         //       name: [{
+         //          contains: ""
+         //       }]
+         //    },
+         //    product: {
+         //       name: "",
+         //       AND: [
+         //          {
+         //             name: {
+         //                contains: ""
+         //             }
+         //          }
+         //       ]
+         //    },
+         //    uid: {
+         //       between: [1, 3]
+         //    },
+         //    name: {
+         //       contains: ""
+         //    },
+         //    email: [{
+         //       contains: "1"
+         //    }]
+         // },
+         // select: {
+         //    name: true,
+         //    photo: true,
+         //    product: true,
+         //    metas: {
+         //       select: {}
+         //    },
+         //    products: {
+         //       aggregate: {
+         //          categories: {
+         //             pcid: {
+         //                count: true,
+         //             },
+         //             name: {
+         //                count: true,
+         //             }
+         //          }
+         //       },
+         //       select: {
+         //          categories: true
+         //       }
+         //    }
+         // }
       })
 
       // const result = await ProductModel.find({
@@ -178,7 +230,7 @@ const server = async (app: Express) => {
       // })
 
       const end = Date.now()
-      console.log(`Find ${result.length} users in ${end - start}ms`)
+      console.log(`Find ${result?.length} users in ${end - start}ms`)
       res.json(result)
    });
 
@@ -188,10 +240,12 @@ const server = async (app: Express) => {
          orderBy: {
             name: "asc",
          },
-         // groupBy: ["user", "price"],
+         groupBy: ["categories"],
          where: {
             user: {
-               in: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+               id: {
+                  in: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+               }
             }
          },
          select: {
@@ -409,40 +463,35 @@ const server = async (app: Express) => {
             email: `john${Math.floor(Math.random() * 10000)}@doe.com`,
             // photo: file,
             products: {
-               // upsert: {
-               //    where: {
-               //       pid: 30
-               //    },
-               //    update: {
-               //       name: `New Post ${Math.floor(Math.random() * 10000)}`,
-               //       description: "This is a new post",
-               //       price: "9999",
-               //    },
-               //    create: {
-               //       name: `Updated Post ${Math.floor(Math.random() * 10000)}`,
-               //       description: "This is an updated post",
-               //       price: "8888",
-               //    }
-               // },
+               upsert: {
+                  where: {
+                     pid: 30
+                  },
+                  update: {
+                     name: `New Post ${Math.floor(Math.random() * 10000)}`,
+                     description: "This is a new post",
+                     price: "9999",
+                  },
+                  create: {
+                     name: `Updated Post ${Math.floor(Math.random() * 10000)}`,
+                     description: "This is an updated post",
+                     price: "8888",
+                  }
+               },
 
-               // update: {
-               //    where: { pid: 31 },
-               //    data: {
-               //       name: `Updated Title ${Math.floor(Math.random() * 10000)}`,
-               //       description: "Updated Content",
-               //    }
-               // },
-               // delete: {
-               //    where: {
-               //       pid: 32
-               //    }
-               // },
-               // upsert: {
-               //    where: {
-               //       pid: 6
-               //    },
+               update: {
+                  where: { pid: 31 },
+                  data: {
+                     name: `Updated Title ${Math.floor(Math.random() * 10000)}`,
+                     description: "Updated Content",
+                  }
+               },
+               delete: {
+                  where: {
+                     pid: 32
+                  }
+               },
 
-               // },
                create: {
                   data: {
                      name: `New Post ${Math.floor(Math.random() * 10000)}`,

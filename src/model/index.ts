@@ -10,17 +10,17 @@ import DeleteExecuter from "./Executer/Delete";
 import FindExecuter from "./Executer/Find";
 import UpdateExecuter from "./Executer/Update";
 import Migrations from "./Migrations";
-import { AggregateArgsType, CreateArgs, DeleteArgsType, FindArgs, FindArgsType, UpdateArgsType, WhereArgsType } from "./types";
+import { AggregateArgs, AggregateResult, CreateArgs, DeleteArgs, FindArgs, ResultArgs, UpdateArgs, WhereArgs } from "./types";
 
 class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> extends ModelBase<Xql, T, S> {
-   readonly migrations: Migrations
+   readonly migrations: Migrations<any>
 
    constructor(xansql: Xql, table: T, schema: S) {
       super(xansql, table, schema);
-      this.migrations = new Migrations(this);
+      this.migrations = new Migrations(this as any);
    }
 
-   async create(args: CreateArgs<S>): Promise<any[]> {
+   async create<T extends CreateArgs<S>>(args: T): Promise<ResultArgs<S, T['select']>[] | null> {
       const xansql = this.xansql;
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
@@ -52,7 +52,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       }
    }
 
-   async update(args: UpdateArgsType): Promise<any[]> {
+   async update<T extends UpdateArgs<S>>(args: T): Promise<ResultArgs<S, T['select']>[] | null> {
       const xansql = this.xansql;
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
@@ -61,10 +61,10 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
          if (!isRelArgs) await xansql.XansqlTransaction.begin()
 
          args = await this.callHook("beforeUpdate", args) || args
-         const executer = new UpdateExecuter(this);
-         await xansql.EventManager.emit("BEFORE_UPDATE", { model: this, args });
-         let results: any = await executer.execute(args);
-         await xansql.EventManager.emit("UPDATE", { model: this, results, args });
+         const executer = new UpdateExecuter(this as any);
+         await xansql.EventManager.emit("BEFORE_UPDATE", { model: this, args } as any);
+         let results: any = await executer.execute(args as any);
+         await xansql.EventManager.emit("UPDATE", { model: this, results, args } as any);
          results = await this.callHook("afterUpdate", results, args) || results
 
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
@@ -83,7 +83,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       }
    }
 
-   async delete(args: DeleteArgsType): Promise<any[]> {
+   async delete<T extends DeleteArgs<S>>(args: T): Promise<ResultArgs<S, T['select']>[] | null> {
       const xansql = this.xansql;
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
@@ -92,10 +92,10 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
          if (!isRelArgs) await xansql.XansqlTransaction.begin()
 
          args = await this.callHook("beforeDelete", args) || args
-         const executer = new DeleteExecuter(this);
-         await xansql.EventManager.emit("BEFORE_DELETE", { model: this, args });
-         let results: any = await executer.execute(args);
-         await xansql.EventManager.emit("DELETE", { model: this, results, args });
+         const executer = new DeleteExecuter(this as any);
+         await xansql.EventManager.emit("BEFORE_DELETE", { model: this, args } as any);
+         let results: any = await executer.execute(args as any);
+         await xansql.EventManager.emit("DELETE", { model: this, results, args } as any);
          results = await this.callHook("afterDelete", results, args) || results
 
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
@@ -106,22 +106,22 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       }
    }
 
-   async find(args: FindArgs<S>): Promise<any[]> {
+   async find<T extends FindArgs<S>>(args: T): Promise<ResultArgs<S, T['select']>[] | null> {
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
 
       args = await this.callHook("beforeFind", args) || args
-      const executer = new FindExecuter(this, async (row: any) => {
+      const executer = new FindExecuter(this as any, async (row: any) => {
          return await this.callHook('transform', row) || row
       });
-      await this.xansql.EventManager.emit("BEFORE_FIND", { model: this, args });
-      let results = await executer.execute(args);
-      await this.xansql.EventManager.emit("FIND", { model: this, results: results, args });
+      await this.xansql.EventManager.emit("BEFORE_FIND", { model: this, args } as any);
+      let results = await executer.execute(args as any);
+      await this.xansql.EventManager.emit("FIND", { model: this, results: results, args } as any);
       results = await this.callHook("afterFind", results, args) || results
-      return results
+      return results || null
    }
 
-   async findOne(args: FindArgsType): Promise<any | null> {
+   async findOne<T extends FindArgs<S>>(args: T): Promise<ResultArgs<S, T['select']> | null> {
       const results = await this.find({
          ...args,
          limit: {
@@ -129,10 +129,10 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             skip: 0
          }
       })
-      return results.length ? results[0] : null
+      return results?.length ? results[0] : null
    }
 
-   async findByID(id: number | string): Promise<any | null> {
+   async findByID(id: number): Promise<ResultArgs<S, {}> | null> {
       const results = await this.find({
          where: {
             [this.IDColumn]: id
@@ -141,27 +141,27 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             take: 1,
             skip: 0
          }
-      })
-      return results.length ? results[0] : null
+      } as any)
+      return results?.length ? results[0] : null
    }
 
    // Helpers Methods
 
-   async aggregate(args: AggregateArgsType): Promise<any[]> {
+   async aggregate<T extends AggregateArgs<S>>(args: T): Promise<AggregateResult<T['select']>[]> {
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
       args = await this.callHook("beforeAggregate", args) || args
-      const executer = new AggregateExecuter(this);
-      await this.xansql.EventManager.emit("BEFORE_AGGREGATE", { model: this, args });
-      let results = await executer.execute(args);
-      await this.xansql.EventManager.emit("AGGREGATE", { model: this, results, args });
+      const executer = new AggregateExecuter(this as any);
+      await this.xansql.EventManager.emit("BEFORE_AGGREGATE", { model: this, args } as any);
+      let results = await executer.execute(args as any);
+      await this.xansql.EventManager.emit("AGGREGATE", { model: this, results, args } as any);
 
       results = await this.callHook("afterAggregate", results, args) || results
       return results
    }
 
 
-   async paginate(page: number, args?: Omit<FindArgsType, "limit"> & { perpage?: number }) {
+   async paginate(page: number, args?: Omit<FindArgs<S>, "limit"> & { perpage?: number }) {
       const perpage = args?.perpage || 20;
       const skip = (page - 1) * perpage;
       const results = await this.find({
@@ -171,7 +171,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             skip
          }
       })
-      const total = await this.count(args?.where || {})
+      const total = await this.count(args?.where || {} as WhereArgs<S>)
       return {
          page,
          perpage,
@@ -181,19 +181,19 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       }
    }
 
-   async count(where: WhereArgsType): Promise<number> {
+   async count(where: WhereArgs<S>): Promise<number> {
       const res: any[] = await this.aggregate({
          where,
          select: {
             [this.IDColumn]: {
                count: true
             }
-         }
+         } as any
       })
       return res.length ? res[0][`count_${this.IDColumn}`] : 0
    }
 
-   async min(column: string, where: WhereArgsType): Promise<number> {
+   async min(column: string, where: WhereArgs<S>): Promise<number> {
       if (!(column in this.schema)) {
          throw new XansqlError({
             message: `Column "${column}" does not exist in table "${this.table}"`,
@@ -206,12 +206,12 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             [column]: {
                min: true
             }
-         }
+         } as any
       })
       return res.length ? res[0][`min_${column}`] : 0
    }
 
-   async max(column: string, where: WhereArgsType): Promise<number> {
+   async max(column: string, where: WhereArgs<S>): Promise<number> {
       if (!(column in this.schema)) {
          throw new XansqlError({
             message: `Column "${column}" does not exist in table "${this.table}"`,
@@ -224,12 +224,12 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             [column]: {
                max: true
             }
-         }
+         } as any
       })
       return res.length ? res[0][`max_${column}`] : 0
    }
 
-   async sum(column: string, where: WhereArgsType): Promise<number> {
+   async sum(column: string, where: WhereArgs<S>): Promise<number> {
       if (!(column in this.schema)) {
          throw new XansqlError({
             message: `Column "${column}" does not exist in table "${this.table}"`,
@@ -242,12 +242,12 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             [column]: {
                sum: true
             }
-         }
+         } as any
       })
       return res.length ? res[0][`sum_${column}`] : 0
    }
 
-   async avg(column: string, where: WhereArgsType): Promise<number> {
+   async avg(column: string, where: WhereArgs<S>): Promise<number> {
       if (!(column in this.schema)) {
          throw new XansqlError({
             message: `Column "${column}" does not exist in table "${this.table}"`,
@@ -260,12 +260,12 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             [column]: {
                avg: true
             }
-         }
+         } as any
       })
       return res.length ? res[0][`avg_${column}`] : 0
    }
 
-   async exists(where: WhereArgsType): Promise<boolean> {
+   async exists(where: WhereArgs<S>): Promise<boolean> {
       return !!(await this.count(where))
    }
 

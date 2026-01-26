@@ -1,4 +1,3 @@
-import Model from "../.."
 import { ModelType } from "../../../core/types"
 import XansqlError from "../../../core/XansqlError"
 import { OrderByArgsType } from "../../types"

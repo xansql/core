@@ -1,17 +1,18 @@
 import Model from "../.."
 import CreateDataArgs from "./CreateDataArgs"
-import { CreateArgsType } from "../../types"
+import { CreateArgs } from "../../types"
 import SelectArgs from "../Find/SelectArgs"
 import { chunkArray } from "../../../utils/chunker"
 import RelationExecuteArgs from "../../Args/RelationExcuteArgs"
-import { ModelType } from "../../../core/types"
+import Xansql from "../../../core/Xansql"
+import { XqlSchemaShape } from "../../../xt/types"
 
-class CreateExecuter<M extends ModelType> {
+class CreateExecuter<M extends Model<Xansql, string, XqlSchemaShape>> {
    model: M
    constructor(model: M) {
       this.model = model
    }
-   async execute(args: CreateArgsType) {
+   async execute<A extends CreateArgs<any>>(args: A) {
       const xansql = this.model.xansql
       const model = this.model
       const createArgs = new CreateDataArgs(model, args.data)
@@ -20,7 +21,7 @@ class CreateExecuter<M extends ModelType> {
       if (args.select) new SelectArgs(model, args.select || {})
 
       const insertIds = []
-      let results = []
+      let results: any = []
 
       for (let { chunk } of chunkArray(createArgs.values)) {
          for (let arg of chunk) {

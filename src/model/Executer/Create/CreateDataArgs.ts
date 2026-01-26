@@ -4,8 +4,10 @@ import XansqlError from "../../../core/XansqlError"
 import XqlDate from "../../../xt/fields/Date"
 import { iof, isArray, isNumber, isObject } from "../../../utils"
 import ValueFormatter from "../../include/ValueFormatter"
-import { DataArgsType } from "../../types"
+import { CreateArgs, DataArgsType } from "../../types"
 import { ModelType } from "../../../core/types"
+import Xansql from "../../../core/Xansql"
+import { XqlSchemaShape } from "../../../xt/types"
 
 
 type DataObject = { [column: string]: any }
@@ -25,7 +27,7 @@ type DataValue = {
    files: Files
 }
 
-class CreateDataArgs {
+class CreateDataArgs<M extends Model<Xansql, string, XqlSchemaShape>, D extends CreateArgs<any>['data']> {
 
    /**
    * Generate SQL for data
@@ -51,7 +53,7 @@ class CreateDataArgs {
    private errors: XansqlError[] = []
 
 
-   constructor(model: ModelType, data: DataArgsType | DataArgsType[]) {
+   constructor(model: M, data: D) {
 
       if (Array.isArray(data)) {
          for (let item of data) {
