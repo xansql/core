@@ -5,7 +5,7 @@ class XqlUnion<T extends XVType<any>[] = XVType<any>[]> extends XVUnion<T> {
       super(types as any)
    }
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

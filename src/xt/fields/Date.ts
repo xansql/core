@@ -2,7 +2,7 @@ import { XVDate, XVOptional } from "xanv"
 
 class XqlDate extends XVDate {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

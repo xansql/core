@@ -2,7 +2,7 @@ import { XVFile } from "xanv"
 
 class XqlFile extends XVFile {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

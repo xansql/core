@@ -1,4 +1,4 @@
-import { XVArray, XVNullable, XVOptional } from "xanv"
+import { XVArray } from "xanv"
 import { XqlField } from "../types";
 
 class XqlArray<T extends XqlField> extends XVArray<T> {
@@ -6,9 +6,10 @@ class XqlArray<T extends XqlField> extends XVArray<T> {
       super(type);
    }
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
+
    nullable() {
       super.optional()
       return super.nullable();

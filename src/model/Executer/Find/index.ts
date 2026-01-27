@@ -30,7 +30,6 @@ class FindExecuter<M extends Model<Xansql, string, XqlSchemaShape>> {
       const Distinct = new DistinctArgs(model, args.distinct || [] as any, Where, args.orderBy as any)
 
       let where_sql = Where.sql
-      console.log(where_sql);
 
       if (Distinct.sql) {
          where_sql = where_sql ? `${where_sql} AND ${Distinct.sql}` : `WHERE ${Distinct.sql}`

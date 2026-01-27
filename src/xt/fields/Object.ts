@@ -3,7 +3,7 @@ import { XVObjectShape } from "xanv/types/Object";
 
 class XqlObject<const T extends XVObjectShape> extends XVObject<T> {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

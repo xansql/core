@@ -41,7 +41,7 @@ class XqlSchema<T extends string, C extends string> extends XVType<T> {
    }
 
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

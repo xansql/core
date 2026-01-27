@@ -2,7 +2,7 @@ import { XVNumber } from "xanv"
 
 class XqlNumber extends XVNumber {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

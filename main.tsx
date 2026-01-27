@@ -79,32 +79,33 @@ const App = () => {
           // const file = new File([longText], 'hello.txt', { type: 'text/plain' });
 
           try {
-            // const result = await UserModel.create({
-            //   select: {
-            //     name: true,
-            //     email: true,
-            //     photo: true,
-            //     products: {
-            //       select: {
-            //         description: true,
-            //         name: true,
-            //         categories: {
-            //           select: {
-            //             name: true,
-            //           },
-            //         }
-            //       }
-            //     }
-            //   },
-            //   data: {
-            //     name: "Jane Doe",
-            //     // username: "jane.doe",
-            //     photo: file,
-            //     password: "asdasdasd",
-            //     email: `${Math.random()}@gmail.com`
-            //   }
-            // })
-            // console.log(result);
+            const result = await UserModel.create({
+              select: {
+                name: true,
+                email: true,
+                photo: true,
+                products: {
+                  select: {
+                    description: true,
+                    name: true,
+                    categories: {
+                      select: {
+                        name: true,
+                      },
+                    }
+                  }
+                }
+              },
+              data: {
+                name: "Jane Doe",
+                // username: "jane.doe",
+                photo: file,
+                password: "asdasdasd",
+                email: `11@gmail.com`,
+                // email: `${Math.random()}@gmail.com`,
+              }
+            })
+            console.log(result);
 
           } catch (error) {
             console.log(error);
@@ -112,28 +113,28 @@ const App = () => {
 
         }} />
         <Button label="Update" onClick={async () => {
-          // const result = await UserModel.update({
-          //   data: {
-          //     name: "hello",
-          //     photo: null
-          //   },
-          //   where: {
-          //     uid: 8
-          //   },
-          //   select: {
-          //     name: true,
-          //     photo: true
-          //   }
-          // })
-          // console.log(result);
+          const result = await UserModel.update({
+            data: {
+              name: "hello",
+              photo: null
+            },
+            where: {
+              uid: 8
+            },
+            select: {
+              name: true,
+              photo: true
+            }
+          })
+          console.log(result);
         }} />
         <Button label="Delete" onClick={async () => {
-          // const result = await UserModel.delete({
-          //   where: {
-          //     uid: 4
-          //   }
-          // })
-          // console.log(result);
+          const result = await UserModel.delete({
+            where: {
+              email: "11@gmail.com"
+            }
+          })
+          console.log(result);
         }} />
       </div>
     </div>

@@ -2,7 +2,7 @@ import { XVString } from "xanv"
 
 class XqlString extends XVString {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

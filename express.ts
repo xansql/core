@@ -112,11 +112,8 @@ const server = async (app: Express) => {
          aggregate: {
             products: {
                price: {
-                  sum: {
-                     alias: "total_price"
-                  },
+                  sum: true,
                   avg: {
-                     alias: "avg_price",
                      round: 2
                   },
                }
@@ -153,9 +150,10 @@ const server = async (app: Express) => {
                ]
             }
          ],
-         // select: {
-         //    name: true
-         // }
+         select: {
+            name: true,
+            photo: true
+         }
          // where: {
          //    products: {
          //       name: [{
@@ -434,9 +432,7 @@ const server = async (app: Express) => {
          aggregate: {
             products: {
                price: {
-                  sum: {
-                     alias: "total_price"
-                  },
+                  sum: true,
                }
             }
          },

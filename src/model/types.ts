@@ -1,9 +1,10 @@
-import { ExecuterResult, ResultData, RowObject } from "../core/types";
+import { ExecuterResult, ResultData, RowObject, XansqlFileMeta } from "../core/types";
 import { XqlField, XqlSchemaShape } from "../xt/types";
 import XqlIDField from "../xt/fields/IDField";
 import XqlSchema from "../xt/fields/Schema";
 import XqlArray from "../xt/fields/Array";
-import { Infer } from "xanv";
+import { InferValue, XVType } from "xanv";
+import XqlFile from "../xt/fields/File";
 
 export interface WhereSubCondition {
    equals?: string | number | boolean;
@@ -165,6 +166,22 @@ export type XansqlModelHooks = {
 
 
 type Simplify<T> = T extends object ? { [K in keyof T]: T[K] } : T
+
+export type IsOptional<T extends XVType<any>> =
+   T["meta"] extends { nullable: true } ? true :
+   T["meta"] extends { optional: true } ? true :
+   T["meta"] extends { default: any } ? true :
+   false
+
+export type InferObject<T extends Record<string, XVType<any>>> =
+   { [K in keyof T as IsOptional<T[K]> extends true ? never : K]: InferValue<T[K]> } &
+   { [K in keyof T as IsOptional<T[K]> extends true ? K : never]?: InferValue<T[K]> }
+
+export type Infer<T> =
+   T extends Record<string, XVType<any>> ? Simplify<InferObject<T>> :
+   T extends XVType<any> ? InferValue<T> : never
+
+
 export type IsIDField<T extends XqlField> = T extends XqlIDField ? true : false
 export type IsRelation<T extends XqlField> = T extends XqlSchema<any, any> ? true : T extends XqlArray<XqlSchema<any, any>> ? true : false;
 export type IsSchema<T extends XqlField> = T extends XqlSchema<any, any> ? true : false;
@@ -344,7 +361,7 @@ export type FindArgs<S extends XqlSchemaShape> = {
 // Result Args ============
 
 export type ResultArgsFields<S extends XqlSchemaShape, SA extends SelectArgs<any>> = {
-   [K in keyof S as K extends keyof SA ? (IsRelation<S[K]> extends true ? never : K) : never]: Infer<S[K]>
+   [K in keyof S as K extends keyof SA ? (IsRelation<S[K]> extends true ? never : K) : never]: S[K] extends XqlFile ? XansqlFileMeta : Infer<S[K]>
 }
 
 export type ResultArgsSchemaFields<S extends XqlSchemaShape, SA extends SelectArgs<any>> = {
@@ -365,7 +382,7 @@ export type ResultFullArsg<S extends XqlSchemaShape, SA extends SelectArgs<any>>
    Simplify<ResultArgsSchemaFields<S, SA>>
 
 
-type DefaultSelect<S extends XqlSchemaShape> = {
+type ResultDefaultSelect<S extends XqlSchemaShape> = {
    [K in keyof S as IsRelation<S[K]> extends true ? never : K]: true
 }
 
@@ -378,11 +395,9 @@ type IsEmptyObject<T> =
 
 export type ResultArgs<S extends XqlSchemaShape, SA extends SelectArgs<any> | unknown> =
    Simplify<ResultFullArsg<S,
-      IsEmptyObject<SA> extends true ? DefaultSelect<S> :
-      SA extends SelectArgs<any> ? SA :
-      SA extends unknown ? {
+      SA extends SelectArgs<any> ? SA & {
          [IDCol in keyof S as S[IDCol] extends XqlIDField ? IDCol : never]: true
-      } : SA
+      } : ResultDefaultSelect<S>
    >>
 
 

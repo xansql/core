@@ -23,11 +23,20 @@ class DeleteExecuter {
          })
       }
 
+      const file_columns_select: any = {}
+      for (let column in model.schema) {
+         const field = model.schema[column]
+         if (iof(field, XqlFile)) {
+            file_columns_select[column] = true
+         }
+      }
+
       const results = await model.find({
          where: args.where,
          limit: "all",
          select: {
             [model.IDColumn]: true,
+            ...file_columns_select,
             ...(args.select || {})
          } as any
       }) as any
@@ -38,7 +47,6 @@ class DeleteExecuter {
 
       for (let column in model.schema) {
          const field = model.schema[column]
-
          if (iof(field, XqlFile)) {
             for (let { chunk } of chunkArray(results)) {
                for (let row of chunk) {

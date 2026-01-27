@@ -2,7 +2,7 @@ import { XVTuple, XVType } from "xanv"
 
 class XqlTuple<T extends XVType<any>[] = any> extends XVTuple<T> {
    optional() {
-      super.nullable()
+      throw new Error("optional not supported");
       return super.optional()
    }
    nullable() {

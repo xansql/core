@@ -1,10 +1,9 @@
-import { Infer } from "xanv";
-import { InferSchema, xt } from "../src";
+import { xt } from "../src";
 
 export const ProductCategorySchema = {
    pcid: xt.id(),
    name: xt.string().index(),
-   description: xt.string().optional(),
+   description: xt.string().nullable(),
    post: xt.schema('products', "categories"),
 }
 
@@ -17,8 +16,8 @@ export const UserModelMetaSchema = {
 export const UserModelSchema = {
    uid: xt.id(),
    name: xt.string(),
-   username: xt.username().optional(),
-   photo: xt.photo().optional(),
+   username: xt.username().nullable(),
+   photo: xt.photo().nullable(),
    email: xt.email(),
    password: xt.password(),
    metas: xt.array(xt.schema("user_metas", "user")),
@@ -30,7 +29,7 @@ export const UserModelSchema = {
 
 export const ProductModelSchema = {
    pid: xt.id(),
-   name: xt.string().index().optional(),
+   name: xt.string().index().nullable(),
    description: xt.string(),
    price: xt.string(),
    disoucnt_price: xt.string().default(() => "100"),
