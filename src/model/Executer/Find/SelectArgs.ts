@@ -161,7 +161,6 @@ class Select<M extends Model<Xansql, string, XqlSchemaShape>, A extends SelectAr
             }
 
          } else {
-
             if (iof(field, XqlFile, XqlEnum, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlUnion)) {
                this.formatable_columns.push(column)
             }
@@ -173,7 +172,11 @@ class Select<M extends Model<Xansql, string, XqlSchemaShape>, A extends SelectAr
 
       if (!hasCol) {
          for (let column in model.schema) {
-            if (!Foreign.is(model.schema[column])) {
+            const field = model.schema[column]
+            if (!Foreign.is(field)) {
+               if (iof(field, XqlFile, XqlEnum, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlUnion)) {
+                  this.formatable_columns.push(column)
+               }
                this.columns.push(column)
             }
          }

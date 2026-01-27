@@ -22,7 +22,6 @@ export const UserModelSchema = {
    password: xt.password(),
    metas: xt.array(xt.schema("user_metas", "user")),
    products: xt.array(xt.schema("products", "user")),
-   product: xt.schema("products", "user_product"),
    created_at: xt.createdAt(),
    updated_at: xt.updatedAt(),
 }

@@ -109,21 +109,21 @@ const server = async (app: Express) => {
       const start = Date.now()
 
       const result = await UserModel.find({
-         aggregate: {
-            products: {
-               price: {
-                  sum: true,
-                  avg: {
-                     round: 2
-                  },
-               }
-            },
-            metas: {
-               meta_value: {
-                  count: true
-               }
-            }
-         },
+         // aggregate: {
+         //    products: {
+         //       price: {
+         //          sum: true,
+         //          avg: {
+         //             round: 2
+         //          },
+         //       }
+         //    },
+         //    metas: {
+         //       meta_value: {
+         //          count: true
+         //       }
+         //    }
+         // },
          limit: {
             take: 1000,
          },
@@ -151,9 +151,9 @@ const server = async (app: Express) => {
             }
          ],
          select: {
-            // name: true,
+            name: true,
             // photo: true,
-            product: true
+            // products: true
          }
          // where: {
          //    products: {
