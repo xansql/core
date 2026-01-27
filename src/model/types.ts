@@ -364,6 +364,10 @@ export type ResultArgsFields<S extends XqlSchemaShape, SA extends SelectArgs<any
    [K in keyof S as K extends keyof SA ? (IsRelation<S[K]> extends true ? never : K) : never]: S[K] extends XqlFile ? XansqlFileMeta : Infer<S[K]>
 }
 
+export type ResultRelationFields<S extends XqlSchemaShape, SA extends SelectArgs<any>> = {
+   [K in keyof S as K extends keyof SA ? (IsSchema<S[K]> extends true ? K : never) : never]: true
+}
+
 export type ResultArgsSchemaFields<S extends XqlSchemaShape, SA extends SelectArgs<any>> = {
    [K in keyof S as K extends keyof SA ? (IsSchema<S[K]> extends true ? K : never) : never]: {
       [column: string]: any
@@ -395,9 +399,11 @@ type IsEmptyObject<T> =
 
 export type ResultArgs<S extends XqlSchemaShape, SA extends SelectArgs<any> | unknown> =
    Simplify<ResultFullArsg<S,
-      SA extends SelectArgs<any> ? SA & {
-         [IDCol in keyof S as S[IDCol] extends XqlIDField ? IDCol : never]: true
-      } : ResultDefaultSelect<S>
+      SA extends SelectArgs<any> ? (
+         IsEmptyObject<Omit<SA, keyof ResultRelationFields<S, SA>>> extends true ? ResultDefaultSelect<S> : SA & {
+            [IDCol in keyof S as S[IDCol] extends XqlIDField ? IDCol : never]: true
+         }
+      ) : ResultDefaultSelect<S>
    >>
 
 

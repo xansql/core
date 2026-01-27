@@ -37,7 +37,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
 
          results = await this.callHook("afterCreate", results, args) || results
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
-         return results
+         return results?.length ? results : null
       } catch (error: any) {
          if (!isRelArgs) await xansql.XansqlTransaction.rollback()
          let errors: { [key: string]: string } = {}
@@ -68,7 +68,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
          results = await this.callHook("afterUpdate", results, args) || results
 
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
-         return results
+         return results?.length ? results : null
       } catch (error: any) {
          if (!isRelArgs) await xansql.XansqlTransaction.rollback()
          let errors: { [key: string]: string } = {}
@@ -99,7 +99,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
          results = await this.callHook("afterDelete", results, args) || results
 
          if (!isRelArgs) await xansql.XansqlTransaction.commit()
-         return results
+         return results?.length ? results : null
       } catch (error) {
          if (!isRelArgs) await xansql.XansqlTransaction.rollback()
          throw error
@@ -118,7 +118,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       let results = await executer.execute(args as any);
       await this.xansql.EventManager.emit("FIND", { model: this, results: results, args } as any);
       results = await this.callHook("afterFind", results, args) || results
-      return results || null
+      return results?.length ? results : null
    }
 
    async findOne<T extends FindArgs<S>>(args: T): Promise<ResultArgs<S, T['select']> | null> {
@@ -133,7 +133,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
    }
 
    async findByID(id: number): Promise<ResultArgs<S, {}> | null> {
-      const results = await this.find({
+      return await this.findOne({
          where: {
             [this.IDColumn]: id
          },
@@ -142,12 +142,11 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             skip: 0
          }
       } as any)
-      return results?.length ? results[0] : null
    }
 
    // Helpers Methods
 
-   async aggregate<T extends AggregateArgs<S>>(args: T): Promise<AggregateResult<T['select']>[]> {
+   async aggregate<T extends AggregateArgs<S>>(args: T): Promise<AggregateResult<T['select']>[] | null> {
       const isRelArgs = iof(args, RelationExecuteArgs)
       if (isRelArgs) args = (args as any).args
       args = await this.callHook("beforeAggregate", args) || args
@@ -157,7 +156,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
       await this.xansql.EventManager.emit("AGGREGATE", { model: this, results, args } as any);
 
       results = await this.callHook("afterAggregate", results, args) || results
-      return results
+      return results?.length ? results : null
    }
 
 
@@ -182,7 +181,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
    }
 
    async count(where: WhereArgs<S>): Promise<number> {
-      const res: any[] = await this.aggregate({
+      const res: any = await this.aggregate({
          where,
          select: {
             [this.IDColumn]: {
@@ -190,7 +189,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             }
          } as any
       })
-      return res.length ? res[0][`count_${this.IDColumn}`] : 0
+      return res?.length ? res[0][`count_${this.IDColumn}`] : 0
    }
 
    async min(column: string, where: WhereArgs<S>): Promise<number> {
@@ -200,7 +199,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             model: this.table,
          });
       }
-      const res: any[] = await this.aggregate({
+      const res: any = await this.aggregate({
          where,
          select: {
             [column]: {
@@ -208,7 +207,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             }
          } as any
       })
-      return res.length ? res[0][`min_${column}`] : 0
+      return res?.length ? res[0][`min_${column}`] : 0
    }
 
    async max(column: string, where: WhereArgs<S>): Promise<number> {
@@ -218,7 +217,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             model: this.table,
          });
       }
-      const res: any[] = await this.aggregate({
+      const res: any = await this.aggregate({
          where,
          select: {
             [column]: {
@@ -226,7 +225,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             }
          } as any
       })
-      return res.length ? res[0][`max_${column}`] : 0
+      return res?.length ? res[0][`max_${column}`] : 0
    }
 
    async sum(column: string, where: WhereArgs<S>): Promise<number> {
@@ -236,7 +235,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             model: this.table,
          });
       }
-      const res: any[] = await this.aggregate({
+      const res: any = await this.aggregate({
          where,
          select: {
             [column]: {
@@ -244,7 +243,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             }
          } as any
       })
-      return res.length ? res[0][`sum_${column}`] : 0
+      return res?.length ? res[0][`sum_${column}`] : 0
    }
 
    async avg(column: string, where: WhereArgs<S>): Promise<number> {
@@ -254,7 +253,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             model: this.table,
          });
       }
-      const res: any[] = await this.aggregate({
+      const res: any = await this.aggregate({
          where,
          select: {
             [column]: {
@@ -262,7 +261,7 @@ class Model<Xql extends Xansql, T extends string, S extends XqlSchemaShape> exte
             }
          } as any
       })
-      return res.length ? res[0][`avg_${column}`] : 0
+      return res?.length ? res[0][`avg_${column}`] : 0
    }
 
    async exists(where: WhereArgs<S>): Promise<boolean> {

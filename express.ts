@@ -151,8 +151,9 @@ const server = async (app: Express) => {
             }
          ],
          select: {
-            name: true,
-            photo: true
+            // name: true,
+            // photo: true,
+            product: true
          }
          // where: {
          //    products: {
@@ -265,7 +266,7 @@ const server = async (app: Express) => {
          }
       })
       const end = Date.now()
-      console.log(`Aggregate ${result.length} products in ${end - start}ms`)
+      console.log(`Aggregate ${result?.length} products in ${end - start}ms`)
       res.json(result)
    })
    app.get("/count", async (req: any, res: any) => {

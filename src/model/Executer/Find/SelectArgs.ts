@@ -76,14 +76,6 @@ class Select<M extends Model<Xansql, string, XqlSchemaShape>, A extends SelectAr
    constructor(model: M, args: A) {
       this.model = model
 
-      if (!args || Object.keys(args).length === 0) {
-         for (let column in model.schema) {
-            if (!Foreign.is(model.schema[column])) {
-               (args as any)[column] = true as any
-            }
-         }
-      }
-
       for (let column in args) {
          if (!(column in this.model.schema)) {
             throw new XansqlError({
@@ -177,11 +169,17 @@ class Select<M extends Model<Xansql, string, XqlSchemaShape>, A extends SelectAr
          }
       }
 
-      // always include ID column
-      if (!this.columns.includes(model.IDColumn)) {
+      const hasCol = this.columns.find(c => !Foreign.is(model.schema[c]))
+
+      if (!hasCol) {
+         for (let column in model.schema) {
+            if (!Foreign.is(model.schema[column])) {
+               this.columns.push(column)
+            }
+         }
+      } else if (!this.columns.includes(model.IDColumn)) {
          this.columns.unshift(model.IDColumn)
       }
-
       this.sql = this.columns.map(col => `${this.model.table}.${col}`).join(', ')
    }
 }
