@@ -15,6 +15,18 @@ class XqlNumber extends XVNumber {
    unique() {
       return this.set("unique", () => { }, true)
    }
+
+   decimal(precision: number, scale: number) {
+      return this.set("decimal", () => { }, { precision, scale })
+   }
+
+   bigint() {
+      return this.set("bigint", () => { }, true)
+   }
+
+   double() {
+      return this.set("double", () => { }, true)
+   }
 }
 
 export default XqlNumber

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { InferSchema, Xansql, XansqlFileMeta, xt } from '../src'
+import { Xansql, XansqlFileMeta, xt } from '../src'
 import SqliteDialect from '@xansql/sqlite-dialect'
 import MysqlDialect from '@xansql/mysql-dialect'
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
