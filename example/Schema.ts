@@ -20,6 +20,7 @@ export const UserModelSchema = {
    photo: xt.photo().nullable(),
    email: xt.email(),
    password: xt.password(),
+   float_val: xt.number().float().nullable(),
    metas: xt.array(xt.schema("user_metas", "user")),
    products: xt.array(xt.schema("products", "user")),
    created_at: xt.createdAt(),

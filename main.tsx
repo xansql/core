@@ -84,6 +84,7 @@ const App = () => {
                 name: true,
                 email: true,
                 photo: true,
+                float_val: true,
                 products: {
                   select: {
                     description: true,
@@ -98,14 +99,14 @@ const App = () => {
               },
               data: {
                 name: "Jane Doe",
+                float_val: 1.2,
                 // username: "jane.doe",
                 photo: file,
                 password: "asdasdasd",
-                email: `11@gmail.com`,
+                email: `${Math.random()}@gmail.com`,
                 // email: `${Math.random()}@gmail.com`,
               }
             })
-            console.log(result);
 
           } catch (error) {
             console.log(error);
