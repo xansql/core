@@ -52,6 +52,12 @@ class ModelFactgory {
             }
          }
       }
+
+      // models.forEach(m => {
+      //    console.log(m.table, m.schema);
+
+      // })
+
       return models;
    }
 

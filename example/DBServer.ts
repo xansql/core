@@ -39,7 +39,31 @@ export const db = new Xansql({
 })
 
 
-export const UserModel = db.model("users", UserModelSchema)
+export const User = db.model("users", (xt) => {
+   return {
+      id: xt.id(),
+      products: xt.many(Product).target("user"), // 
+      profile: xt.one(Profile).target("users"),
+      creator: xt.one(User).target("creators"),
+      creators: xt.many(User).target("creator")
+   }
+})
+
+export const Product = db.model("users", (xt) => {
+   return {
+      id: xt.id(),
+      user: xt.one(User).target("products").nullable()
+   }
+})
+
+export const Profile = db.model("users", (xt) => {
+   return {
+      id: xt.id(),
+      user: xt.one(User).target("profile")
+   }
+})
+
+
 export const ProductModel = db.model("products", ProductModelSchema)
 export const ProductCategory = db.model("categories", ProductCategorySchema)
 export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)

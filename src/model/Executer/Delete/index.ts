@@ -63,14 +63,7 @@ class DeleteExecuter {
             const meta = schemaType.meta || {}
             const foreign = Foreign.get(model, column)
             const FModel = model.xansql.getModel(foreign.table)
-
             if (meta.nullable) {
-               // update foreign column to null
-               console.log(model.table, FModel.table, foreign, {
-                  data: { [foreign.column]: null },
-                  where: { [foreign.column]: args.where }
-               });
-
                await FModel.update(new RelationExecuteArgs({
                   data: { [foreign.column]: null },
                   where: { [foreign.column]: args.where }

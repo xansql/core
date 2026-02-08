@@ -28,7 +28,7 @@ export const ProductModelSchema = {
    description: xt.string(),
    price: xt.string(),
    disoucnt_price: xt.string().default(() => "100"),
-   categories: xt.array(xt.schema("categories", "post")),
+   categories: xt.many(ProductCategorySchema),
    user: xt.schema("users", "products"),
 }
 
@@ -38,6 +38,7 @@ export const ProductCategorySchema = {
    name: xt.string().index(),
    description: xt.string().nullable(),
    // post: xt.schema('products', "categories"),
+   post: xt.one(ProductModelSchema),
 }
 
 export const ProductMetaSchema = {

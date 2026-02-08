@@ -95,7 +95,7 @@ const server = async (app: Express) => {
       res.json(where.sql)
    });
 
-   // app.get('/foreign', async (req:any, res:any) => {
+   // app.get('/foreign', async (req: any, res: any) => {
    //    const f = db.foreignInfo("posts", "user")
    //    const u = db.foreignInfo("users", "user_posts")
 
