@@ -46,11 +46,11 @@ class UpdateDataArgs {
       for (let column in data) {
          const field = model.schema[column]
          let value: any = data[column]
+         // if (!value) continue
          try {
-
             if (Foreign.is(field)) {
                if (Foreign.isSchema(field)) {
-                  if (isNumber(value)) {
+                  if (isNumber(value) || (field.meta.nullable && value === null)) {
                      this.data[column] = value
                   } else {
                      throw new XansqlError({

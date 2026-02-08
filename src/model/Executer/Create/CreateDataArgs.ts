@@ -90,7 +90,7 @@ class CreateDataArgs<M extends Model<Xansql, string, XqlSchemaShape>, D extends 
                         const foreign = Foreign.get(model, column)
                         let rdatas = isObject(value) ? [value] : value
 
-                        if (rdatas.length === 0) {
+                        if (!rdatas.length) {
                            throw new XansqlError({
                               message: `Relation data array for column ${model.table}.${column} cannot be empty.`,
                               model: model.table,

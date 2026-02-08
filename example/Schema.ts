@@ -1,11 +1,6 @@
 import { xt } from "../src";
 
-export const ProductCategorySchema = {
-   pcid: xt.id(),
-   name: xt.string().index(),
-   description: xt.string().nullable(),
-   post: xt.schema('products', "categories"),
-}
+
 
 export const UserModelMetaSchema = {
    uoid: xt.id(),
@@ -37,9 +32,17 @@ export const ProductModelSchema = {
    user: xt.schema("users", "products"),
 }
 
+
+export const ProductCategorySchema = {
+   pcid: xt.id(),
+   name: xt.string().index(),
+   description: xt.string().nullable(),
+   // post: xt.schema('products', "categories"),
+}
+
 export const ProductMetaSchema = {
    pmid: xt.id(),
-   product: xt.schema("products", "metas"),
+   product: xt.schema("products", "metas").nullable(),
    meta_key: xt.string(),
    meta_value: xt.string(),
 }

@@ -58,6 +58,8 @@ class ModelFactgory {
    private formatIsSchema(model: ModelType, column: string) {
       const models = this.models;
       const field: any = model.schema[column];
+      if (field.dynamic) return
+
 
       const FModel = models.get(field.table);
       if (!FModel) {
@@ -89,9 +91,9 @@ class ModelFactgory {
             });
          }
       } else {
-         const n = xt.schema(model.table, column).nullable();
-         (n as any).dynamic = true;
-         FModel.schema[field.column] = xt.array(n);
+         const n = field.clone();
+         n.dynamic = true;
+         FModel.schema[field.column] = xt.array(field);
          models.set(FModel.table, FModel);
       }
    }
@@ -100,6 +102,7 @@ class ModelFactgory {
       const models = this.models;
       const field: any = model.schema[column];
       const FSchemaField = (field as any).type as XqlSchema<any, any>;
+      if (FSchemaField.dynamic) return
 
       const FModel = models.get(FSchemaField.table);
       if (!FModel) {
@@ -125,14 +128,13 @@ class ModelFactgory {
             });
          }
       } else {
-         const n = xt.schema(model.table, column);
 
-         if (FSchemaField.meta?.nullable) n.nullable();
-         if (FSchemaField.meta?.optional) n.optional();
-         if (FSchemaField.meta?.default !== undefined) n.default(FSchemaField.meta.default);
-         if (FSchemaField.meta?.transform) n.transform(FSchemaField.meta.transform);
+         let n = xt.schema(model.table, column).nullable()
+         // field.type = FSchemaField.nullable()
+         if (FSchemaField.meta?.default !== undefined) n = n.default(FSchemaField.meta.default);
+         if (FSchemaField.meta?.transform) n = n.transform(FSchemaField.meta.transform);
 
-         (n as any).dynamic = true;
+         n.dynamic = true;
          FModel.schema[FSchemaField.column] = n;
          models.set(FModel.table, FModel);
       }

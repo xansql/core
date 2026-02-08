@@ -8,6 +8,7 @@ import { chunkArray } from "../../../utils/chunker"
 import XansqlError from "../../../core/XansqlError"
 import { iof } from "../../../utils"
 import { ModelType } from "../../../core/types"
+import XqlArray from "../../../xt/fields/Array"
 
 class DeleteExecuter {
    constructor(readonly model: ModelType) {
@@ -16,7 +17,7 @@ class DeleteExecuter {
    async execute(args: DeleteArgsType) {
       const xansql = this.model.xansql
       const model = this.model
-      if (!args.where || Object.keys(args.where).length === 0) {
+      if (!args.where || !Object.keys(args.where).length) {
          throw new XansqlError({
             message: `Delete operation on model ${model.table} requires a WHERE clause to prevent accidental deletion of all records.`,
             model: model.table
@@ -41,9 +42,10 @@ class DeleteExecuter {
          } as any
       }) as any
 
-      if (results?.length === 0) {
+      if (!results?.length) {
          return []
       }
+
 
       for (let column in model.schema) {
          const field = model.schema[column]
@@ -57,12 +59,18 @@ class DeleteExecuter {
                }
             }
          } else if (Foreign.isArray(field)) {
-            const meta = field.meta || {}
+            const schemaType = (field as XqlArray<any>).type
+            const meta = schemaType.meta || {}
             const foreign = Foreign.get(model, column)
             const FModel = model.xansql.getModel(foreign.table)
 
-            if (meta.optional || meta.nullable) {
+            if (meta.nullable) {
                // update foreign column to null
+               console.log(model.table, FModel.table, foreign, {
+                  data: { [foreign.column]: null },
+                  where: { [foreign.column]: args.where }
+               });
+
                await FModel.update(new RelationExecuteArgs({
                   data: { [foreign.column]: null },
                   where: { [foreign.column]: args.where }
@@ -75,6 +83,7 @@ class DeleteExecuter {
             }
          }
       }
+
 
       const Where = new WhereArgs(model, args.where)
       const sql = `DELETE FROM ${model.table} ${Where.sql}`.trim()

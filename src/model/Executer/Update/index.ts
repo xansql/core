@@ -20,7 +20,7 @@ class UpdateExecuter {
       const model = this.model
       const upArgs = new UpdateDataArgs(model, args.data)
 
-      if (Object.keys(args.where).length === 0) {
+      if (!Object.keys(args.where).length) {
          throw new XansqlError({
             message: `Update operation on model ${model.table} requires a WHERE clause to prevent accidental update of all records.`,
             model: model.table

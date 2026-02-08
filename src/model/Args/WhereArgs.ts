@@ -96,7 +96,7 @@ class WhereArgs {
                      model: model.table,
                      column
                   });
-               } else if (isObject(value) && Object.keys(value).length === 0 || isArray(value) && value.length === 0) {
+               } else if (isObject(value) && !Object.keys(value).length || isArray(value) && !value.length) {
                   // skip empty object
                   continue;
                }
@@ -218,7 +218,7 @@ class WhereArgs {
             case 'gte':
                return `${col} >= ${val}`;
             case 'in':
-               if (val?.length === 0) {
+               if (!val?.length) {
                   return `1 = 0`;
                } else if (!val.includes(",")) {
                   return `${col} = ${val}`;
@@ -226,7 +226,7 @@ class WhereArgs {
                return `${col} IN (${val})`;
             case 'notIn':
                // handle empty array and val is a single value
-               if (val.length === 0) {
+               if (!val.length) {
                   return `1 = 1`;
                } else if (!val.includes(",")) {
                   return `${col} != ${val}`;

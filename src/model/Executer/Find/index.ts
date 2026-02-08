@@ -335,7 +335,7 @@ class FindExecuter<M extends Model<Xansql, string, XqlSchemaShape>> {
                ids.push(id)
             }
          }
-         if (ids.length === 0) continue;
+         if (!ids.length) continue;
          const AggExecuter = new AggregateExecuter(FModel, false)
          const aggRes = await AggExecuter.execute({
             where: {

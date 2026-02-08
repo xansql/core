@@ -103,7 +103,7 @@ const App = () => {
                 // username: "jane.doe",
                 photo: file,
                 password: "asdasdasd",
-                email: `${Math.random()}@gmail.com`,
+                email: `11@gmail.com`,
                 // email: `${Math.random()}@gmail.com`,
               }
             })

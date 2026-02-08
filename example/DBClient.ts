@@ -3,6 +3,7 @@ import { XansqlBridgeDialect } from '@xansql/bridge';
 import { ProductCategorySchema, ProductMetaSchema, ProductModelSchema, UserModelMetaSchema, UserModelSchema } from './Schema';
 
 export const db = new Xansql({
+   // debug: true,
    dialect: XansqlBridgeDialect("http://localhost:4000/data") as any,
 })
 
