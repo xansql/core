@@ -7,8 +7,8 @@ export const db = new Xansql({
    dialect: XansqlBridgeDialect("http://localhost:4000/data") as any,
 })
 
-export const UserModel = db.model("users", UserModelSchema)
-export const ProductModel = db.model("products", ProductModelSchema)
-export const ProductCategory = db.model("categories", ProductCategorySchema)
-export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)
-export const ProductMetaModel = db.model("metas", ProductMetaSchema)
+// export const UserModel = db.model("users", UserModelSchema)
+// export const ProductModel = db.model("products", ProductModelSchema)
+// export const ProductCategory = db.model("categories", ProductCategorySchema)
+// export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)
+// export const ProductMetaModel = db.model("metas", ProductMetaSchema)

@@ -28,7 +28,7 @@ export const ProductModelSchema = {
    description: xt.string(),
    price: xt.string(),
    disoucnt_price: xt.string().default(() => "100"),
-   categories: xt.many(ProductCategorySchema),
+   // categories: xt.many(ProductCategorySchema),
    user: xt.schema("users", "products"),
 }
 

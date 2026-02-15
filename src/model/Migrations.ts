@@ -19,7 +19,7 @@ import XqlUnion from "../xt/fields/Union";
 import { XqlSchemaShape } from "../xt/types";
 import ValueFormatter from "./include/ValueFormatter";
 
-class Migrations<M extends Model<Xansql, string, XqlSchemaShape>> {
+class Migrations<M extends Model<Xansql, any>> {
    model: M;
    TableMigration: any;
    constructor(model: M) {

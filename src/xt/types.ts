@@ -1,7 +1,7 @@
 
 import { XVType } from "xanv"
-import XqlArray from "./fields/Array";
-import XqlSchema from "./fields/Schema";
+import xt from ".";
 
 export type XqlField = XVType<any>
-export type XqlSchemaShape = Record<string, XqlField>;
+export type XqlSchemaShape = Record<string, any>;
+export type XT = typeof xt

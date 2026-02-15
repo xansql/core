@@ -1,12 +1,11 @@
-import { Infer, XVType } from "xanv";
 import Model from "../model";
 import { AggregateArgsType, CreateArgsType, DeleteArgsType, FindArgsType, UpdateArgsType } from "../model/types";
-import XqlSchema from "../xt/fields/Schema";
-import { XqlSchemaShape } from "../xt/types";
+import { XqlSchemaShape, XT } from "../xt/types";
 import Xansql from "./Xansql";
-import XqlArray from "../xt/fields/Array";
 
-export type ModelType = Model<Xansql, string, XqlSchemaShape>
+export type ModelType = Model<Xansql, string, XqlSchemaShape>;
+type NoInfer<T> = [T][T extends any ? 0 : never]
+export type ModelCallback<C extends object> = (xt: any) => NoInfer<C>
 
 export type RowObject = {
    [key: string]: any;

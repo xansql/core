@@ -7,73 +7,55 @@ import fs from 'fs'
 import path from 'path'
 dotenv.config()
 
-const mysqlConn: string = (typeof process !== 'undefined' ? process.env.MYSQL_DB : 'mysql://root:root1234@localhost:3306/xansql') as string
-const sqliteConn: string = 'db.sqlite'
-let dir = 'uploads';
+// const mysqlConn: string = (typeof process !== 'undefined' ? process.env.MYSQL_DB : 'mysql://root:root1234@localhost:3306/xansql') as string
+// const sqliteConn: string = 'db.sqlite'
+// let dir = 'uploads';
 
-const mysql = MysqlDialect({
-   host: "localhost",
-   port: 3306,
-   user: 'root',
-   password: 'root1234',
-   database: "xansql",
-   // file: {
-   //    upload: async (file: File, xansql: Xansql) => {
+// const mysql = MysqlDialect({
+//    host: "localhost",
+//    port: 3306,
+//    user: 'root',
+//    password: 'root1234',
+//    database: "xansql",
+//    // file: {
+//    //    upload: async (file: File, xansql: Xansql) => {
 
-   //    },
-   //    delete: async (fileId: string) => {
-   //       const fs = await import('fs');
-   //       const path = await import('path');
-   //       const filePath = path.join(process.cwd(), dir, fileId);
-   //       if (fs.existsSync(filePath)) {
-   //          fs.unlinkSync(filePath);
-   //       }
-   //    }
-   // }
-})
-
-const sqlite = SqliteDialect(sqliteConn)
-
-export const db = new Xansql({
-   dialect: mysql as any,
-})
-
-
-export const User = db.model("users", (xt) => {
-   return {
-      id: xt.id(),
-      products: xt.many(Product).target("user"), // 
-      profile: xt.one(Profile).target("users"),
-      creator: xt.one(User).target("creators"),
-      creators: xt.many(User).target("creator")
-   }
-})
-
-export const Product = db.model("users", (xt) => {
-   return {
-      id: xt.id(),
-      user: xt.one(User).target("products").nullable()
-   }
-})
-
-export const Profile = db.model("users", (xt) => {
-   return {
-      id: xt.id(),
-      user: xt.one(User).target("profile")
-   }
-})
-
-
-export const ProductModel = db.model("products", ProductModelSchema)
-export const ProductCategory = db.model("categories", ProductCategorySchema)
-export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)
-export const ProductMetaModel = db.model("metas", ProductMetaSchema)
-
-// type T = InferSchema<typeof ProductModelSchema>
-
-// const a = await ProductModel.create({
-//    data: {
-//       description: "string",
-//       price: "string"
-//    }
+//    //    },
+//    //    delete: async (fileId: string) => {
+//    //       const fs = await import('fs');
+//    //       const path = await import('path');
+//    //       const filePath = path.join(process.cwd(), dir, fileId);
+//    //       if (fs.existsSync(filePath)) {
+//    //          fs.unlinkSync(filePath);
+//    //       }
+//    //    }
+//    // }
 // })
+
+// const sqlite = SqliteDialect(sqliteConn)
+
+// export const db = new Xansql({
+//    dialect: mysql as any,
+// })
+
+
+// export const User = db.model("users", () => ({
+//    id: xt.id(),
+//    products: xt.many("Product").target("user"), // 
+// }))
+
+// export const Product = db.model("users", () => ({
+//    id: xt.id(),
+//    user: xt.one("User").target("products")
+// }))
+
+// export const Profile = db.model("users", () => ({
+//    id: xt.id(),
+//    // user: xt.one(User).target("profile")
+// })
+
+
+// export const ProductModel = db.model("products", ProductModelSchema)
+// export const ProductCategory = db.model("categories", ProductCategorySchema)
+// export const UserModelMeta = db.model("user_metas", UserModelMetaSchema)
+// export const ProductMetaModel = db.model("metas", ProductMetaSchema)

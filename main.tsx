@@ -1,6 +1,38 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { db, ProductModel, UserModel } from './example/DBClient'
+import { db } from './example/DBClient'
+import { xt } from './src';
+import Schema from './src/core/Schema';
+
+class UserSchema extends Schema {
+  schema() {
+    return {
+      uid: xt.id(),
+      products: xt.many(ProductSchema).target("user"),
+      customer: xt.one(UserSchema).target("customers"),
+    }
+  }
+}
+
+class ProductSchema extends Schema {
+  schema() {
+    return {
+      pid: xt.id(),
+      name: xt.string(),
+      user: xt.one(UserSchema).target("products")
+    }
+  }
+
+  getStudents() {
+
+  }
+}
+
+
+const User = db.model(UserSchema)
+const Product = db.model(ProductSchema)
+const cols = User.columns
+type T = typeof cols
 
 
 const Button = ({ label, onClick }: any) => {

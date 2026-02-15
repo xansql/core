@@ -20,12 +20,13 @@ import XqlPhoto from "./additional/Photo";
 import XqlPhone from "./additional/Phone";
 import XqlIP from "./additional/IP";
 import { XVOptional, XVType } from "xanv";
+import RelationMany from "./fields/RelationMany";
+import Model from "../model";
+import RelationOne from "./fields/RelationOne";
+import Schema from "../core/Schema";
 
 const xt = {
-   id: () => {
-      const i = new XqlIDField()
-      return i as XVOptional<typeof i>
-   },
+   id: () => new XqlIDField(),
    array: <T extends XVType<any>>(type: T) => new XqlArray(type),
    boolean: () => new XqlBoolean(),
    date: () => new XqlDate(),
@@ -38,6 +39,8 @@ const xt = {
    union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
    schema: <T extends string, C extends string>(table: T, column: C) => new XqlSchema<T, C>(table, column),
+   many: <S extends Schema>(m: new () => S) => new RelationMany(m),
+   one: <S extends Schema>(m: new () => S) => new RelationOne(m),
 
    createdAt: () => xt.date().create(),
    updatedAt: () => xt.date().update(),

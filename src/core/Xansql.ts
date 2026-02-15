@@ -1,5 +1,5 @@
 import Model from "../model";
-import { ExecuterResult, ModelType, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
+import { ExecuterResult, ModelCallback, ModelType, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
 import ModelFactory from "./classes/ModelFactory";
@@ -7,6 +7,8 @@ import XansqlMigration from "./classes/XansqlMigrartion";
 import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
 import { XqlSchemaShape } from "../xt/types";
+import Schema from "./Schema";
+
 
 class Xansql {
    private ModelFactory: ModelFactory;
@@ -15,6 +17,7 @@ class Xansql {
    readonly XansqlTransaction: XansqlTransaction;
    readonly EventManager: EventManager
    readonly XansqlMigration: XansqlMigration
+   private models = new Map<string, Model<this, any>>()
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
@@ -30,41 +33,55 @@ class Xansql {
       return this.config.dialect;
    }
 
-   get models() {
-      return this.ModelFactory.models
-   }
    get aliases() {
       return this.ModelFactory.aliases
    }
 
-   clone(config?: Partial<XansqlConfigType>) {
-      const self = new XansqlClone({ ...this.config, ...(config || {}) });
-      for (let [table, model] of this.models) {
-         self.model(table, model.schema);
+   private _timer: number | null = null
+
+   model<S extends Schema>(schema: new () => S, hooks?: any) {
+      const _schema = new schema
+      const model = new Model(this, _schema)
+
+      // get all props and methods from schema and assign to model
+      for (let key of Object.getOwnPropertyNames(Object.getPrototypeOf(_schema))) {
+         if (key !== "constructor" && key !== "schema" && key !== "table" && key !== "IDColumn") {
+            if (key in model) {
+               throw new Error(`Property ${key} already exists in model ${_schema.table}. Please rename the method or property in the schema.`)
+            }
+            const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(_schema), key)
+            if (descriptor) {
+               Object.defineProperty(model, key, descriptor)
+            }
+         }
       }
-      return self;
+
+      // assign props from schema to model
+      for (let key of Object.keys(_schema)) {
+         if (key in model) {
+            throw new Error(`Property ${key} already exists in model ${_schema.table}. Please rename the method or property in the schema.`)
+         }
+         if (["_talbe", "_IDColumn", "model"].includes(key)) continue;
+         const descriptor = Object.getOwnPropertyDescriptor(_schema, key)
+         if (descriptor) {
+            Object.defineProperty(model, key, descriptor)
+         }
+      }
+
+      _schema.model = model
+
+      this.models.set(_schema.table, model)
+      return model as unknown as Model<this, S> & Omit<typeof _schema, "schema" | "table" | "IDColumn" | "model">
    }
 
-   model<T extends string, S extends XqlSchemaShape>(table: T, schema: S): Model<this, T, S> {
-      const model = new Model(this, table, schema);
-      if (this.ModelFactory.models.has(table)) {
-         throw new XansqlError({
-            message: `Model for table ${table} already exists.`,
-            model: table,
-         });
-      }
-      this.ModelFactory.set(model as any);
-      return model
-   }
-
-   getModel<T extends string>(table: T) {
+   getModel<S extends Schema>(table: string) {
       if (!this.models.has(table)) {
          throw new XansqlError({
             message: `Model for table ${table} does not exist.`,
             model: table,
          });
       }
-      return this.models.get(table) as Model<this, T, XqlSchemaShape>
+      return this.models.get(table) as Model<this, S>
    }
 
    async execute(sql: string): Promise<ExecuterResult> {

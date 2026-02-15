@@ -1,6 +1,7 @@
 import { XVNumber } from "xanv"
 
 class XqlIDField extends XVNumber {
+   readonly type = "id"
    optional() {
       throw new Error("Optional not allowed")
       return super.optional()
