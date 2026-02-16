@@ -24,15 +24,19 @@ class ProductSchema extends Schema {
   }
 
   getStudents() {
+    this.find({
 
+    })
   }
 }
 
 
 const User = db.model(UserSchema)
 const Product = db.model(ProductSchema)
-const cols = User.columns
+const cols = User
 type T = typeof cols
+
+console.log(User);
 
 
 const Button = ({ label, onClick }: any) => {

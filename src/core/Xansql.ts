@@ -6,8 +6,7 @@ import ModelFactory from "./classes/ModelFactory";
 import XansqlMigration from "./classes/XansqlMigrartion";
 import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
-import { XqlSchemaShape } from "../xt/types";
-import Schema from "./Schema";
+import Schema, { SchemaClass } from "./Schema";
 
 
 class Xansql {
@@ -17,7 +16,7 @@ class Xansql {
    readonly XansqlTransaction: XansqlTransaction;
    readonly EventManager: EventManager
    readonly XansqlMigration: XansqlMigration
-   private models = new Map<string, Model<this, any>>()
+   readonly models = new Map<new () => Schema, Schema>()
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
@@ -37,10 +36,20 @@ class Xansql {
       return this.ModelFactory.aliases
    }
 
-   private _timer: number | null = null
+   model<S extends Schema>(schema: SchemaClass<S>, hooks?: any) {
+      if (this.models.has(schema)) {
+         return this.models.get(schema) as Schema<S>
+      }
+      const _schema = new schema(this)
+      this.models.set(schema, _schema)
+      return _schema as Schema<S>
+   }
+   _model<S extends Schema>(schema: SchemaClass<S>, hooks?: any) {
+      // if (this.models.has(schema)) {
+      //    return this.models.get(schema) as Model<this, S> & Omit<InstanceType<typeof schema>, "schema" | "table" | "IDColumn" | "model">
+      // }
 
-   model<S extends Schema>(schema: new () => S, hooks?: any) {
-      const _schema = new schema
+      const _schema = new schema(this) as Schema<S>
       const model = new Model(this, _schema)
 
       // get all props and methods from schema and assign to model
@@ -69,20 +78,83 @@ class Xansql {
       }
 
       _schema.model = model
+      this.models.set(schema, model)
 
-      this.models.set(_schema.table, model)
+      const shape = _schema.schema()
+      for (let column in shape) {
+         const field = shape[column]
+         if (field.isRelation && !this.models.has(field.schema)) {
+            this.model(field.schema)
+         }
+
+         // check if relation target exists         
+         if (field.isRelation && field.type === "relation-many") {
+            const targetColumn = field.column
+            const targetSchema = field.schema
+            const targetModel = this.models.get(targetSchema)
+
+            if (!targetModel) {
+               throw new Error(`Target model for relation ${column} in schema ${_schema.table} not found. Please define the target schema before defining the relation.`)
+            }
+
+            const targetShape = targetModel.schema.schema()
+            if (!targetShape[targetColumn] || targetShape[targetColumn].type !== "relation-one") {
+               throw new Error(`Target column ${targetColumn} for relation ${column} in schema ${_schema.table} not found in target schema ${targetSchema.table}. Please define the target column in the target schema.`)
+            }
+         }
+
+         // update relation info
+         if (field.isRelation) {
+
+            if (field.type == 'relation-one') {
+               console.log(field);
+
+               field.info = {
+                  self: {
+                     table: _schema.table,
+                     relation: column,
+                     column: column,
+                  },
+                  target: {
+                     table: field.schema.table,
+                     relation: field.schema.IDColumn,
+                     column: field.column,
+                  },
+                  sql: `${_schema.table}.${column} = ${field.schema.table}.${field.schema.IDColumn}`
+               }
+            } else if (field.type == 'relation-many') {
+               field.info = {
+                  self: {
+                     table: _schema.table,
+                     relation: _schema.IDColumn,
+                     column: column,
+                  },
+                  target: {
+                     table: field.schema.table,
+                     relation: field.column,
+                     column: field.column,
+                  },
+                  sql: `${_schema.table}.${_schema.IDColumn} = ${field.schema.table}.${field.column}`
+               }
+            }
+         }
+      }
+
+
+      // create table if not exists
+
       return model as unknown as Model<this, S> & Omit<typeof _schema, "schema" | "table" | "IDColumn" | "model">
    }
 
-   getModel<S extends Schema>(table: string) {
-      if (!this.models.has(table)) {
-         throw new XansqlError({
-            message: `Model for table ${table} does not exist.`,
-            model: table,
-         });
-      }
-      return this.models.get(table) as Model<this, S>
-   }
+   // getModel<S extends Schema>(table: string) {
+   //    if (!this.models.has(table)) {
+   //       throw new XansqlError({
+   //          message: `Model for table ${table} does not exist.`,
+   //          model: table,
+   //       });
+   //    }
+   //    return this.models.get(table) as Model<this, S>
+   // }
 
    async execute(sql: string): Promise<ExecuterResult> {
       const query = sql.trim().replace(/\s+/g, ' ');

@@ -33,35 +33,35 @@ class Model<Xql extends Xansql, S extends Schema> {
          if (field.isRelation) {
             this.relation_columns.push(column)
 
-            if (field.type == 'relation-one') {
-               field.info = {
-                  self: {
-                     table: schema.table,
-                     relation: column,
-                     column: column,
-                  },
-                  target: {
-                     table: field.schema.table,
-                     relation: field.schema.IDColumn,
-                     column: field.column,
-                  },
-                  sql: `${schema.table}.${column} = ${field.schema.table}.${field.schema.IDColumn}`
-               }
-            } else if (field.type == 'relation-many') {
-               field.info = {
-                  self: {
-                     table: schema.table,
-                     relation: schema.IDColumn,
-                     column: column,
-                  },
-                  target: {
-                     table: field.schema.table,
-                     relation: field.column,
-                     column: field.column,
-                  },
-                  sql: `${schema.table}.${schema.IDColumn} = ${field.schema.table}.${field.column}`
-               }
-            }
+            // if (field.type == 'relation-one') {
+            //    field.info = {
+            //       self: {
+            //          table: schema.table,
+            //          relation: column,
+            //          column: column,
+            //       },
+            //       target: {
+            //          table: field.schema.table,
+            //          relation: field.schema.IDColumn,
+            //          column: field.column,
+            //       },
+            //       sql: `${schema.table}.${column} = ${field.schema.table}.${field.schema.IDColumn}`
+            //    }
+            // } else if (field.type == 'relation-many') {
+            //    field.info = {
+            //       self: {
+            //          table: schema.table,
+            //          relation: schema.IDColumn,
+            //          column: column,
+            //       },
+            //       target: {
+            //          table: field.schema.table,
+            //          relation: field.column,
+            //          column: field.column,
+            //       },
+            //       sql: `${schema.table}.${schema.IDColumn} = ${field.schema.table}.${field.column}`
+            //    }
+            // }
          } else {
             this.columns.push(column)
          }

@@ -1,4 +1,4 @@
-import Schema from "../../core/Schema"
+import Schema, { SchemaClass } from "../../core/Schema"
 
 
 export type RelationOneInfo = {
@@ -17,7 +17,7 @@ export type RelationOneInfo = {
 
 
 class RelationOne<S extends Schema> {
-   readonly schema: S
+   readonly schema: SchemaClass<S>
    private _target_column = ''
 
    readonly type = "relation-one"
@@ -37,8 +37,8 @@ class RelationOne<S extends Schema> {
       sql: ''
    }
 
-   constructor(schema: new () => S) {
-      this.schema = new schema
+   constructor(schema: SchemaClass<S>) {
+      this.schema = schema
    }
 
    target(column: string) {
