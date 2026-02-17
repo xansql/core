@@ -36,7 +36,7 @@ const Product = db.model(ProductSchema)
 const cols = User
 type T = typeof cols
 
-console.log(User);
+console.log(Product);
 
 
 const Button = ({ label, onClick }: any) => {
@@ -54,6 +54,7 @@ const Button = ({ label, onClick }: any) => {
 
 const App = () => {
   const [file, setFile] = React.useState<File | null>(null);
+  return ""
   return (
     <div style={{ fontFamily: 'monospace,math, sans-serif', textAlign: 'center', marginTop: '50px' }}>
       <input type="file" onChange={(e) => {

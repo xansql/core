@@ -17,7 +17,7 @@
       "url": "https://github.com/xansql/core"
    },
    "scripts": {
-      "start": "makepack start",
+      "start": "makepack start -p 1234",
       "build": "makepack build",
       "release": "makepack release"
    },

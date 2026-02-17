@@ -1,3 +1,4 @@
+import { XVType } from "xanv"
 import Schema, { SchemaClass } from "../../core/Schema"
 
 export type RelationManyInfo = {
@@ -14,38 +15,26 @@ export type RelationManyInfo = {
    sql: string // self table join target table on self.column = target.column
 }
 
-class RelationMany<S extends Schema> {
-   readonly schema: SchemaClass<S>
-   private _target_column = ''
+class RelationMany<S extends Schema> extends XVType<ReturnType<S["schema"]>> {
 
-   readonly type = "relation-many"
-   readonly isRelation = true
-   info: RelationManyInfo = {
-      self: {
-         table: '',
-         column: '',
-         relation: ''
-      },
-      target: {
-         table: '',
-         column: '',
-         relation: ''
-      },
-      sql: ''
+   protected check(value: unknown): ReturnType<S["schema"]> {
+      if (!this.meta.target) {
+         throw new Error("Target column not defined for relation-many field")
+      }
+      return value as ReturnType<S["schema"]>
    }
 
+   readonly schema: SchemaClass<S>
+   readonly type = "relation-many"
+   readonly isRelation = true
+
    constructor(schema: SchemaClass<S>) {
+      super()
       this.schema = schema
    }
 
    target(column: string) {
-      this._target_column = column
       return this
-   }
-
-   get column() {
-      if (!this._target_column) throw new Error(`target column not found`)
-      return this._target_column
    }
 }
 export default RelationMany
