@@ -34,6 +34,7 @@ class RelationMany<S extends Schema> extends XVType<ReturnType<S["schema"]>> {
    }
 
    target(column: string) {
+      this.set("column", column, true)
       return this
    }
 }
