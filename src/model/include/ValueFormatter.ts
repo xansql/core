@@ -10,7 +10,7 @@ import XqlIDField from "../../xt/fields/IDField";
 import XqlNumber from "../../xt/fields/Number";
 import XqlObject from "../../xt/fields/Object";
 import XqlRecord from "../../xt/fields/Record";
-import XqlSchema from "../../xt/fields/Schema";
+import XqlRelationOne from "../../xt/fields/RelationOne";
 import XqlString from "../../xt/fields/String";
 import XqlTuple from "../../xt/fields/Tuple";
 import XqlUnion from "../../xt/fields/Union";
@@ -59,7 +59,7 @@ class ValueFormatter {
 
       if (value === undefined || value === null) {
          return 'NULL';
-      } else if (iof(field, XqlIDField, XqlNumber, XqlSchema)) {
+      } else if (iof(field, XqlIDField, XqlNumber, XqlRelationOne)) {
          return value
       } else if (iof(field, XqlFile)) {
          return `'${value.name}'`;
@@ -126,7 +126,7 @@ class ValueFormatter {
 
          if (value === undefined || value === null) {
             return 'DEFAULT NULL';
-         } else if (iof(field, XqlIDField, XqlNumber, XqlSchema)) {
+         } else if (iof(field, XqlIDField, XqlNumber, XqlRelationOne)) {
             return `DEFAULT ${value}`;
          } else if (iof(field, XqlString, XqlEnum, XqlFile)) {
             return `DEFAULT '${this.escape(value)}'`;

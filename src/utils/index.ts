@@ -22,9 +22,24 @@ export const freezeObject = (obj: any) => {
 }
 
 
-export const iof = (field: any, ...instances: any[]) => {
-   return instances.some(instance => field instanceof instance || field?.constructor === instance.constructor);
+// export const iof = (field: any, ...instances: any[]) => {
+//    return instances.some(instance => field instanceof instance || field?.constructor === instance.constructor);
+// }
+
+
+type Constructor<T = any> = new (...args: any[]) => T;
+
+export function iof<
+   T extends Constructor[]
+>(
+   value: any,
+   ...types: T
+): value is InstanceType<T[number]> {
+   return types.some(type => value instanceof type);
 }
+
+
+
 
 
 export const quote = (engine: XansqlDialectEngine, identifier: string) => {

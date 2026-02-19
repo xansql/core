@@ -1,25 +1,24 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { db } from './example/DBClient'
-import { xt } from './src';
-import Schema from './src/core/Schema';
+import { Model, xt } from './src';
 
-class UserSchema extends Schema {
+class UserModel extends Model {
   schema() {
     return {
       uid: xt.id(),
-      products: xt.many(ProductSchema).target("user"),
-      customer: xt.one(UserSchema).target("customers"),
+      products: xt.many(ProductModel).target("user"),
+      customer: xt.one(UserModel).target("customers"),
     }
   }
 }
 
-class ProductSchema extends Schema {
+class ProductModel extends Model {
   schema() {
     return {
       pid: xt.id(),
       name: xt.string(),
-      user: xt.one(UserSchema).target("products")
+      user: xt.one(UserModel).target("products")
     }
   }
 
@@ -31,12 +30,12 @@ class ProductSchema extends Schema {
 }
 
 
-const User = db.model(UserSchema)
-const Product = db.model(ProductSchema)
+const User = db.model(UserModel)
+const Product = db.model(ProductModel)
 const cols = User
 type T = typeof cols
 
-console.log(Product);
+console.log(User.schema());
 
 
 const Button = ({ label, onClick }: any) => {
@@ -63,116 +62,13 @@ const App = () => {
       }} />
       <div style={{ marginTop: "50px" }}>
         <Button label="Find" onClick={async () => {
-          const result = await UserModel.findOne({
-            // aggregate: {
-            //   products: {
-            //     price: {
-            //       sum: {
-            //         alias: "total_price"
-            //       },
-            //       avg: {
-            //         alias: "avg_price",
-            //         round: 2
-            //       },
-            //     }
-            //   },
-            //   metas: {
-            //     meta_value: {
-            //       count: true
-            //     }
-            //   }
-            // },
-            where: {
-              // uid: 4,
-              // name: "John Doe"
-            },
-            select: {
-              name: true,
-              photo: true,
-              password: true,
-              metas: true,
-              products: {
-                aggregate: {
-                  categories: {
-                    pcid: {
-                      count: true,
-                    },
-                    name: {
-                      count: true,
-                    }
-                  }
-                },
-                select: {
-                  categories: true
-                }
-              }
-            }
-          })
-          console.log(result);
 
         }} />
         <Button label="Create" onClick={async () => {
-          let longText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.".repeat(1000); // ~5MB
-          // const file = new File([longText], 'hello.txt', { type: 'text/plain' });
 
-          try {
-            const result = await UserModel.create({
-              select: {
-                name: true,
-                email: true,
-                photo: true,
-                float_val: true,
-                products: {
-                  select: {
-                    description: true,
-                    name: true,
-                    categories: {
-                      select: {
-                        name: true,
-                      },
-                    }
-                  }
-                }
-              },
-              data: {
-                name: "Jane Doe",
-                float_val: 1.2,
-                // username: "jane.doe",
-                photo: file,
-                password: "asdasdasd",
-                email: `11@gmail.com`,
-                // email: `${Math.random()}@gmail.com`,
-              }
-            })
-
-          } catch (error) {
-            console.log(error);
-          }
-
-        }} />
-        <Button label="Update" onClick={async () => {
-          const result = await UserModel.update({
-            data: {
-              name: "hello",
-              photo: null
-            },
-            where: {
-              uid: 8
-            },
-            select: {
-              name: true,
-              photo: true
-            }
-          })
-          console.log(result);
         }} />
         <Button label="Delete" onClick={async () => {
-          const result = await UserModel.delete({
-            where: {
-              email: "11@gmail.com"
-            }
-          })
-          console.log(result);
+
         }} />
       </div>
     </div>

@@ -1,4 +1,7 @@
-import Schema, { SchemaClass } from "../../core/Schema"
+import { XVType } from "xanv"
+import Model, { ModelClass } from "../../model"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 
 export type RelationOneInfo = {
@@ -16,14 +19,21 @@ export type RelationOneInfo = {
 }
 
 
-class RelationOne<S extends Schema> {
-   readonly schema: SchemaClass<S>
+class XqlRelationOne<S extends Model> extends XVType<any> {
+   readonly model: ModelClass<S>
    private _target_column = ''
-
    readonly type = "relation-one"
    readonly isRelation = true
 
-   info: RelationOneInfo = {
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
+   }
+
+   relationInfo: RelationOneInfo = {
       self: {
          table: '',
          column: '',
@@ -32,13 +42,29 @@ class RelationOne<S extends Schema> {
       target: {
          table: '',
          column: '',
-         relation: ''
+         relation: '',
       },
       sql: ''
    }
 
-   constructor(schema: SchemaClass<S>) {
-      this.schema = schema
+   constructor(model: ModelClass<S>) {
+      super()
+      this.model = model
+      this.index()
+   }
+
+   protected check(value: unknown) { }
+
+   optional(): any {
+      throw new Error("optional not supported");
+   }
+
+   nullable() {
+      super.optional()
+      return super.nullable();
+   }
+   index() {
+      return this.set("index", () => { }, true)
    }
 
    target(column: string) {
@@ -53,4 +79,4 @@ class RelationOne<S extends Schema> {
    }
 }
 
-export default RelationOne
+export default XqlRelationOne

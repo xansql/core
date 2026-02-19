@@ -2,9 +2,9 @@ import { XVType } from "xanv";
 import Model from "../../model";
 import { iof } from "../../utils";
 import XqlArray from "../../xt/fields/Array";
-import XqlSchema from "../../xt/fields/Schema";
 import XansqlError from "../XansqlError";
 import { ModelType } from "../types";
+import XqlRelationOne from "../../xt/fields/RelationOne";
 
 
 export type ForeignInfoType = {
@@ -34,7 +34,7 @@ class Foreign {
    }
 
    static isSchema(field: XVType<any>) {
-      return iof(field, XqlSchema)
+      return iof(field, XqlRelationOne)
    }
 
    static get(model: ModelType, column: string): ForeignInfoType {
@@ -43,7 +43,7 @@ class Foreign {
       let field: any = schema[column]
 
       if (this.isArray(field)) {
-         const foreignType = field.type as XqlSchema<any, any>;
+         const foreignType = field.type as XqlRelationOne<any>;
          return {
             table: foreignType.table,
             column: foreignType.column,

@@ -1,20 +1,24 @@
 import { XVBoolean } from "xanv"
+import { XansqlDialectEngine } from "../../core/types";
+import XqlFieldInfo from "../XqlFieldInfo";
 
 class XqlBoolean extends XVBoolean {
-   optional() {
-      throw new Error("optional not supported");
-      return super.optional()
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
    }
-   nullable() {
-      super.optional()
-      return super.nullable();
+
+   optional(): any {
+      throw new Error("optional not supported");
+   }
+   nullable(): any {
+      throw new Error("nullable not supported");
    }
    index() {
       return this.set("index", () => { }, true)
-   }
-
-   unique() {
-      return this.set("unique", () => { }, true)
    }
 }
 

@@ -1,9 +1,18 @@
 import { XVString } from "xanv"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlString extends XVString {
-   optional() {
-      throw new Error("optional not supported");
-      return super.optional()
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
+   }
+
+   optional(): any {
+      throw new Error("optional not supported")
    }
    nullable() {
       super.optional()

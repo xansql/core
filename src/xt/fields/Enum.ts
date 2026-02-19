@@ -1,9 +1,17 @@
 import { XVEnum } from "xanv"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlEnum<const T extends string | number> extends XVEnum<T> {
-   optional() {
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
+   }
+   optional(): any {
       throw new Error("optional not supported");
-      return super.optional()
    }
    nullable() {
       super.optional()

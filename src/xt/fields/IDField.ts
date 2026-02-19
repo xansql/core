@@ -1,14 +1,21 @@
 import { XVNumber } from "xanv"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlIDField extends XVNumber {
-   readonly type = "id"
-   optional() {
-      throw new Error("Optional not allowed")
-      return super.optional()
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
    }
-   nullable() {
+
+   optional(): any {
+      throw new Error("Optional not allowed")
+   }
+   nullable(): any {
       throw new Error("nullable not allowed")
-      return super.nullable();
    }
 }
 

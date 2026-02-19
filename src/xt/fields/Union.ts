@@ -1,12 +1,18 @@
 import { XVType, XVUnion } from "xanv"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlUnion<T extends XVType<any>[] = XVType<any>[]> extends XVUnion<T> {
-   constructor(types: T) {
-      super(types as any)
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
    }
-   optional() {
+
+   optional(): any {
       throw new Error("optional not supported");
-      return super.optional()
    }
    nullable() {
       super.optional()

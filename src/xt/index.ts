@@ -10,7 +10,6 @@ import XqlTuple from "./fields/Tuple";
 import XqlUnion from "./fields/Union";
 import XqlIDField from "./fields/IDField";
 import XqlFile from "./fields/File";
-import XqlSchema from "./fields/Schema";
 import XqlName from "./additional/Name";
 import XqlPassword from "./additional/Password";
 import XqlUsername from "./additional/Username";
@@ -19,11 +18,10 @@ import XqlUrl from "./additional/Url";
 import XqlPhoto from "./additional/Photo";
 import XqlPhone from "./additional/Phone";
 import XqlIP from "./additional/IP";
-import { XVOptional, XVType } from "xanv";
+import { XVType } from "xanv";
 import RelationMany from "./fields/RelationMany";
-import Model from "../model";
+import Model, { ModelClass } from "../model";
 import RelationOne from "./fields/RelationOne";
-import Schema, { SchemaClass } from "../core/Schema";
 
 const xt = {
    id: () => new XqlIDField(),
@@ -38,9 +36,8 @@ const xt = {
    tuple: <T extends XVType<any>[]>(type: T) => new XqlTuple(type),
    union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
-   schema: <T extends string, C extends string>(table: T, column: C) => new XqlSchema<T, C>(table, column),
-   many: <S extends Schema>(m: SchemaClass<S>) => new RelationMany(m),
-   one: <S extends Schema>(m: SchemaClass<S>) => new RelationOne(m),
+   many: <S extends Model>(m: ModelClass<S>) => new RelationMany(m),
+   one: <S extends Model>(m: ModelClass<S>) => new RelationOne(m),
 
    createdAt: () => xt.date().create(),
    updatedAt: () => xt.date().update(),

@@ -1,5 +1,7 @@
 import { XVType } from "xanv"
-import Schema, { SchemaClass } from "../../core/Schema"
+import Model, { ModelClass } from "../../model"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 export type RelationManyInfo = {
    self: {
@@ -15,27 +17,58 @@ export type RelationManyInfo = {
    sql: string // self table join target table on self.column = target.column
 }
 
-class RelationMany<S extends Schema> extends XVType<ReturnType<S["schema"]>> {
+class XqlRelationMany<M extends Model> extends XVType<any> {
 
-   protected check(value: unknown): ReturnType<S["schema"]> {
-      if (!this.meta.target) {
-         throw new Error("Target column not defined for relation-many field")
-      }
-      return value as ReturnType<S["schema"]>
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
    }
 
-   readonly schema: SchemaClass<S>
+   relationInfo: RelationManyInfo = {
+      self: {
+         table: '',
+         column: '',
+         relation: '',
+      },
+      target: {
+         table: '',
+         column: '',
+         relation: '',
+      },
+      sql: ''
+   }
+
+   protected check(value: unknown) { }
+
+   readonly model: ModelClass<M>
    readonly type = "relation-many"
    readonly isRelation = true
+   private _target_column = ''
 
-   constructor(schema: SchemaClass<S>) {
+   get column() {
+      if (!this._target_column) throw new Error(`target column not found`)
+      return this._target_column
+   }
+
+   constructor(model: ModelClass<M>) {
       super()
-      this.schema = schema
+      this.model = model
+   }
+   optional(): any {
+      throw new Error("optional not supported");
+   }
+
+   nullable(): any {
+      throw new Error("nullable not supported");
    }
 
    target(column: string) {
-      this.set("column", column, true)
+      if (this._target_column) throw new Error(`target column already assigned`);
+      this._target_column = column
       return this
    }
 }
-export default RelationMany
+export default XqlRelationMany

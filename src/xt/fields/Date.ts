@@ -1,9 +1,18 @@
 import { XVDate, XVOptional } from "xanv"
+import { XansqlDialectEngine } from "../../core/types"
+import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlDate extends XVDate {
-   optional() {
+   table!: string
+   column_name!: string
+   engine!: XansqlDialectEngine
+
+   get info(): XqlFieldInfo {
+      return new XqlFieldInfo(this)
+   }
+
+   optional(): any {
       throw new Error("optional not supported");
-      return super.optional()
    }
    nullable() {
       super.optional()
