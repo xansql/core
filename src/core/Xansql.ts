@@ -1,11 +1,12 @@
-import Model, { ModelClass } from "../model";
-import { ExecuterResult, ModelCallback, ModelType, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
+import Model from "../model";
+import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
 import ModelFactory from "./classes/ModelFactory";
 import XansqlMigration from "./classes/XansqlMigrartion";
 import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
+import { ModelClass, SchemaShape } from "../model/types-new";
 
 
 class Xansql {
@@ -15,7 +16,7 @@ class Xansql {
    readonly XansqlTransaction: XansqlTransaction;
    readonly EventManager: EventManager
    readonly XansqlMigration: XansqlMigration
-   readonly models = new Map<new () => Model, Model>()
+   readonly models = new Map<ModelClass<any>, Model>()
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
@@ -35,15 +36,17 @@ class Xansql {
       return this.ModelFactory.aliases
    }
 
-   model<S extends Model<any>>(model: ModelClass<S>, hooks?: any) {
+   model<M extends Model<any>>(model: ModelClass<M>, hooks?: any) {
       if (this.models.has(model)) {
-         return this.models.get(model) as Model<S>
+         return this.models.get(model) as Model<ReturnType<M['schema']>>
       }
 
       const _model = new model(this)
       this.models.set(model, _model)
-      return _model as Model<S>
+
+      return _model as Model<ReturnType<M['schema']>>
    }
+
 
    // getModel<S extends Schema>(table: string) {
    //    if (!this.models.has(table)) {

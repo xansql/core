@@ -1,5 +1,4 @@
 
-import { XVType } from "xanv"
 import XqlArray from "./fields/Array"
 import XqlBoolean from "./fields/Boolean"
 import XqlDate from "./fields/Date"

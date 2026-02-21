@@ -11,6 +11,17 @@ class XqlIDField extends XVNumber {
       return new XqlFieldInfo(this)
    }
 
+   toSql(value: unknown): string {
+      value = super.parse(value) as any
+      if (value === undefined || value === null) return 'NULL';
+      return `${value}`
+   }
+
+   fromSql(value: string): ReturnType<typeof this.parse> {
+      if (value === null || value === undefined) return null
+      return JSON.parse(value);
+   }
+
    optional(): any {
       throw new Error("Optional not allowed")
    }

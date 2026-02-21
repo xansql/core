@@ -1,6 +1,7 @@
 import { XVFile } from "xanv"
 import { XansqlDialectEngine } from "../../core/types"
 import XqlFieldInfo from "../XqlFieldInfo"
+import { escapeSqlValue } from "../../utils"
 
 class XqlFile extends XVFile {
    table!: string
@@ -10,6 +11,18 @@ class XqlFile extends XVFile {
    get info(): XqlFieldInfo {
       return new XqlFieldInfo(this)
    }
+
+   toSql(value: unknown): string | "NULL" {
+      const file = super.parse(value) as File
+      if (file === undefined || file === null) return 'NULL';
+      return `'${escapeSqlValue(file.name)}'`;
+   }
+
+   fromSql(value: string): ReturnType<typeof this.parse> {
+      if (value === null || value === undefined) return null
+      return JSON.parse(value);
+   }
+
    optional(): any {
       throw new Error("optional not supported");
    }

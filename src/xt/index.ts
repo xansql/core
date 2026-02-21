@@ -20,8 +20,9 @@ import XqlPhone from "./additional/Phone";
 import XqlIP from "./additional/IP";
 import { XVType } from "xanv";
 import RelationMany from "./fields/RelationMany";
-import Model, { ModelClass } from "../model";
+import Model from "../model";
 import RelationOne from "./fields/RelationOne";
+import { ModelClass } from "../model/types-new";
 
 const xt = {
    id: () => new XqlIDField(),
@@ -36,8 +37,8 @@ const xt = {
    tuple: <T extends XVType<any>[]>(type: T) => new XqlTuple(type),
    union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
-   many: <S extends Model>(m: ModelClass<S>) => new RelationMany(m),
-   one: <S extends Model>(m: ModelClass<S>) => new RelationOne(m),
+   many: <M extends Model>(m: ModelClass<M>) => new RelationMany(m),
+   one: <M extends Model>(m: ModelClass<M>) => new RelationOne(m),
 
    createdAt: () => xt.date().create(),
    updatedAt: () => xt.date().update(),

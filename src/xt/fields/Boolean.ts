@@ -11,6 +11,17 @@ class XqlBoolean extends XVBoolean {
       return new XqlFieldInfo(this)
    }
 
+   toSql(value: unknown): string {
+      let _value = super.parse(value)
+      if (_value === undefined || _value === null) return 'NULL';
+      return _value ? "1" : "0"
+   }
+
+   fromSql(value: string): ReturnType<typeof this.parse> {
+      if (value === null || value === undefined) return null
+      return JSON.parse(value);
+   }
+
    optional(): any {
       throw new Error("optional not supported");
    }

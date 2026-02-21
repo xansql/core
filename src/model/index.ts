@@ -3,11 +3,10 @@ import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { FindArgs, SchemaShape } from "./types-new";
+import { FindArgs, ModelClass, SchemaShape } from "./types-new";
 
-export type ModelClass<M extends Model = Model> = new (...args: any[]) => M
 
-abstract class Model<S extends SchemaShape = any> {
+abstract class Model<S extends SchemaShape = SchemaShape> {
    abstract schema(): S
    private xansql: Xansql
    readonly table: string
@@ -25,7 +24,7 @@ abstract class Model<S extends SchemaShape = any> {
          throw new Error(`ID Column not found in schema ${this.table}. Please define an ID column using xt.id() in the schema.`)
       }
       // build model registry in xansql for relations
-      xansql.models.set(this.constructor as ModelClass, this)
+      xansql.models.set(this.constructor as ModelClass<any>, this as any)
       for (let column in fields) {
          const field = fields[column]
          if (iof(field, XqlRelationMany, XqlRelationOne) && !xansql.models.has(field.model)) {

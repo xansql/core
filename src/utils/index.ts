@@ -6,9 +6,14 @@ export const isString = (v: any) => typeof v === 'string'
 export const isNumber = (v: any) => typeof v === 'number' && !isNaN(v)
 
 export const escapeSqlValue = (value: string): string => {
-   return value
-      .replace(/'/g, "''")   // Escape single quote
-      .replace(/\x00/g, '\\0'); // Escape null byte (rare but can break SQL)
+   if (value === null || value === undefined) {
+      return ""
+   }
+
+   const str = String(value)
+   const escaped = str.replace(/'/g, "''")
+
+   return escaped
 }
 
 export const freezeObject = (obj: any) => {

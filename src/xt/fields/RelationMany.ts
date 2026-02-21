@@ -1,7 +1,8 @@
 import { XVType } from "xanv"
-import Model, { ModelClass } from "../../model"
+import Model from "../../model"
 import { XansqlDialectEngine } from "../../core/types"
 import XqlFieldInfo from "../XqlFieldInfo"
+import { ModelClass } from "../../model/types-new"
 
 export type RelationManyInfo = {
    self: {
@@ -18,6 +19,11 @@ export type RelationManyInfo = {
 }
 
 class XqlRelationMany<M extends Model> extends XVType<any> {
+   readonly schema!: ReturnType<M['schema']>
+   readonly model: ModelClass<M>
+   readonly type = "relation-many"
+   readonly isRelation = true
+   private _target_column = ''
 
    table!: string
    column_name!: string
@@ -43,10 +49,7 @@ class XqlRelationMany<M extends Model> extends XVType<any> {
 
    protected check(value: unknown) { }
 
-   readonly model: ModelClass<M>
-   readonly type = "relation-many"
-   readonly isRelation = true
-   private _target_column = ''
+
 
    get column() {
       if (!this._target_column) throw new Error(`target column not found`)

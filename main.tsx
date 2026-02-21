@@ -7,6 +7,9 @@ class UserModel extends Model {
   schema() {
     return {
       uid: xt.id(),
+      name: xt.string(),
+      age: xt.number(),
+      email: xt.string().email().unique(),
       products: xt.many(ProductModel).target("user"),
       customer: xt.one(UserModel).target("customers"),
     }
@@ -18,24 +21,80 @@ class ProductModel extends Model {
     return {
       pid: xt.id(),
       name: xt.string(),
+      description: xt.string(),
+      status: xt.string(),
       user: xt.one(UserModel).target("products")
     }
   }
 
   getStudents() {
     this.find({
+      select: {
 
+      }
     })
   }
 }
-
 
 const User = db.model(UserModel)
 const Product = db.model(ProductModel)
 const cols = User
 type T = typeof cols
 
+const s = Product.schema().user.schema
 console.log(User.schema());
+
+const f = User.find({
+  distinct: ["age"],
+  orderBy: {
+    name: "desc",
+    customer: "asc"
+  },
+  aggregate: {
+    products: {
+      uid: {
+        count: true
+      }
+    }
+  },
+  select: {
+    name: true,
+    email: true,
+    products: {
+      select: {
+        name: true,
+      }
+    },
+    customer: {
+      select: {
+        name: true
+      }
+    }
+  },
+  where: {
+    OR: [
+      {
+        name: {},
+        AND: []
+      }
+    ],
+    name: {
+      equals: "asd"
+    },
+    email: [
+      {
+        equals: "",
+      }
+    ],
+    products: {
+      status: "",
+      description: "",
+      user: {
+        email: ""
+      }
+    }
+  }
+})
 
 
 const Button = ({ label, onClick }: any) => {

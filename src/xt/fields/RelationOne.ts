@@ -1,7 +1,8 @@
 import { XVType } from "xanv"
-import Model, { ModelClass } from "../../model"
+import Model from "../../model"
 import { XansqlDialectEngine } from "../../core/types"
 import XqlFieldInfo from "../XqlFieldInfo"
+import { ModelClass } from "../../model/types-new"
 
 
 export type RelationOneInfo = {
@@ -19,8 +20,9 @@ export type RelationOneInfo = {
 }
 
 
-class XqlRelationOne<S extends Model> extends XVType<any> {
-   readonly model: ModelClass<S>
+class XqlRelationOne<M extends Model> extends XVType<any> {
+   readonly schema!: ReturnType<M['schema']>
+   readonly model: ModelClass<M>
    private _target_column = ''
    readonly type = "relation-one"
    readonly isRelation = true
@@ -47,13 +49,24 @@ class XqlRelationOne<S extends Model> extends XVType<any> {
       sql: ''
    }
 
-   constructor(model: ModelClass<S>) {
+   constructor(model: ModelClass<M>) {
       super()
       this.model = model
       this.index()
    }
 
    protected check(value: unknown) { }
+
+   toSql(value: unknown): string {
+      value = super.parse(value) as any
+      if (value === undefined || value === null) return 'NULL';
+      return `${value}`
+   }
+
+   fromSql(value: string): ReturnType<typeof this.parse> {
+      if (value === null || value === undefined) return null
+      return JSON.parse(value);
+   }
 
    optional(): any {
       throw new Error("optional not supported");

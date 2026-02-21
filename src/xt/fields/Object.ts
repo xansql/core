@@ -2,6 +2,7 @@ import { XVObject } from "xanv"
 import { XVObjectShape } from "xanv/types/Object";
 import { XansqlDialectEngine } from "../../core/types";
 import XqlFieldInfo from "../XqlFieldInfo";
+import { escapeSqlValue } from "../../utils";
 
 class XqlObject<const T extends XVObjectShape> extends XVObject<T> {
    table!: string
@@ -10,6 +11,17 @@ class XqlObject<const T extends XVObjectShape> extends XVObject<T> {
 
    get info(): XqlFieldInfo {
       return new XqlFieldInfo(this)
+   }
+   toSql(value: unknown): string {
+      let _value: string = super.parse(value) as any
+      if (_value === undefined || _value === null) return 'NULL';
+      _value = JSON.stringify(_value);
+      return `'${escapeSqlValue(_value)}'`;
+   }
+
+   fromSql(value: string): ReturnType<typeof this.parse> {
+      if (value === null || value === undefined) return null
+      return JSON.parse(value);
    }
 
    optional(): any {
