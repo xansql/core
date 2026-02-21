@@ -1,9 +1,16 @@
+import { XVType } from "xanv";
 import Xansql from "../core/Xansql";
 import { iof } from "../utils";
+import XqlFile from "../xt/fields/File";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { FindArgs, ModelClass, SchemaShape } from "./types-new";
+import { CreateArgs, DeleteArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
+import XansqlError from "../core/XansqlError";
+
+type Narrow<T> =
+   | (T extends [] ? [] : never)
+   | (T extends object ? { [K in keyof T]: Narrow<T[K]> } : T)
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -23,6 +30,7 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       if (!this.IDColumn) {
          throw new Error(`ID Column not found in schema ${this.table}. Please define an ID column using xt.id() in the schema.`)
       }
+
       // build model registry in xansql for relations
       xansql.models.set(this.constructor as ModelClass<any>, this as any)
       for (let column in fields) {
@@ -34,6 +42,16 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
       for (let column in fields) {
          const field = fields[column]
+
+         // check field is valid XqlField
+         if (!field.meta || !field.info || !field.parse) {
+            throw new XansqlError({
+               model: this.constructor.name,
+               column,
+               message: `Invalid field type in model ${this.constructor.name}:${column}`
+            })
+         }
+
          field.table = this.table
          field.column_name = column
          field.engine = xansql.dialect.engine
@@ -91,7 +109,15 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       return this.xansql.execute(sql)
    }
 
-   find(where: FindArgs<S>) { }
+   // find(args: FindArgs<S>) { }
+   find<T extends FindArgs<S>>(args: T): Normalize<T> {
+      return args as any
+   }
+
+   create<A extends CreateArgs<S>>(args: A) { }
+   update<A extends UpdateArgs<S>>(args: A) { }
+   upsert<A extends UpsertArgs<S>>(args: A) { }
+   delete<A extends DeleteArgs<S>>(args: A) { }
 
 }
 

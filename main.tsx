@@ -45,15 +45,16 @@ const s = Product.schema().user.schema
 console.log(User.schema());
 
 const f = User.find({
-  distinct: ["age"],
   orderBy: {
     name: "desc",
     customer: "asc"
   },
   aggregate: {
     products: {
-      uid: {
-        count: true
+      name: {
+        count: {
+          round: 2
+        }
       }
     }
   },
@@ -63,19 +64,22 @@ const f = User.find({
     products: {
       select: {
         name: true,
+      },
+      where: {
+        id: 3
       }
     },
-    customer: {
-      select: {
-        name: true
-      }
-    }
+    // customer: {
+    //   select: {
+    //     name: true
+    //   }
+    // }
   },
   where: {
     OR: [
       {
         name: {},
-        AND: []
+        AND: {}
       }
     ],
     name: {

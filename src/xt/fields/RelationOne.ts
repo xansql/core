@@ -49,6 +49,18 @@ class XqlRelationOne<M extends Model> extends XVType<any> {
       sql: ''
    }
 
+   readonly value = {
+      toSql: (value: unknown): string => {
+         value = super.parse(value) as any
+         if (value === undefined || value === null) return 'NULL';
+         return `${value}`
+      },
+      fromSql: (value: string): ReturnType<typeof this.parse> => {
+         if (value === null || value === undefined) return null
+         return JSON.parse(value);
+      }
+   }
+
    constructor(model: ModelClass<M>) {
       super()
       this.model = model
@@ -57,16 +69,7 @@ class XqlRelationOne<M extends Model> extends XVType<any> {
 
    protected check(value: unknown) { }
 
-   toSql(value: unknown): string {
-      value = super.parse(value) as any
-      if (value === undefined || value === null) return 'NULL';
-      return `${value}`
-   }
 
-   fromSql(value: string): ReturnType<typeof this.parse> {
-      if (value === null || value === undefined) return null
-      return JSON.parse(value);
-   }
 
    optional(): any {
       throw new Error("optional not supported");

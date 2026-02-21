@@ -123,7 +123,7 @@ class XqlFieldInfo {
             type = "TEXT"  // store ISO string (SQLite has no native DATETIME
          }
       } else if (iof(field, XqlEnum)) {
-         let options = (field as any).options
+         let options = field.enum_options
          const valuesList = options.map((v: any) => `'${escapeSqlValue(v)}'`).join(', ');
          type = `VARCHAR(255) CHECK(${quote(engine, column)} IN (${valuesList}))`
       } else if (iof(field, XqlArray, XqlObject, XqlRecord, XqlTuple, XqlUnion)) {

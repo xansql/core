@@ -8,38 +8,40 @@ class XqlDate extends XVDate {
    column_name!: string
    engine!: XansqlDialectEngine
 
+   readonly value = {
+      toSql: (value: unknown): string => {
+         value = super.parse(value)
+
+         if (value === undefined || value === null) return 'NULL';
+
+         const date =
+            value instanceof Date
+               ? value
+               : typeof value === "string" || typeof value === "number"
+                  ? new Date(value)
+                  : null
+
+         if (!date || isNaN(date.getTime())) {
+            throw new Error(
+               `Invalid date value for column ${this.column_name}: ${value}`
+            )
+         }
+
+         // ISO 8601 UTC format (universal standard)
+         // Example: 2026-02-21T10:30:00.000Z
+         const iso = date.toISOString()
+
+         return `'${escapeSqlValue(iso)}'`
+      },
+
+      fromSql: (value: string): ReturnType<typeof this.parse> => {
+         if (value === null || value === undefined) return null
+         return new Date(value);
+      }
+   }
+
    get info(): XqlFieldInfo {
       return new XqlFieldInfo(this)
-   }
-
-   toSql(value: unknown): string {
-      value = super.parse(value)
-
-      if (value === undefined || value === null) return 'NULL';
-
-      const date =
-         value instanceof Date
-            ? value
-            : typeof value === "string" || typeof value === "number"
-               ? new Date(value)
-               : null
-
-      if (!date || isNaN(date.getTime())) {
-         throw new Error(
-            `Invalid date value for column ${this.column_name}: ${value}`
-         )
-      }
-
-      // ISO 8601 UTC format (universal standard)
-      // Example: 2026-02-21T10:30:00.000Z
-      const iso = date.toISOString()
-
-      return `'${escapeSqlValue(iso)}'`
-   }
-
-   fromSql(value: string): ReturnType<typeof this.parse> {
-      if (value === null || value === undefined) return null
-      return new Date(value);
    }
 
 

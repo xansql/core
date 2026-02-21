@@ -8,20 +8,23 @@ class XqlString extends XVString {
    column_name!: string
    engine!: XansqlDialectEngine
 
+   readonly value = {
+      toSql: (value: unknown): string => {
+         const _value = super.parse(value) as string
+         if (_value === undefined || _value === null) return 'NULL';
+         return `'${escapeSqlValue(_value)}'`
+      },
+      fromSql: (value: string): ReturnType<typeof this.parse> => {
+         if (value === null || value === undefined) return null
+         return JSON.parse(value);
+      }
+   }
+
    get info(): XqlFieldInfo {
       return new XqlFieldInfo(this)
    }
 
-   toSql(value: unknown): string | "NULL" {
-      const _value = super.parse(value) as string
-      if (_value === undefined || _value === null) return 'NULL';
-      return `'${escapeSqlValue(_value)}'`
-   }
 
-   fromSql(value: string): ReturnType<typeof this.parse> {
-      if (value === null || value === undefined) return null
-      return JSON.parse(value);
-   }
 
    optional(): any {
       throw new Error("optional not supported")

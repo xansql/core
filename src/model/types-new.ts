@@ -7,7 +7,7 @@ import XqlIDField from "../xt/fields/IDField"
 
 export type SchemaShape = Record<string, XqlField>
 export type ModelClass<M extends Model<any>> = new (...args: any[]) => M
-type Normalize<T> = T extends object ? { [K in keyof T]: T[K] } : T
+export type Normalize<T> = T extends object ? { [K in keyof T]: T[K] } : T
 
 export type SchemaAllColumns<S extends SchemaShape> = {
    [column in keyof S as S[column] extends XqlRelationMany<any> ? never : column]: S[column]
@@ -70,28 +70,41 @@ export type WhereLogical<S extends SchemaShape> = {
    NOT?: WhereArgs<S>[]
 }
 
-export type WhereArgs<S extends SchemaShape> = {
+export type WhereArgs<S extends SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
-} | WhereLogical<S>
+}> | WhereLogical<S>
 
-//    SELECT ARGS
+// SELECT ARGS
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true; schema: SchemaShape } ? boolean | Normalize<FindArgs<S[C]['schema']>> : boolean
 }>
 
 
+// AGGREGATE ARGS
+export type AggregateSelectArgs<S extends SchemaShape> = {
+   [C in keyof S  as S[C] extends { isRelation: true } ? never : C]?: AggregateArgsValue
+}
+
+export type AggregateGroupByArgs<S extends SchemaShape> = (keyof SchemaAllColumns<S>)[]
+
+export type AggregateArgs<S extends SchemaShape> = {
+   groupBy?: AggregateGroupByArgs<S>;
+   orderBy?: OrderByArgs<S>;
+   limit?: LimitArgs;
+   where?: WhereArgs<S>;
+   select: AggregateSelectArgs<S>
+}
+
 // FIND ARGS
 export type FindAggregateArgs<S extends SchemaShape> = Normalize<{
-   [K in keyof S as IsRelationMany<S[K]> extends true ? K : never]?: {
-      [C in keyof S as S[C] extends { isRelation: true } ? never : C]?: AggregateArgsValue
-   }
+   [K in keyof S as S[K] extends { type: "relation-many", schema: SchemaShape } ? K : never]?: S[K] extends { type: "relation-many", schema: SchemaShape } ? Normalize<AggregateSelectArgs<S[K]["schema"]>> : never
 }>
 
 
 // FIND ARGS
 export type FindArgs<S extends SchemaShape = SchemaShape> = {
    distinct?: DistinctArgs<S>
-   where?: WhereArgs<S> | WhereArgs<S>[]
+   where?: WhereArgs<S>
    select?: SelectArgs<S>
    limit?: LimitArgs
    orderBy?: OrderByArgs<S>;

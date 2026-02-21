@@ -8,22 +8,26 @@ class XqlTuple<T extends XVType<any>[] = any> extends XVTuple<T> {
    column_name!: string
    engine!: XansqlDialectEngine
 
+   readonly value = {
+      toSql: (value: unknown): string => {
+         let _value: string = super.parse(value) as any
+         if (_value === undefined || _value === null) return 'NULL';
+         _value = JSON.stringify(_value);
+         return `'${escapeSqlValue(_value)}'`;
+      },
+
+      fromSql: (value: string): ReturnType<typeof this.parse> => {
+         if (value === null || value === undefined) return null
+         return JSON.parse(value);
+      }
+   }
+
    get info(): XqlFieldInfo {
       return new XqlFieldInfo(this)
    }
 
 
-   toSql(value: unknown): string {
-      let _value: string = super.parse(value) as any
-      if (_value === undefined || _value === null) return 'NULL';
-      _value = JSON.stringify(_value);
-      return `'${escapeSqlValue(_value)}'`;
-   }
 
-   fromSql(value: string): ReturnType<typeof this.parse> {
-      if (value === null || value === undefined) return null
-      return JSON.parse(value);
-   }
 
    optional(): any {
       throw new Error("optional not supported");
