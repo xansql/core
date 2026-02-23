@@ -1,16 +1,12 @@
-import { XVType } from "xanv";
 import Xansql from "../core/Xansql";
 import { iof } from "../utils";
-import XqlFile from "../xt/fields/File";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { CreateArgs, DeleteArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
+import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
 
-type Narrow<T> =
-   | (T extends [] ? [] : never)
-   | (T extends object ? { [K in keyof T]: Narrow<T[K]> } : T)
+
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -39,6 +35,9 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
             xansql.model(field.model)
          }
       }
+
+
+      let migration_columns = []
 
       for (let column in fields) {
          const field = fields[column]
@@ -102,22 +101,31 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
                }
             }
          }
+
+         const info = field.info
+
+         migration_columns.push(info.sql.column)
+
       }
+
+      // migration
+      const sql = `CREATE TABLE IF NOT EXISTS ${table}(${migration_columns.join(",")})`
+      // xansql.execute(sql)
+
    }
 
    async execute(sql: string) {
       return this.xansql.execute(sql)
    }
 
-   // find(args: FindArgs<S>) { }
-   find<T extends FindArgs<S>>(args: T): Normalize<T> {
+   find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Normalize<T> {
       return args as any
    }
 
-   create<A extends CreateArgs<S>>(args: A) { }
-   update<A extends UpdateArgs<S>>(args: A) { }
-   upsert<A extends UpsertArgs<S>>(args: A) { }
-   delete<A extends DeleteArgs<S>>(args: A) { }
+   create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>) { }
+   update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) { }
+   upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
+   delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) { }
 
 }
 

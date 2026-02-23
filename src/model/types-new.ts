@@ -5,6 +5,22 @@ import XqlRelationOne from "../xt/fields/RelationOne"
 import { XqlField } from "../xt/types"
 import XqlIDField from "../xt/fields/IDField"
 
+
+export type ExactArgs<T, Shape> =
+   T extends object
+   ? Shape extends object
+   ? Exclude<keyof T, keyof Shape> extends never
+   ? {
+      [K in keyof T]: K extends keyof Shape
+      ? T[K] extends object
+      ? ExactArgs<T[K], Shape[K]>
+      : T[K]
+      : never
+   }
+   : Shape
+   : never
+   : T;
+
 export type SchemaShape = Record<string, XqlField>
 export type ModelClass<M extends Model<any>> = new (...args: any[]) => M
 export type Normalize<T> = T extends object ? { [K in keyof T]: T[K] } : T
@@ -75,6 +91,7 @@ export type WhereArgs<S extends SchemaShape> = Normalize<{
 }> | WhereLogical<S>
 
 // SELECT ARGS
+
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true; schema: SchemaShape } ? boolean | Normalize<FindArgs<S[C]['schema']>> : boolean
 }>
@@ -102,7 +119,8 @@ export type FindAggregateArgs<S extends SchemaShape> = Normalize<{
 
 
 // FIND ARGS
-export type FindArgs<S extends SchemaShape = SchemaShape> = {
+
+export type FindArgs<S extends SchemaShape> = {
    distinct?: DistinctArgs<S>
    where?: WhereArgs<S>
    select?: SelectArgs<S>

@@ -28,11 +28,7 @@ class ProductModel extends Model {
   }
 
   getStudents() {
-    this.find({
-      select: {
 
-      }
-    })
   }
 }
 
@@ -45,9 +41,11 @@ const s = Product.schema().user.schema
 console.log(User.schema());
 
 const f = User.find({
+  distinct: ['age', "email"],
   orderBy: {
     name: "desc",
-    customer: "asc"
+    customer: "asc",
+    uid: "asc"
   },
   aggregate: {
     products: {
@@ -66,20 +64,15 @@ const f = User.find({
         name: true,
       },
       where: {
-        id: 3
+        pid: 3
       }
     },
-    // customer: {
-    //   select: {
-    //     name: true
-    //   }
-    // }
   },
   where: {
     OR: [
       {
         name: {},
-        AND: {}
+        AND: []
       }
     ],
     name: {

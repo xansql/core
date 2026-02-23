@@ -1,4 +1,3 @@
-import { XansqlDialectEngine } from "../core/types";
 import XansqlError from "../core/XansqlError";
 import { escapeSqlValue, iof, quote } from "../utils";
 import XqlArray from "./fields/Array";
@@ -10,6 +9,7 @@ import XqlIDField from "./fields/IDField";
 import XqlNumber from "./fields/Number";
 import XqlObject from "./fields/Object";
 import XqlRecord from "./fields/Record";
+import XqlRelationMany from "./fields/RelationMany";
 import XqlRelationOne from "./fields/RelationOne";
 import XqlString from "./fields/String";
 import XqlTuple from "./fields/Tuple";
@@ -29,6 +29,8 @@ class XqlFieldInfo {
    readonly schema: XqlFieldInfoSchema
    readonly sql: {
       column: string,
+      alter_column: string,
+      drop_column: string;
       create_index: string
       drop_index: string
    }
@@ -52,7 +54,9 @@ class XqlFieldInfo {
 
 
       let type = ""
-      if (iof(field, XqlRelationOne)) {
+      if (iof(field, XqlRelationMany)) {
+
+      } else if (iof(field, XqlRelationOne)) {
          if (engine === 'mysql' || engine === 'postgresql') {
             type = "BIGINT"
          } else if (engine === 'sqlite') {
@@ -136,7 +140,6 @@ class XqlFieldInfo {
          });
       }
 
-
       this.schema = {
          type: field.constructor.name,
          length: meta.length || meta.max || null,
@@ -153,9 +156,11 @@ class XqlFieldInfo {
             create_index = `CREATE UNIQUE INDEX ${this.schema.index} ON ${quote(engine, table)} (${quote(engine, column)});`
          }
       }
-
+      const _column = `${quote(engine, column)} ${type} ${nullable}${default_value ? ` DEFAULT ${default_value} ` : ''}${unique}`.trim().replace(/ +/g, ' ')
       this.sql = {
-         column: `${quote(engine, column)} ${type} ${nullable}${default_value ? ` DEFAULT ${default_value} ` : ''}${unique}`.trim().replace(/ +/g, ' '),
+         column: _column,
+         alter_column: `ALTER TABLE ${field.table} ADD COLUMN ${_column}`,
+         drop_column: `ALTER TABLE ${field.table} DROP COLUMN ${quote(engine, column)}`,
          create_index: create_index,
          drop_index: this.schema.index ? `DROP INDEX ${quote(engine, this.schema.index)};` : ''
       }
