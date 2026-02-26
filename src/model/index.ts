@@ -5,13 +5,14 @@ import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
 import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
+import BuildWhereArgs from "./Build/WhereArgs";
 
 
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
    abstract schema(): S
-   private xansql: Xansql
+   readonly xansql: Xansql
    readonly table: string
    readonly IDColumn: string
 
@@ -118,7 +119,10 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       return this.xansql.execute(sql)
    }
 
-   find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Normalize<T> {
+   find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>) {
+      const wargs = new BuildWhereArgs(args.where || {}, this)
+      console.log(wargs.sql);
+
       return args as any
    }
 

@@ -55,27 +55,26 @@ export type OrderByArgs<S extends SchemaShape> = Normalize<{
 
 
 // WHERE 
-export interface WhereSubConditionArgs<V> {
-   equals?: V;
-   not?: V;
-   lt?: V;
-   lte?: V;
-   gt?: V;
-   gte?: V;
-   in?: (V)[];
-   notIn?: (V)[];
-   between?: [V, V];
-   notBetween?: [V, V];
-   contains?: V;
-   notContains?: V;
-   startsWith?: V;
-   endsWith?: V;
-   isNull?: boolean;
-   isNotNull?: boolean;
-   isEmpty?: boolean;
-   isNotEmpty?: boolean;
-   isTrue?: boolean;
-   isFalse?: boolean;
+export type WhereSubConditionArgs<T> = {
+   equals?: T;
+   not?: T | WhereSubConditionArgs<T> | WhereSubConditionArgs<T>[];
+
+   lt?: T extends number | Date ? T : never;
+   lte?: T extends number | Date ? T : never;
+   gt?: T extends number | Date ? T : never;
+   gte?: T extends number | Date ? T : never;
+
+   in?: T[];
+   notIn?: T[];
+
+   between?: T extends number | Date ? [T, T] : never;
+
+   contains?: T extends string ? string : never;
+   startsWith?: T extends string ? string : never;
+   endsWith?: T extends string ? string : never;
+
+   is?: null;
+   isNot?: null;
 }
 
 export type WhereColumnArgs<F extends XqlField> = Infer<F> | WhereSubConditionArgs<Infer<F>> | WhereSubConditionArgs<Infer<F>>[]
@@ -88,10 +87,9 @@ export type WhereLogical<S extends SchemaShape> = {
 
 export type WhereArgs<S extends SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
-}> | WhereLogical<S>
+}>
 
 // SELECT ARGS
-
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true; schema: SchemaShape } ? boolean | Normalize<FindArgs<S[C]['schema']>> : boolean
 }>

@@ -1,23 +1,80 @@
-type XanErrorOption = {
-   model?: string;
-   column?: string;
-   message: string;
-}
+export type XansqlErrorCode =
+   | "VALIDATION_ERROR"
+   | "QUERY_ERROR"
+   | "CONNECTION_ERROR"
+   | "NOT_FOUND"
+   | "UNIQUE_CONSTRAINT"
+   | "FOREIGN_KEY_CONSTRAINT"
+   | "MIGRATION_ERROR"
+   | "INTERNAL_ERROR"
+   | "FILE_ERROR"
 
+export interface XansqlErrorOptions {
+   code: XansqlErrorCode
+   message: string
+   model?: string
+   field?: string
+   sql?: string
+}
 
 class XansqlError extends Error {
-   model?: string
-   column?: string
+   public readonly code: XansqlErrorCode
+   public readonly model?: string
+   public readonly field?: string
+   public readonly sql?: string
+   public readonly timestamp: string
 
-   constructor(opt: XanErrorOption | string) {
-      let model = typeof opt === 'string' ? undefined : opt.model;
-      let column = typeof opt === 'string' ? undefined : opt.column;
-      let message = typeof opt === 'string' ? (opt as string) : opt.message;
-      super(message);
-      this.name = "XansqlError";
-      this.model = model;
-      this.column = column;
+   constructor(options: XansqlErrorOptions) {
+      super(options.message)
+
+      this.name = "XansqlError"
+      this.code = options.code
+      this.model = options.model
+      this.field = options.field
+      this.sql = options.sql
+      this.timestamp = new Date().toISOString()
+      Error.captureStackTrace?.(this, XansqlError)
+      super.message = this.format() as string
+
    }
+
+   toJSON() {
+      return {
+         name: this.name,
+         code: this.code,
+         message: this.message,
+         model: this.model,
+         field: this.field,
+         sql: this.sql,
+         timestamp: this.timestamp,
+      }
+   }
+
+   format(): string {
+      let context = []
+      if (this.model) {
+         context.push(`Model: ${this.model}`)
+      }
+      if (this.field) {
+         context.push(`Field: ${this.field}`)
+      }
+      if (this.sql) {
+         context.push(`SQL: ${this.sql}`)
+      }
+      return `  XANSQL ERROR  •  ${this.code}
+
+- Message
+  ${this.message}
+
+- Context
+${context.join("\n")}
+Time  : ${this.timestamp}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`.trim()
+   }
+
+
 }
 
-export default XansqlError;
+export default XansqlError

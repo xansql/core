@@ -1,7 +1,9 @@
 import { XansqlDialectEngine } from "../core/types";
 
 export const isArray = (v: any) => Array.isArray(v)
-export const isObject = (v: any) => Object.prototype.toString.call(v) === '[object Object]';
+export const isObject = (v: unknown): v is Record<string, unknown> => {
+   return Object.prototype.toString.call(v) === '[object Object]';
+};
 export const isString = (v: any) => typeof v === 'string'
 export const isNumber = (v: any) => typeof v === 'number' && !isNaN(v)
 

@@ -91,14 +91,20 @@ class Xansql {
 
    async uploadFile(file: File) {
       if (!this.dialect.file?.upload) {
-         throw new XansqlError(`File upload is not supported by the current dialect.`);
+         throw new XansqlError({
+            code: "INTERNAL_ERROR",
+            message: `File upload is not supported by the current dialect.`
+         });
       }
       return await this.dialect.file.upload(file, this);
    }
 
    async deleteFile(fileId: string) {
       if (!this.dialect.file?.delete) {
-         throw new XansqlError(`File delete is not supported by the current dialect.`);
+         throw new XansqlError({
+            code: "INTERNAL_ERROR",
+            message: `File delete is not supported by the current dialect.`
+         });
       }
       return await this.dialect.file.delete(fileId, this);
    }

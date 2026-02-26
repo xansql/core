@@ -38,7 +38,7 @@ const cols = User
 type T = typeof cols
 
 const s = Product.schema().user.schema
-console.log(User.schema());
+// console.log(User.schema());
 
 const f = User.find({
   distinct: ['age', "email"],
@@ -69,26 +69,47 @@ const f = User.find({
     },
   },
   where: {
-    OR: [
-      {
-        name: {},
-        AND: []
-      }
-    ],
     name: {
       equals: "asd"
     },
     email: [
       {
-        equals: "",
+        equals: "a",
+        // contains: "con",
+        // not: {
+        //   in: ["a", "b"]
+        // }
+      },
+      {
+        equals: "b",
+        // contains: "con",
+        // not: {
+        //   in: ["a", "b"]
+        // }
       }
     ],
     products: {
       status: "",
       description: "",
-      user: {
-        email: ""
-      }
+      user: [
+        {
+          name: "nax",
+          email: "toast@sad",
+        },
+        {
+          email: {
+            contains: "T"
+          },
+          name: {
+            not: {
+              in: ["as", "bs"],
+              not: {
+                equals: "as"
+              }
+            }
+          }
+        }
+      ]
     }
   }
 })
