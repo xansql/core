@@ -44,7 +44,7 @@ export type AggregateArgsValue = {
 }
 export type DistinctArgs<S extends SchemaShape> = Normalize<(keyof SchemaAllColumns<S>)[]>
 
-export type LimitArgs = {
+export type LimitArgs = "all" | {
    take?: number;
    skip?: number;
 }
@@ -56,8 +56,9 @@ export type OrderByArgs<S extends SchemaShape> = Normalize<{
 
 // WHERE 
 export type WhereSubConditionArgs<T> = {
-   equals?: T;
-   not?: T | WhereSubConditionArgs<T> | WhereSubConditionArgs<T>[];
+   distinct?: boolean;
+   is?: T | null;
+   not?: T | null | WhereSubConditionArgs<T> | WhereSubConditionArgs<T>[];
 
    lt?: T extends number | Date ? T : never;
    lte?: T extends number | Date ? T : never;
@@ -73,21 +74,14 @@ export type WhereSubConditionArgs<T> = {
    startsWith?: T extends string ? string : never;
    endsWith?: T extends string ? string : never;
 
-   is?: null;
-   isNot?: null;
+
 }
 
 export type WhereColumnArgs<F extends XqlField> = Infer<F> | WhereSubConditionArgs<Infer<F>> | WhereSubConditionArgs<Infer<F>>[]
 
-export type WhereLogical<S extends SchemaShape> = {
-   AND?: WhereArgs<S>[]
-   OR?: WhereArgs<S>[]
-   NOT?: WhereArgs<S>[]
-}
-
 export type WhereArgs<S extends SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
-}>
+}> | WhereArgs<S>[]
 
 // SELECT ARGS
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{

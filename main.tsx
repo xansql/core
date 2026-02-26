@@ -68,50 +68,51 @@ const f = User.find({
       }
     },
   },
-  where: {
-    name: {
-      equals: "asd"
-    },
-    email: [
-      {
-        equals: "a",
-        // contains: "con",
-        // not: {
-        //   in: ["a", "b"]
-        // }
+  where: [
+    {
+      name: {
+        is: "asd"
       },
-      {
-        equals: "b",
-        // contains: "con",
-        // not: {
-        //   in: ["a", "b"]
-        // }
-      }
-    ],
-    products: {
-      status: "",
-      description: "",
-      user: [
+      email: [
         {
-          name: "nax",
-          email: "toast@sad",
+          contains: "a",
         },
         {
-          email: {
-            contains: "T"
+          contains: "b",
+        }
+      ],
+      products: {
+        status: "",
+        description: "",
+        user: [
+          {
+            name: "nax",
+            email: "toast@sad.com",
           },
-          name: {
-            not: {
-              in: ["as", "bs"],
+          {
+            name: {
               not: {
-                equals: "as"
+                in: ["as", "bs"],
+                not: {
+                  contains: "as"
+                }
               }
             }
           }
+        ]
+      }
+    },
+    {
+      name: {
+        not: {
+          in: ["as", "bs"],
+          not: {
+            contains: "as"
+          }
         }
-      ]
+      }
     }
-  }
+  ]
 })
 
 

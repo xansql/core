@@ -8,13 +8,12 @@ import XansqlError from "../core/XansqlError";
 import BuildWhereArgs from "./Build/WhereArgs";
 
 
-
-
 abstract class Model<S extends SchemaShape = SchemaShape> {
    abstract schema(): S
    readonly xansql: Xansql
    readonly table: string
    readonly IDColumn: string
+   readonly alias: string
 
    constructor(xansql: Xansql) {
       this.xansql = xansql
@@ -37,17 +36,30 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
          }
       }
 
+      const aliases = Array.from(xansql.models.values()).map(m => m.alias)
+      const parts = table.split(/_|(?=[A-Z])/);
+      let alias = parts.map(p => p[0]).join('');
+      if (!alias || alias.length < 1) {
+         alias = table.slice(0, 2);
+      }
+      alias = alias.toLowerCase();
+      let counter = 1;
+      while (aliases.includes(alias)) {
+         alias = alias + counter;
+         counter++;
+      }
+      this.alias = alias
 
       let migration_columns = []
-
       for (let column in fields) {
          const field = fields[column]
 
          // check field is valid XqlField
          if (!field.meta || !field.info || !field.parse) {
             throw new XansqlError({
+               code: "INTERNAL_ERROR",
                model: this.constructor.name,
-               column,
+               field: column,
                message: `Invalid field type in model ${this.constructor.name}:${column}`
             })
          }
