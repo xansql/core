@@ -12,6 +12,7 @@ import { XansqlFileMeta, xt } from './src';
 import fs from 'fs'
 import path from 'path'
 import { Infer } from 'xanv';
+import { User } from './example/db';
 
 
 
@@ -62,7 +63,6 @@ const server = async (app: Express) => {
    })
 
 
-
    // app.get('/foreign', async (req: any, res: any) => {
    //    const f = db.foreignInfo("posts", "user")
    //    const u = db.foreignInfo("users", "user_posts")
@@ -75,6 +75,10 @@ const server = async (app: Express) => {
 
    app.get('/find', async (req: any, res: any) => {
       const start = Date.now()
+      const results = await User.find({
+
+      })
+      res.json({})
 
    });
 
@@ -95,7 +99,6 @@ const server = async (app: Express) => {
 
 
    });
-
 
 
    app.get('/update', async (req: any, res: any) => {

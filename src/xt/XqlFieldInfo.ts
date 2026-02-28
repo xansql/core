@@ -42,8 +42,8 @@ class XqlFieldInfo {
       const engine = (field as any).engine
 
       const meta = field.meta || {};
-      const nullable = meta.nullable || meta.optional ? 'NULL' : 'NOT NULL';
-      const unique = meta.unique ? 'UNIQUE' : '';
+      const nullable = meta.nullable || meta.optional ? 'NULL ' : 'NOT NULL ';
+      const unique = meta.unique ? 'UNIQUE ' : '';
 
       let default_value = ''
       if (meta.default !== undefined) {
@@ -54,9 +54,8 @@ class XqlFieldInfo {
 
 
       let type = ""
-      if (iof(field, XqlRelationMany)) {
 
-      } else if (iof(field, XqlRelationOne)) {
+      if (iof(field, XqlRelationOne)) {
          if (engine === 'mysql' || engine === 'postgresql') {
             type = "BIGINT"
          } else if (engine === 'sqlite') {
@@ -134,9 +133,10 @@ class XqlFieldInfo {
          type = "TEXT"
       } else {
          throw new XansqlError({
+            code: "QUERY_ERROR",
             message: `Unsupported field type for column "${column}" in table "${table}".`,
             model: table,
-            column
+            field: column
          });
       }
 
@@ -146,7 +146,7 @@ class XqlFieldInfo {
          default: default_value || undefined,
          unique: meta.unique ? true : false,
          nullable: !!meta.nullable,
-         index: `${table}_${column}_idx`
+         index: meta.index ? `${table}_${column}_idx` : ""
       }
 
       let create_index = ''
@@ -164,6 +164,7 @@ class XqlFieldInfo {
          create_index: create_index,
          drop_index: this.schema.index ? `DROP INDEX ${quote(engine, this.schema.index)};` : ''
       }
+
    }
 }
 

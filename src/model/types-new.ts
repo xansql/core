@@ -42,7 +42,7 @@ export type AggregateArgsValue = {
       distinct?: boolean;
    }
 }
-export type DistinctArgs<S extends SchemaShape> = Normalize<(keyof SchemaAllColumns<S>)[]>
+export type GropuByArgs<S extends SchemaShape> = Normalize<(keyof SchemaAllColumns<S>)[]>
 
 export type LimitArgs = "all" | {
    take?: number;
@@ -56,7 +56,6 @@ export type OrderByArgs<S extends SchemaShape> = Normalize<{
 
 // WHERE 
 export type WhereSubConditionArgs<T> = {
-   distinct?: boolean;
    is?: T | null;
    not?: T | null | WhereSubConditionArgs<T> | WhereSubConditionArgs<T>[];
 
@@ -113,7 +112,8 @@ export type FindAggregateArgs<S extends SchemaShape> = Normalize<{
 // FIND ARGS
 
 export type FindArgs<S extends SchemaShape> = {
-   distinct?: DistinctArgs<S>
+   distinct?: boolean;
+   groupBy?: GropuByArgs<S>
    where?: WhereArgs<S>
    select?: SelectArgs<S>
    limit?: LimitArgs

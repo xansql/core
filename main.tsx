@@ -2,38 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { db } from './example/DBClient'
 import { Model, xt } from './src';
+import { Product, User } from './example/db';
 
-class UserModel extends Model {
-  schema() {
-    return {
-      uid: xt.id(),
-      name: xt.string(),
-      age: xt.number(),
-      email: xt.string().email().unique(),
-      products: xt.many(ProductModel).target("user"),
-      customer: xt.one(UserModel).target("customers"),
-    }
-  }
-}
-
-class ProductModel extends Model {
-  schema() {
-    return {
-      pid: xt.id(),
-      name: xt.string(),
-      description: xt.string(),
-      status: xt.string(),
-      user: xt.one(UserModel).target("products")
-    }
-  }
-
-  getStudents() {
-
-  }
-}
-
-const User = db.model(UserModel)
-const Product = db.model(ProductModel)
 const cols = User
 type T = typeof cols
 
@@ -41,7 +11,7 @@ const s = Product.schema().user.schema
 // console.log(User.schema());
 
 const f = User.find({
-  distinct: ['age', "email"],
+  groupBy: ['age', "email"],
   orderBy: {
     name: "desc",
     customer: "asc",
@@ -57,11 +27,13 @@ const f = User.find({
     }
   },
   select: {
-    name: true,
-    email: true,
+    // name: true,
+    // email: true,
+    customer: true,
     products: {
       select: {
         name: true,
+        // user: true
       },
       where: {
         pid: 3
@@ -70,6 +42,12 @@ const f = User.find({
   },
   where: [
     {
+
+      customer: {
+        uid: {
+          in: [1]
+        }
+      },
       name: {
         is: "asd"
       },
@@ -90,28 +68,56 @@ const f = User.find({
             email: "toast@sad.com",
           },
           {
-            name: {
-              not: {
-                in: ["as", "bs"],
-                not: {
-                  contains: "as"
-                }
-              }
-            }
+            name: "well"
           }
         ]
       }
     },
     {
       name: {
-        not: {
-          in: ["as", "bs"],
-          not: {
-            contains: "as"
-          }
+        is: "asd"
+      },
+      email: [
+        {
+          contains: "a",
+        },
+        {
+          contains: "b",
         }
+      ],
+      products: {
+        status: "",
+        description: "",
+        user: [
+          {
+            name: "nax",
+            email: "toast@sad.com",
+            products: {
+              user: {
+                name: {
+                  not: {
+                    endsWith: "Test"
+                  }
+                }
+              },
+              name: {
+                not: {
+                  contains: "P"
+                }
+              }
+            }
+          },
+          {
+            name: {
+              not: {
+                in: ['a']
+              }
+            }
+          }
+        ]
       }
-    }
+    },
+
   ]
 })
 

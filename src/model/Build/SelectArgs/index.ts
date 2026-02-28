@@ -1,0 +1,78 @@
+import Model from "../..";
+import XansqlError from "../../../core/XansqlError";
+import { FindArgs, SelectArgs } from "../../types-new";
+import BuildFindArgs from "../FindArgs";
+import BuildWhereArgs from "../WhereArgs";
+
+class BuildSelectArgs {
+
+   readonly columns: string[] = []
+   readonly relations: { [column: string]: BuildFindArgs } = {}
+
+   get sql() {
+      return `SELECT${this.distinct ? " DISTINCT" : ""} ${this.columns.join(", ")} FROM ${this.model.table} as ${this.model.alias}`
+   }
+
+   constructor(args: SelectArgs, private model: Model<any>, private distinct = false) {
+      const xansql = model.xansql
+      const schema = model.schema()
+      const columns: string[] = []
+      const relation_one_columns: string[] = []
+
+      for (let col in args) {
+         let val = args[col]
+         if (!val) continue; // if col: false
+
+         const field = schema[col]
+         if (field.isRelation) {
+            const isMany = field.type == "relation-many"
+            const RModel = xansql.model(field.model)
+            const RSchema = RModel.schema()
+            const relationInfo = field.relationInfo
+            const RArgs: FindArgs<any> = (val === true ? { select: {} } : val) as any
+            if (!RArgs.select) {
+               RArgs.select = {}
+            }
+
+            if (!isMany) {
+               relation_one_columns.push(col)
+            } else {
+               const targetCol = relationInfo.target.column
+               const targetFiled = RSchema[targetCol]
+               const TModel = xansql.model(targetFiled.model);
+
+               if (TModel.table === model.table && targetCol in RArgs.select) {
+                  throw new XansqlError({
+                     code: "QUERY_ERROR",
+                     message: `Circular reference detected`,
+                     model: RModel.table,
+                     field: targetCol,
+                     params: RArgs
+                  })
+               }
+               // RArgs.select[relationInfo.target.relation] = true
+            }
+            this.relations[col] = RArgs as any
+         } else {
+            columns.push(col)
+         }
+      }
+
+      if (!columns.length) {
+         for (let col in schema) {
+            const filed = schema[col]
+            if (!filed.isRelation) {
+               columns.push(col)
+            }
+         }
+      }
+
+      if (!columns.includes(model.IDColumn)) {
+         columns.unshift(model.IDColumn)
+      }
+
+      this.columns = [...columns, ...relation_one_columns]
+   }
+}
+
+export default BuildSelectArgs

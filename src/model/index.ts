@@ -6,21 +6,27 @@ import XqlRelationOne from "../xt/fields/RelationOne";
 import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
 import BuildWhereArgs from "./Build/WhereArgs";
+import BuildSelectArgs from "./Build/SelectArgs";
+import BuildFindArgs from "./Build/FindArgs";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
    abstract schema(): S
    readonly xansql: Xansql
-   readonly table: string
    readonly IDColumn: string
    readonly alias: string
+
+   get table() {
+      const name = this.constructor.name.replaceAll("_", "")
+      let table = name.split(/(?=[A-Z])/).filter(l => l.toLowerCase() !== 'model').join("_").toLowerCase()
+      table = table.endsWith("y") ? table.slice(0, -1) + "ies" : table + "s"
+      return table
+   }
 
    constructor(xansql: Xansql) {
       this.xansql = xansql
       const fields = this.schema()
-      const name = this.constructor.name
-      let table = name.split(/(?=[A-Z])/).filter(l => l.toLowerCase() !== 'model').join("_").toLowerCase()
-      this.table = table.endsWith("y") ? table.slice(0, -1) + "ies" : table + "s"
+
       this.schema = (() => fields).bind(this)
       this.IDColumn = Object.keys(fields).find(column => fields[column] instanceof XqlIDField) || ''
       if (!this.IDColumn) {
@@ -37,10 +43,10 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       }
 
       const aliases = Array.from(xansql.models.values()).map(m => m.alias)
-      const parts = table.split(/_|(?=[A-Z])/);
+      const parts = this.table.split(/_|(?=[A-Z])/);
       let alias = parts.map(p => p[0]).join('');
       if (!alias || alias.length < 1) {
-         alias = table.slice(0, 2);
+         alias = this.table.slice(0, 2);
       }
       alias = alias.toLowerCase();
       let counter = 1;
@@ -51,11 +57,12 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       this.alias = alias
 
       let migration_columns = []
+      let index_sqls = []
       for (let column in fields) {
          const field = fields[column]
 
          // check field is valid XqlField
-         if (!field.meta || !field.info || !field.parse) {
+         if (!field.meta || !field.parse) {
             throw new XansqlError({
                code: "INTERNAL_ERROR",
                model: this.constructor.name,
@@ -114,26 +121,34 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
                }
             }
          }
-
-         const info = field.info
-
-         migration_columns.push(info.sql.column)
-
+         if (!iof(field, XqlRelationMany)) {
+            const info = field.info
+            migration_columns.push(info.sql.column)
+            if (info.sql.create_index) {
+               index_sqls.push(info.sql.create_index)
+            }
+         }
       }
 
       // migration
-      const sql = `CREATE TABLE IF NOT EXISTS ${table}(${migration_columns.join(",")})`
-      // xansql.execute(sql)
+      const sql = `CREATE TABLE IF NOT EXISTS ${this.table}(${migration_columns.join(",")})`
+      xansql.execute(sql)
+      for (let idxql of index_sqls) {
+         try {
+            xansql.execute(idxql)
+         } catch (error) {
 
+         }
+      }
    }
 
    async execute(sql: string) {
       return this.xansql.execute(sql)
    }
 
-   find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>) {
-      const wargs = new BuildWhereArgs(args.where || {}, this)
-      console.log(wargs.sql);
+   async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>) {
+      const build = new BuildFindArgs(args as any, this)
+      const results = await build.results()
 
       return args as any
    }

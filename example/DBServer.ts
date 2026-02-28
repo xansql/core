@@ -32,7 +32,7 @@ const mysql = MysqlDialect({
    // }
 })
 
-const sqlite = SqliteDialect(sqliteConn)
+const sqlite = SqliteDialect('db.sqlite')
 
 export const db = new Xansql({
    dialect: mysql as any,

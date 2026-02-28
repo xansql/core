@@ -23,14 +23,13 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
       const xansql = model.xansql
       const schema = model.schema();
       const parts: string[] = [];
-      const aliasDept = aliases[model.table] || 0
-      const alias = `${model.alias}${aliasDept || ""}`
-      aliases[model.table] = aliasDept + 1
+      aliases[model.table] = model.table in aliases ? aliases[model.table] : 0
+      const alias = `${model.alias}${aliases[model.table] || ""}`
 
       if (Array.isArray(args)) {
          const _parts = []
          for (const arg of args) {
-            const w_parts = new BuildWhereArgs(arg, model).parts
+            const w_parts = new BuildWhereArgs(arg, model, { ...aliases }).parts
             if (w_parts.length) {
                if (w_parts.length > 1) {
                   _parts.push(`(${w_parts.join(" AND ")})`)
@@ -54,11 +53,15 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                });
             }
 
+
             const field = schema[col];
             if (field.isRelation) {
                const relArgs = val as WhereArgs<any>;
                const RModel = xansql.model(field.model);
-               const ralias = `${RModel.alias}${aliasDept || ""}`
+
+               aliases[RModel.table] = RModel.table in aliases ? aliases[RModel.table] + 1 : 0
+               const ralias = `${RModel.alias}${aliases[RModel.table] || ""}`
+
                const rinfo = field.relationInfo as RelationManyInfo
                const relationSql = `${alias}.${rinfo.self.relation}=${ralias}.${rinfo.target.relation}`
                const relParts: string[] = [];
@@ -67,7 +70,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                   const parts = []
                   for (const rargs of relArgs) {
                      if (!isObject(rargs)) continue;
-                     const relWhere = new BuildWhereArgs(rargs, RModel, aliases);
+                     const relWhere = new BuildWhereArgs(rargs, RModel, { ...aliases });
                      const relSql = relWhere.parts.join(" AND ");
                      if (relSql) {
                         const keys = Object.keys(rargs);
@@ -96,7 +99,6 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                continue;
             }
 
-
             // Array of subconditions → OR
             if (Array.isArray(val)) {
                const subParts: string[] = [];
@@ -110,7 +112,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                         params: subargs
                      })
                   }
-                  const cond = this.condition(col, subargs);
+                  const cond = this.condition(col, subargs, alias);
                   if (cond) {
                      const keys = Object.keys(subargs);
                      if (keys.length > 1) {
@@ -136,7 +138,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             // Subcondition object
             if (isObject(val)) {
                const keys = Object.keys(val);
-               const cond = this.condition(col, val);
+               const cond = this.condition(col, val, alias);
                if (cond) {
                   if (keys.length > 1) {
                      parts.push(`(${cond})`);
@@ -149,15 +151,15 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             }
             // Direct primitive
             parts.push(`${alias}.${col}=${this.format(col, val)}`);
-
          }
       }
+      aliases[model.table] = aliases[model.table] + 1
       this.parts = parts;
    }
 
-   condition(column: string, subargs: WhereSubConditionArgs<any>) {
+   condition(column: string, subargs: WhereSubConditionArgs<any>, alias: string) {
       const parts: string[] = [];
-      const col_name = `${this.model.table}.${column}`
+      const col_name = `${alias}.${column}`
       for (const key in subargs) {
          const val = (subargs as any)[key];
 
@@ -181,7 +183,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                            model: this.model.table,
                         })
                      }
-                     const cond = this.condition(column, v as WhereSubConditionArgs<any>);
+                     const cond = this.condition(column, v as WhereSubConditionArgs<any>, alias);
                      if (cond) {
                         const keys = Object.keys(v);
                         if (keys.length > 1) {
@@ -195,7 +197,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                      parts.push(`NOT (${notParts.join(" OR ")})`);
                   }
                } else if (isObject(val)) {
-                  parts.push(`NOT (${this.condition(column, val)})`);
+                  parts.push(`NOT (${this.condition(column, val, alias)})`);
                } else if (val === null) {
                   parts.push(`${col_name} IS NOT NULL`)
                } else {

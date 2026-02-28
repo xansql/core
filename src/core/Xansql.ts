@@ -43,20 +43,8 @@ class Xansql {
 
       const _model = new model(this)
       this.models.set(model, _model)
-
       return _model as Model<ReturnType<M['schema']>>
    }
-
-
-   // getModel<S extends Schema>(table: string) {
-   //    if (!this.models.has(table)) {
-   //       throw new XansqlError({
-   //          message: `Model for table ${table} does not exist.`,
-   //          model: table,
-   //       });
-   //    }
-   //    return this.models.get(table) as Model<this, S>
-   // }
 
    async execute(sql: string): Promise<ExecuterResult> {
       const query = sql.trim().replace(/\s+/g, ' ');
