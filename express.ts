@@ -72,13 +72,50 @@ const server = async (app: Express) => {
    //    })
    // });
 
+   app.get('/create', async (req: any, res: any) => {
+      const start = Date.now()
+      const results = await User.create({
+         data: {
+            name: "nax",
+            email: Math.random() + "@gmail.com",
+            age: 1,
+            metas: [
+               {
+                  key: "um",
+                  value: "nicer",
+               }
+            ],
+            products: [{
+               name: "new Pro",
+               description: "we",
+               status: "asd",
+               metas: {
+                  key: "asd",
+                  value: "asd"
+               }
+            }]
+         }
+      })
+      res.json({ results })
+   });
 
    app.get('/find', async (req: any, res: any) => {
       const start = Date.now()
       const results = await User.find({
-
+         select: {
+            products: {
+               select: {
+                  name: true,
+                  user: {
+                     select: {
+                        email: true
+                     }
+                  }
+               }
+            }
+         }
       })
-      res.json({})
+      res.json({ results })
 
    });
 
@@ -91,9 +128,7 @@ const server = async (app: Express) => {
 
    })
 
-   app.get('/create', async (req: any, res: any) => {
 
-   });
 
    app.get('/delete', async (req: any, res: any) => {
 

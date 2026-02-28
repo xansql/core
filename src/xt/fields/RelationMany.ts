@@ -18,12 +18,12 @@ export type RelationManyInfo = {
    sql: string // self table join target table on self.column = target.column
 }
 
-class XqlRelationMany<M extends Model> extends XVType<any> {
+class XqlRelationMany<M extends Model, T extends string = string> extends XVType<any> {
    readonly schema!: ReturnType<M['schema']>
    readonly model: ModelClass<M>
    readonly type = "relation-many"
    readonly isRelation = true
-   private _target_column = ''
+   readonly targetColumn: T
 
    table!: string
    column_name!: string
@@ -49,29 +49,18 @@ class XqlRelationMany<M extends Model> extends XVType<any> {
 
    protected check(value: unknown) { }
 
-
-
-   get column() {
-      if (!this._target_column) throw new Error(`target column not found`)
-      return this._target_column
-   }
-
-   constructor(model: ModelClass<M>) {
+   constructor(model: ModelClass<M>, targetColumn: T) {
       super()
       this.model = model
+      this.targetColumn = targetColumn
    }
+
    optional(): any {
       throw new Error("optional not supported");
    }
 
    nullable(): any {
       throw new Error("nullable not supported");
-   }
-
-   target(column: string) {
-      if (this._target_column) throw new Error(`target column already assigned`);
-      this._target_column = column
-      return this
    }
 }
 export default XqlRelationMany

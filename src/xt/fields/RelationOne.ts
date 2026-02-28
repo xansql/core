@@ -20,12 +20,12 @@ export type RelationOneInfo = {
 }
 
 
-class XqlRelationOne<M extends Model> extends XVType<any> {
+class XqlRelationOne<M extends Model, T extends string = string> extends XVType<any> {
    readonly schema!: ReturnType<M['schema']>
    readonly model: ModelClass<M>
-   private _target_column = ''
    readonly type = "relation-one"
    readonly isRelation = true
+   readonly targetColumn: T
 
    table!: string
    column_name!: string
@@ -61,15 +61,14 @@ class XqlRelationOne<M extends Model> extends XVType<any> {
       }
    }
 
-   constructor(model: ModelClass<M>) {
+   constructor(model: ModelClass<M>, targetColumn: T) {
       super()
       this.model = model
+      this.targetColumn = targetColumn
       this.index()
    }
 
    protected check(value: unknown) { }
-
-
 
    optional(): any {
       throw new Error("optional not supported");
@@ -83,16 +82,6 @@ class XqlRelationOne<M extends Model> extends XVType<any> {
       return this.set("index", () => { }, true)
    }
 
-   target(column: string) {
-      if (this._target_column) throw new Error(`target column already assigned`);
-      this._target_column = column
-      return this
-   }
-
-   get column() {
-      if (!this._target_column) throw new Error(`target column not found`)
-      return this._target_column
-   }
 }
 
 export default XqlRelationOne

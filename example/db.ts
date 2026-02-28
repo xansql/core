@@ -37,10 +37,24 @@ class UserModel extends Model {
       return {
          uid: xt.id(),
          name: xt.string(),
-         age: xt.number(),
-         email: xt.string().email().unique(),
-         products: xt.many(ProductModel).target("user"),
-         customer: xt.one(UserModel).target("customers"),
+         age: xt.number().nullable(),
+         email: xt.string().email().unique().nullable(),
+         create_at: xt.date().createAt(),
+         update_at: xt.date().updateAt(),
+         products: xt.many(ProductModel, 'user'),
+         customer: xt.one(UserModel, 'customers').nullable(),
+         metas: xt.many(UserMetaModel, 'user'),
+      }
+   }
+}
+
+class UserMetaModel extends Model {
+   schema() {
+      return {
+         id: xt.id(),
+         key: xt.string(),
+         value: xt.string(),
+         user: xt.one(UserModel, "metas")
       }
    }
 }
@@ -52,7 +66,8 @@ class ProductModel extends Model {
          name: xt.string(),
          description: xt.string(),
          status: xt.string(),
-         user: xt.one(UserModel).target("products")
+         user: xt.one(UserModel, 'products'),
+         metas: xt.many(ProductMetaModel, 'product'),
       }
    }
 
@@ -61,5 +76,17 @@ class ProductModel extends Model {
    }
 }
 
+class ProductMetaModel extends Model {
+   schema() {
+      return {
+         id: xt.id(),
+         key: xt.string(),
+         value: xt.string(),
+         product: xt.one(ProductMetaModel, "metas")
+      }
+   }
+}
+
 export const User = db.model(UserModel)
 export const Product = db.model(ProductModel)
+export const ProductMeta = db.model(ProductMetaModel)

@@ -37,11 +37,11 @@ const xt = {
    tuple: <T extends XVType<any>[]>(type: T) => new XqlTuple(type),
    union: <T extends XVType<any>[]>(types: T) => new XqlUnion(types),
    file: (size?: number) => new XqlFile(size),
-   many: <M extends Model>(m: ModelClass<M>) => new RelationMany(m),
-   one: <M extends Model>(m: ModelClass<M>) => new RelationOne(m),
+   many: <M extends Model, T extends string>(m: ModelClass<M>, targetColum: T) => new RelationMany(m, targetColum),
+   one: <M extends Model, T extends string>(m: ModelClass<M>, targetColum: T) => new RelationOne(m, targetColum),
 
-   createdAt: () => xt.date().create(),
-   updatedAt: () => xt.date().update(),
+   createdAt: () => xt.date().createAt(),
+   updatedAt: () => xt.date().updateAt(),
    // Custom Types
    name: () => new XqlName,
    password: () => new XqlPassword,

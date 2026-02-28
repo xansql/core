@@ -1,4 +1,4 @@
-import { Infer } from "xanv"
+import { Infer, XVType } from "xanv"
 import Model from "."
 import XqlRelationMany from "../xt/fields/RelationMany"
 import XqlRelationOne from "../xt/fields/RelationOne"
@@ -76,7 +76,8 @@ export type WhereSubConditionArgs<T> = {
 
 }
 
-export type WhereColumnArgs<F extends XqlField> = Infer<F> | WhereSubConditionArgs<Infer<F>> | WhereSubConditionArgs<Infer<F>>[]
+export type InferWhereValue<T extends XVType<any>> = T extends { _type: infer R } ? R : never
+export type WhereColumnArgs<F extends XqlField> = InferWhereValue<F> | WhereSubConditionArgs<InferWhereValue<F>> | WhereSubConditionArgs<InferWhereValue<F>>[];
 
 export type WhereArgs<S extends SchemaShape> = Normalize<{
    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
@@ -121,21 +122,56 @@ export type FindArgs<S extends SchemaShape> = {
    aggregate?: FindAggregateArgs<S>
 }
 
+// Fix FindResult so missing select returns full shape
+export type FindResultFullSchema<S extends SchemaShape> = {
+   [K in keyof S as S[K] extends { isRelation: true } ? never : K]: Infer<S[K]>
+}
+
+
+
+export type FindResult<T extends FindArgs<any>, S extends SchemaShape> =
+   keyof T['select'] extends never ? Normalize<FindResultFullSchema<S>> :
+
+   {
+      [K in keyof T['select'] & keyof S as T['select'][K] extends any ? K : never]: (
+         S[K] extends { type: "relation-many", schema: SchemaShape } ? (
+            T['select'][K] extends FindArgs<any> ? (
+               keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>[]
+            ) : Normalize<FindResultFullSchema<S[K]['schema']>>[]
+         ) :
+         S[K] extends { type: "relation-one", schema: SchemaShape } ? (
+            T['select'][K] extends FindArgs<any> ? (
+               keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>
+            ) : Normalize<FindResultFullSchema<S[K]['schema']>>
+         ) :
+         Infer<S[K]>
+      )
+   }
+
+
 
 // CREATE ARGS
 export type CreateDataValue<F extends XqlField> =
    F extends XqlRelationOne<any> ? number :
-   F extends { type: "relation-many", schema: SchemaShape } ? CreateDataArgs<F['schema']> | CreateDataArgs<F['schema']>[] :
+   F extends { type: "relation-many", schema: SchemaShape, targetColumn: string } ? CreateArgs<Omit<F['schema'], F['targetColumn']>>['data'] :
    Infer<F>
 
-export type CreateDataArgs<S extends SchemaShape> = {
+export type CreateDataArgs<S extends SchemaShape> = Normalize<{
    [
    C in keyof S as
    S[C] extends XqlIDField ? never :
-   S[C]['meta'] extends { create: true } ? never :
-   S[C]['meta'] extends { update: true } ? never : C
+   S[C] extends XqlRelationMany<any> ? never :
+   S[C]['meta'] extends { nullable: true } ? never :
+   S[C]['meta'] extends { createAt: true } ? never :
+   S[C]['meta'] extends { updateAt: true } ? never : C
    ]: CreateDataValue<S[C]>
-}
+} & {
+   [
+   C in keyof S as
+   S[C] extends XqlRelationMany<any> ? C :
+   S[C]['meta'] extends { nullable: true } ? C : never
+   ]?: CreateDataValue<S[C]>
+}>
 
 export type CreateArgs<S extends SchemaShape> = {
    data: CreateDataArgs<S> | CreateDataArgs<S>[];
@@ -149,29 +185,29 @@ export type UpdateDataValue<F extends XqlField> =
    F extends { type: "relation-many", schema: SchemaShape } ? UpdateArgs<F['schema']> :
    Infer<F>
 
-export type UpdateDataArgs<S extends SchemaShape> = {
+export type UpdateDataArgs<S extends SchemaShape> = Normalize<{
    [
    C in keyof S as
    S[C] extends XqlIDField ? never :
    S[C]['meta'] extends { create: true } ? never :
    S[C]['meta'] extends { update: true } ? never : C
    ]?: UpdateDataValue<S[C]>
-}
+}>
 
 export type UpdateArgs<S extends SchemaShape> = {
    data: UpdateDataArgs<S>;
-   where: WhereArgs<S> | WhereArgs<S>[]
+   where: WhereArgs<S>
 }
 
 // UPSERT
 export type UpsertArgs<S extends SchemaShape> = {
    create: CreateDataArgs<S>;
    update: CreateDataArgs<S>;
-   where: WhereArgs<S> | WhereArgs<S>[]
+   where: WhereArgs<S>
 }
 
 // DELETE ARGS
 export type DeleteArgs<S extends SchemaShape> = {
-   where: WhereArgs<S> | WhereArgs<S>[];
+   where: WhereArgs<S>;
    select?: SelectArgs<S>;
 }

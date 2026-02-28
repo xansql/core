@@ -11,7 +11,6 @@ class XqlDate extends XVDate {
    readonly value = {
       toSql: (value: unknown): string => {
          value = super.parse(value)
-
          if (value === undefined || value === null) return 'NULL';
 
          const date =
@@ -27,11 +26,12 @@ class XqlDate extends XVDate {
             )
          }
 
-         // ISO 8601 UTC format (universal standard)
-         // Example: 2026-02-21T10:30:00.000Z
-         const iso = date.toISOString()
+         const formatted = date
+            .toISOString()
+            .replace('T', ' ')
+            .replace('Z', '')
 
-         return `'${escapeSqlValue(iso)}'`
+         return `'${escapeSqlValue(formatted)}'`
       },
 
       fromSql: (value: string): ReturnType<typeof this.parse> => {
@@ -61,12 +61,12 @@ class XqlDate extends XVDate {
       return this.set("unique", () => { }, true)
    }
 
-   update(): XVOptional<this> & { meta: { update: true } } {
-      return this.set("update", () => { }, true).default(() => new Date()) as any
+   createAt(): XVOptional<this> & { meta: { createAt: true } } {
+      return this.index().set("createAt", () => { }, true) as any
    }
 
-   create(): XVOptional<this> & { meta: { create: true } } {
-      return this.index().default(() => new Date()).set("create", () => { }, true) as any
+   updateAt(): XVOptional<this> & { meta: { updateAt: true } } {
+      return this.set("updateAt", () => { }, true) as any
    }
 }
 

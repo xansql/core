@@ -1,4 +1,5 @@
 export type XansqlErrorCode =
+   | "INVALID_ARGUMENTS"
    | "VALIDATION_ERROR"
    | "QUERY_ERROR"
    | "CONNECTION_ERROR"

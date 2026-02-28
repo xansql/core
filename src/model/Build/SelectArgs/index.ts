@@ -2,12 +2,12 @@ import Model from "../..";
 import XansqlError from "../../../core/XansqlError";
 import { FindArgs, SelectArgs } from "../../types-new";
 import BuildFindArgs from "../FindArgs";
-import BuildWhereArgs from "../WhereArgs";
+
 
 class BuildSelectArgs {
 
    readonly columns: string[] = []
-   readonly relations: { [column: string]: BuildFindArgs } = {}
+   readonly relations: { [column: string]: BuildFindArgs<any> } = {}
 
    get sql() {
       return `SELECT${this.distinct ? " DISTINCT" : ""} ${this.columns.join(", ")} FROM ${this.model.table} as ${this.model.alias}`
@@ -52,7 +52,11 @@ class BuildSelectArgs {
                }
                // RArgs.select[relationInfo.target.relation] = true
             }
+
+
             this.relations[col] = RArgs as any
+
+
          } else {
             columns.push(col)
          }

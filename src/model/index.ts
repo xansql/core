@@ -3,11 +3,10 @@ import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, ModelClass, Normalize, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
+import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
-import BuildWhereArgs from "./Build/WhereArgs";
-import BuildSelectArgs from "./Build/SelectArgs";
 import BuildFindArgs from "./Build/FindArgs";
+import BuildCreateArgs from "./Build/CreateArgs";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -76,7 +75,7 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
          field.engine = xansql.dialect.engine
 
          if (iof(field, XqlRelationMany, XqlRelationOne)) {
-            const targetColumn = field.column
+            const targetColumn = field.targetColumn
             const targetSchema = field.model
             const targetModel = xansql.models.get(targetSchema)
             if (!targetModel) {
@@ -131,14 +130,32 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       }
 
       // migration
+      this.migrationInit()
+
+   }
+
+   private async migrationInit() {
+      const fields = this.schema()
+      let migration_columns = []
+      let index_sqls = []
+      for (let column in fields) {
+         const field = fields[column]
+
+         if (!iof(field, XqlRelationMany)) {
+            const info = field.info
+            migration_columns.push(info.sql.column)
+            if (info.sql.create_index) {
+               index_sqls.push(info.sql.create_index)
+            }
+         }
+      }
       const sql = `CREATE TABLE IF NOT EXISTS ${this.table}(${migration_columns.join(",")})`
-      xansql.execute(sql)
+      await this.xansql.execute(sql)
+
       for (let idxql of index_sqls) {
          try {
-            xansql.execute(idxql)
-         } catch (error) {
-
-         }
+            await this.xansql.execute(idxql)
+         } catch (error) { }
       }
    }
 
@@ -146,14 +163,17 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       return this.xansql.execute(sql)
    }
 
-   async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>) {
-      const build = new BuildFindArgs(args as any, this)
+   async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
+      const build = new BuildFindArgs(args as any, this as any)
       const results = await build.results()
-
-      return args as any
+      return results
    }
 
-   create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>) { }
+   async create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>) {
+      const build = new BuildCreateArgs(args as any, this)
+      const results = await build.results()
+      return results
+   }
    update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) { }
    upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
    delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) { }

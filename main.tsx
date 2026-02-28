@@ -117,8 +117,13 @@ const f = User.find({
         ]
       }
     },
-
   ]
+})
+
+const create = User.create({
+  data: {
+    name: ""
+  }
 })
 
 

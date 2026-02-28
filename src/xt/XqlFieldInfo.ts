@@ -9,7 +9,6 @@ import XqlIDField from "./fields/IDField";
 import XqlNumber from "./fields/Number";
 import XqlObject from "./fields/Object";
 import XqlRecord from "./fields/Record";
-import XqlRelationMany from "./fields/RelationMany";
 import XqlRelationOne from "./fields/RelationOne";
 import XqlString from "./fields/String";
 import XqlTuple from "./fields/Tuple";
@@ -119,11 +118,11 @@ class XqlFieldInfo {
          default_value = default_value ? "1" : "0"
       } else if (iof(field, XqlDate)) {
          if (engine === "mysql") {
-            type = "DATETIME"
+            type = "DATETIME(3)"               // supports milliseconds
          } else if (engine === "postgresql") {
-            type = "TIMESTAMP"
-         } else {
-            type = "TEXT"  // store ISO string (SQLite has no native DATETIME
+            type = "TIMESTAMP(3) WITH TIME ZONE" // best practice in PG
+         } else if (engine === "sqlite") {
+            type = "TEXT" // store ISO 8601 string
          }
       } else if (iof(field, XqlEnum)) {
          let options = field.enum_options
@@ -146,7 +145,7 @@ class XqlFieldInfo {
          default: default_value || undefined,
          unique: meta.unique ? true : false,
          nullable: !!meta.nullable,
-         index: meta.index ? `${table}_${column}_idx` : ""
+         index: meta.index ? `${table}_${column}_index` : ""
       }
 
       let create_index = ''

@@ -45,10 +45,6 @@ export function iof<
    return types.some(type => value instanceof type);
 }
 
-
-
-
-
 export const quote = (engine: XansqlDialectEngine, identifier: string) => {
    if (engine === 'mysql') return `\`${identifier}\``;
    if (engine === 'postgresql' || engine === 'sqlite') return `"${identifier}"`;
