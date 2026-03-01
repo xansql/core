@@ -1,12 +1,14 @@
 import Model from "../..";
+import { XansqlFileMeta } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
 import { iof, isNumber, isObject, quote } from "../../../utils";
 import XqlDate from "../../../xt/fields/Date";
 import XqlFile from "../../../xt/fields/File";
-import { CreateArgs, SchemaShape } from "../../types-new";
+import { CreateArgs, SchemaShape, SelectArgs } from "../../types-new";
+import BuildFindArgs from "../FindArgs";
 
 class BuildCreateArgs {
-   constructor(private args: CreateArgs<SchemaShape>, private model: Model<any>) {
+   constructor(private args: CreateArgs<SchemaShape>, private model: Model<any>, private isSubquery = false) {
       const data = args.data
       if (Array.isArray(data)) {
          for (let d of data) {
@@ -21,6 +23,7 @@ class BuildCreateArgs {
       const model = this.model
       const xansql = this.model.xansql
       const args = this.args
+      const isSubquery = this.isSubquery
       const schema = model.schema()
       const data = args.data
 
@@ -32,7 +35,7 @@ class BuildCreateArgs {
       } else {
          const values: { [col: string]: any } = {}
          const relations: { [col: string]: CreateArgs<any>['data'] } = {}
-
+         const fileMetas: { [col: string]: XansqlFileMeta } = {}
          for (let col in data) {
             const value = data[col]
             const field = schema[col]
@@ -46,6 +49,7 @@ class BuildCreateArgs {
                if (iof(field, XqlFile)) {
                   try {
                      const filemeta = await xansql.uploadFile(value)
+                     fileMetas[col] = filemeta
                      values[quote(xansql.dialect.engine, col)] = `'${JSON.stringify(filemeta)}'`
                   } catch (error: any) {
                      throw new XansqlError({
@@ -81,28 +85,51 @@ class BuildCreateArgs {
 
          let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
 
-         const results = await model.execute(sql)
-         const insertId = results?.insertId
-         if (insertId && Object.keys(relations).length) {
-            for (let col in relations) {
-               const rdata = relations[col]
-               const field = schema[col]
-               const rinfo = field.relationInfo
-               const RModel = xansql.model(field.model)
-               if (Array.isArray(rdata)) {
-                  for (let d of rdata) {
-                     d[rinfo.target.relation] = insertId
+         try {
+            const results = await model.execute(sql)
+            const insertId = results?.insertId
+            if (insertId && Object.keys(relations).length) {
+               for (let col in relations) {
+                  const rdata = relations[col]
+                  const field = schema[col]
+                  const rinfo = field.relationInfo
+                  const RModel = xansql.model(field.model)
+                  if (Array.isArray(rdata)) {
+                     for (let d of rdata) {
+                        d[rinfo.target.relation] = insertId
+                     }
+                  } else {
+                     rdata[rinfo.target.relation] = insertId
                   }
-               } else {
-                  rdata[rinfo.target.relation] = insertId
+
+                  const build = new BuildCreateArgs({ data: rdata }, RModel, true)
+                  await build.results()
                }
-
-               const build = new BuildCreateArgs({ data: rdata }, RModel)
-               await build.results()
             }
-         }
 
-         return results
+            if (!isSubquery && insertId) {
+               let sargs: SelectArgs = {}
+               if (!args.select) {
+                  for (let col in relations) {
+                     sargs[col] = true
+                  }
+               }
+               sargs = args.select ?? sargs
+
+               const buildFind = new BuildFindArgs({
+                  select: sargs,
+                  where: {
+                     [model.IDColumn]: insertId
+                  }
+               }, model)
+               return await buildFind.results()
+            }
+         } catch (error) {
+            for (let col in fileMetas) {
+               await xansql.deleteFile(fileMetas[col].fileId)
+            }
+            throw error
+         }
       }
    }
 

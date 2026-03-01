@@ -44,8 +44,8 @@ export type AggregateArgsValue = {
 }
 export type GropuByArgs<S extends SchemaShape> = Normalize<(keyof SchemaAllColumns<S>)[]>
 
-export type LimitArgs = "all" | {
-   take?: number;
+export type LimitArgs = {
+   take: number;
    skip?: number;
 }
 

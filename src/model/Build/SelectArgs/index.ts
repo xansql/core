@@ -9,8 +9,7 @@ class BuildSelectArgs {
    readonly relations: { [column: string]: FindArgs<any> } = {}
 
    get sql() {
-      const engin = this.model.xansql.dialect.engine
-      return this.columns.map(c => quote(engin, c)).join(", ")
+      return this.columns.map(c => `${this.model.alias}.${c}`).join(", ")
    }
 
    constructor(args: SelectArgs, private model: Model<any>) {

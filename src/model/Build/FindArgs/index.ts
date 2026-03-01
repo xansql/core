@@ -4,6 +4,7 @@ import XqlRelationMany from "../../../xt/fields/RelationMany";
 import XqlRelationOne from "../../../xt/fields/RelationOne";
 import { FindArgs, Normalize } from "../../types-new";
 import BuildLimitArgs from "../LimitArgs";
+import BuildOrderByArgs from "../OrderByArgs";
 import BuildSelectArgs from "../SelectArgs";
 import BuildWhereArgs from "../WhereArgs";
 
@@ -26,30 +27,36 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
       const schema = model.schema()
       const wargs = new BuildWhereArgs(args.where || {}, model)
       const sargs = new BuildSelectArgs((args as any)?.select! || {}, model)
-      const largs = new BuildLimitArgs(args.limit || {}, model)
-      console.log(largs);
+      const largs = new BuildLimitArgs(args.limit || {} as any, model)
+      const oargs = new BuildOrderByArgs(args.orderBy || {}, model)
 
       if (subQueryInfo) {
          if (!sargs.columns.includes(subQueryInfo.column)) {
             sargs.columns.push(subQueryInfo.column)
          }
-         wargs.parts.push(`${subQueryInfo.column} IN (${subQueryInfo.ins.join(",")})`)
+         wargs.parts.push(`${model.alias}.${subQueryInfo.column} IN (${subQueryInfo.ins.join(",")})`)
       }
 
-      let sql = `SELECT  ${args.distinct ? "DISTINCT" : ""} ${sargs.sql} FROM ${model.table} as ${model.alias} ${wargs.sql} ${largs.sql}`
+      let sql = `SELECT  ${args.distinct ? "DISTINCT" : ""} ${sargs.sql} FROM ${model.table} as ${model.alias} ${wargs.sql} ${largs.sql} ${oargs.sql}`
 
-      if (subQueryInfo) {
+      if (subQueryInfo && largs.sql) {
+         const orderBySql = oargs.sql ? oargs.sql : `ORDER BY ${model.alias}.${model.IDColumn}`
          sql = `
-            SELECT ${sargs.sql} FROM (
-              SELECT
-                  ${sargs.sql},
-                ROW_NUMBER() OVER (PARTITION BY ${model.table}.${subQueryInfo.column} ${args.orderBy}) AS ${model.table}_rank
-              FROM ${model.table}
-               ${wargs.sql}
-            ) AS ${model.table}
-            WHERE ${model.table}_rank > ${largs.skip} AND ${model.table}_rank <= ${largs.take + largs.skip};
+            SELECT ${sargs.sql}
+            FROM (
+                SELECT
+                   ${sargs.sql},
+                    ROW_NUMBER() OVER (
+                        PARTITION BY ${model.alias}.${subQueryInfo.column}
+                        ${orderBySql}
+                    ) AS ${model.alias}_rank
+                FROM ${model.table} ${model.alias}
+                ${wargs.sql}
+            ) AS ${model.alias}
+            WHERE ${model.alias}.${model.alias}_rank > ${largs.skip} AND ${model.alias}.${model.alias}_rank <= ${largs.take + largs.skip}
          `
       }
+
       // execute model
       const execute = await model.execute(sql)
       const results = execute.results
@@ -65,11 +72,22 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
             const indexes: { [id: number]: number } = {}
 
             for (let i = 0; i < results.length; i++) {
-               const r = results[i]
-               const id = r[rinfo.self.relation]
-               indexes[id] = i
-               in_ids.push(id)
+               const row = results[i]
+               const id = row[rinfo.self.relation]
+               if (id) {
+                  indexes[id] = i
+                  in_ids.push(id)
+               }
+
+               // row parsing
+               for (let rcol in row) {
+                  const field: any = schema[rcol]
+                  if (!field || field.isRelation) continue
+                  row[rcol] = (field as any).value.fromSql(row[rcol])
+               }
             }
+
+            if (!in_ids.length) continue
 
             const RModel = xansql.model(field.model)
             const rargs = sargs.relations[col]

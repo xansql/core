@@ -117,12 +117,21 @@ const server = async (app: Express) => {
       const start = Date.now()
       const results = await User.find({
          where: {
-            uid: 1
+            // uid: 1
+         },
+         orderBy: {
+            uid: "desc"
          },
          select: {
             email: true,
             customer: true,
             products: {
+               // orderBy: {
+               //    name: "desc"
+               // },
+               limit: {
+                  take: 2,
+               },
                select: {
                   name: true,
                   metas: {
@@ -133,6 +142,10 @@ const server = async (app: Express) => {
                   categories: {
                      where: {
                         value: "Electronics"
+                     },
+                     limit: { take: 1 },
+                     orderBy: {
+                        id: "desc"
                      },
                      select: {
                         sub_categories: {

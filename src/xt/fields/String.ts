@@ -16,7 +16,7 @@ class XqlString extends XVString {
       },
       fromSql: (value: string): ReturnType<typeof this.parse> => {
          if (value === null || value === undefined) return null
-         return JSON.parse(value);
+         return value
       }
    }
 
