@@ -127,26 +127,37 @@ export type FindResultFullSchema<S extends SchemaShape> = {
    [K in keyof S as S[K] extends { isRelation: true } ? never : K]: Infer<S[K]>
 }
 
+export type FindResultColumnMap<T extends FindArgs<any>, S extends SchemaShape> = {
+   [K in keyof T['select'] & keyof S as T['select'][K] extends any ?
+   (
+      S[K] extends { isRelation: true } ? never : K
+   ) :
+   never]: true
+}
 
+export type FindResultMap<T extends FindArgs<any>, S extends SchemaShape> = {
+   [C in keyof S as S[C] extends XqlIDField ? C : never]: number
+} & {
+   [K in keyof T['select'] & keyof S as T['select'][K] extends any ? K : never]: (
+      S[K] extends { type: "relation-many", schema: SchemaShape } ? (
+         T['select'][K] extends FindArgs<any> ? (
+            keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>[]
+         ) : Normalize<FindResultFullSchema<S[K]['schema']>>[]
+      ) :
+      S[K] extends { type: "relation-one", schema: SchemaShape } ? (
+         T['select'][K] extends FindArgs<any> ? (
+            keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>
+         ) : Normalize<FindResultFullSchema<S[K]['schema']>>
+      ) :
+      Infer<S[K]>
+   )
+}
 
 export type FindResult<T extends FindArgs<any>, S extends SchemaShape> =
-   keyof T['select'] extends never ? Normalize<FindResultFullSchema<S>> :
+   Normalize<keyof T['select'] extends never ? Normalize<FindResultFullSchema<S>> :
+      keyof FindResultColumnMap<T, S> extends never ? Normalize<FindResultFullSchema<S>> & Normalize<FindResultMap<T, S>> :
+      Normalize<FindResultMap<T, S>>>
 
-   {
-      [K in keyof T['select'] & keyof S as T['select'][K] extends any ? K : never]: (
-         S[K] extends { type: "relation-many", schema: SchemaShape } ? (
-            T['select'][K] extends FindArgs<any> ? (
-               keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>[]
-            ) : Normalize<FindResultFullSchema<S[K]['schema']>>[]
-         ) :
-         S[K] extends { type: "relation-one", schema: SchemaShape } ? (
-            T['select'][K] extends FindArgs<any> ? (
-               keyof T['select'][K] extends never ? Normalize<FindResultFullSchema<S[K]['schema']>> : FindResult<T["select"][K], S[K]['schema']>
-            ) : Normalize<FindResultFullSchema<S[K]['schema']>>
-         ) :
-         Infer<S[K]>
-      )
-   }
 
 
 

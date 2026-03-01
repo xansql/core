@@ -43,7 +43,8 @@ class UserModel extends Model {
          update_at: xt.date().updateAt(),
          products: xt.many(ProductModel, 'user'),
          customer: xt.one(UserModel, 'customers').nullable(),
-         metas: xt.many(UserMetaModel, 'user'),
+         // customers: xt.many(UserModel, 'customer'),
+         // metas: xt.many(UserMetaModel, 'user'),
       }
    }
 }
@@ -68,11 +69,8 @@ class ProductModel extends Model {
          status: xt.string(),
          user: xt.one(UserModel, 'products'),
          metas: xt.many(ProductMetaModel, 'product'),
+         categories: xt.many(ProductCategoryModel, 'product'),
       }
-   }
-
-   getStudents() {
-
    }
 }
 
@@ -82,11 +80,47 @@ class ProductMetaModel extends Model {
          id: xt.id(),
          key: xt.string(),
          value: xt.string(),
-         product: xt.one(ProductMetaModel, "metas")
+         product: xt.one(ProductModel, "metas")
+      }
+   }
+}
+
+class ProductCategoryModel extends Model {
+   schema() {
+      return {
+         id: xt.id(),
+         name: xt.string(),
+         value: xt.string(),
+         product: xt.one(ProductModel, "categories"),
+         sub_categories: xt.many(ProductSubCategoryModel, "category")
+      }
+   }
+}
+
+class ProductSubCategoryModel extends Model {
+   schema() {
+      return {
+         id: xt.id(),
+         name: xt.string(),
+         value: xt.string(),
+         category: xt.one(ProductCategoryModel, "sub_categories"),
+         group: xt.one(ProductSubCategoryGroupModel, "sub_categories").nullable(),
+      }
+   }
+}
+
+class ProductSubCategoryGroupModel extends Model {
+   schema() {
+      return {
+         id: xt.id(),
+         name: xt.string(),
+         value: xt.string(),
+         sub_categories: xt.many(ProductSubCategoryModel, "group")
       }
    }
 }
 
 export const User = db.model(UserModel)
+export const UserMeta = db.model(UserMetaModel)
 export const Product = db.model(ProductModel)
 export const ProductMeta = db.model(ProductMetaModel)

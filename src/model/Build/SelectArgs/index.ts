@@ -1,19 +1,19 @@
 import Model from "../..";
 import XansqlError from "../../../core/XansqlError";
+import { quote } from "../../../utils";
 import { FindArgs, SelectArgs } from "../../types-new";
-import BuildFindArgs from "../FindArgs";
-
 
 class BuildSelectArgs {
 
    readonly columns: string[] = []
-   readonly relations: { [column: string]: BuildFindArgs<any> } = {}
+   readonly relations: { [column: string]: FindArgs<any> } = {}
 
    get sql() {
-      return `SELECT${this.distinct ? " DISTINCT" : ""} ${this.columns.join(", ")} FROM ${this.model.table} as ${this.model.alias}`
+      const engin = this.model.xansql.dialect.engine
+      return this.columns.map(c => quote(engin, c)).join(", ")
    }
 
-   constructor(args: SelectArgs, private model: Model<any>, private distinct = false) {
+   constructor(args: SelectArgs, private model: Model<any>) {
       const xansql = model.xansql
       const schema = model.schema()
       const columns: string[] = []
@@ -53,10 +53,7 @@ class BuildSelectArgs {
                // RArgs.select[relationInfo.target.relation] = true
             }
 
-
             this.relations[col] = RArgs as any
-
-
          } else {
             columns.push(col)
          }

@@ -7,6 +7,7 @@ import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, Sc
 import XansqlError from "../core/XansqlError";
 import BuildFindArgs from "./Build/FindArgs";
 import BuildCreateArgs from "./Build/CreateArgs";
+import xt from "../xt";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -26,7 +27,6 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       this.xansql = xansql
       const fields = this.schema()
 
-      this.schema = (() => fields).bind(this)
       this.IDColumn = Object.keys(fields).find(column => fields[column] instanceof XqlIDField) || ''
       if (!this.IDColumn) {
          throw new Error(`ID Column not found in schema ${this.table}. Please define an ID column using xt.id() in the schema.`)
@@ -76,8 +76,8 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
          if (iof(field, XqlRelationMany, XqlRelationOne)) {
             const targetColumn = field.targetColumn
-            const targetSchema = field.model
-            const targetModel = xansql.models.get(targetSchema)
+            const TModel = field.model
+            const targetModel = xansql.models.get(TModel)
             if (!targetModel) {
                throw new Error(`Target model for relation ${column} in schema ${fields.table} not found. Please define the target schema before defining the relation.`)
             }
@@ -88,6 +88,10 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
                if (!targetShape[targetColumn] || targetShape[targetColumn].type !== "relation-one") {
                   throw new Error(`Target column ${targetColumn} for relation ${column} in schema ${fields.table} not found in target schema ${targetModel.table}. Please define the target column in the target schema.`)
                }
+            } else if (!targetShape[targetColumn]) {
+               // const tschema = targetModel.schema()
+               // tschema[targetColumn] = xt.many(this.constructor as any, column)
+               // targetModel.schema = (() => tschema).bind(targetModel)
             }
 
             if (field.type == 'relation-one') {
@@ -128,6 +132,7 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
             }
          }
       }
+      this.schema = (() => fields).bind(this)
 
       // migration
       this.migrationInit()
@@ -166,7 +171,7 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
       const build = new BuildFindArgs(args as any, this as any)
       const results = await build.results()
-      return results
+      return results as any
    }
 
    async create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>) {

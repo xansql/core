@@ -4,6 +4,8 @@ import { LimitArgs } from "../../types-new";
 
 class BuildLimitArgs {
    readonly sql
+   readonly take: number = 0
+   readonly skip: number = 0
 
    constructor(args: LimitArgs, model: Model<any>) {
       const xansql = model.xansql
@@ -14,6 +16,7 @@ class BuildLimitArgs {
       } else {
          let take = args.take ?? maxLimit
          let skip = args.skip ?? 0
+
          if (take < 0 || !Number.isInteger(take)) {
             throw new XansqlError({
                code: "QUERY_ERROR",
@@ -29,6 +32,8 @@ class BuildLimitArgs {
             })
          }
 
+         this.take = take
+         this.skip = skip
          this.sql = `LIMIT ${take} ${skip ? `OFFSET ${skip} ` : ""}`.trim()
       }
    }

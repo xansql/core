@@ -79,12 +79,10 @@ const server = async (app: Express) => {
             name: "nax",
             email: Math.random() + "@gmail.com",
             age: 1,
-            metas: [
-               {
-                  key: "um",
-                  value: "nicer",
-               }
-            ],
+            // metas: {
+            //    key: "um",
+            //    value: "nicer",
+            // },
             products: [{
                name: "new Pro",
                description: "we",
@@ -92,7 +90,23 @@ const server = async (app: Express) => {
                metas: {
                   key: "asd",
                   value: "asd"
-               }
+               },
+               categories: [
+                  {
+                     name: "Mobile",
+                     value: "mobile",
+                  },
+                  {
+                     name: "Electronics",
+                     value: "Electronics",
+                     sub_categories: [
+                        {
+                           name: "sub",
+                           value: "sub",
+                        }
+                     ]
+                  }
+               ]
             }]
          }
       })
@@ -102,19 +116,37 @@ const server = async (app: Express) => {
    app.get('/find', async (req: any, res: any) => {
       const start = Date.now()
       const results = await User.find({
+         where: {
+            uid: 1
+         },
          select: {
+            email: true,
+            customer: true,
             products: {
                select: {
                   name: true,
-                  user: {
+                  metas: {
                      select: {
-                        email: true
+                        key: true,
+                     }
+                  },
+                  categories: {
+                     where: {
+                        value: "Electronics"
+                     },
+                     select: {
+                        sub_categories: {
+                           select: {
+                              group: true
+                           }
+                        }
                      }
                   }
                }
             }
          }
       })
+
       res.json({ results })
 
    });

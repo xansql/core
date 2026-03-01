@@ -40,7 +40,6 @@ class Xansql {
       if (this.models.has(model)) {
          return this.models.get(model) as Model<ReturnType<M['schema']>>
       }
-
       const _model = new model(this)
       this.models.set(model, _model)
       return _model as Model<ReturnType<M['schema']>>
