@@ -1,14 +1,16 @@
 import Model from "../..";
 import { XansqlFileMeta } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
-import { iof, isNumber, isObject, quote } from "../../../utils";
+import { deepMerge, iof, isNumber, isObject, quote } from "../../../utils";
 import XqlDate from "../../../xt/fields/Date";
 import XqlFile from "../../../xt/fields/File";
 import { CreateArgs, SchemaShape, SelectArgs } from "../../types-new";
 import BuildFindArgs from "../FindArgs";
 
 class BuildCreateArgs {
-   constructor(private args: CreateArgs<SchemaShape>, private model: Model<any>, private isSubquery = false) {
+   private isSubquery
+   constructor(private args: CreateArgs<SchemaShape>, private model: Model<any>, isSubquery = false) {
+      this.isSubquery = isSubquery
       const data = args.data
       if (Array.isArray(data)) {
          for (let d of data) {
@@ -27,9 +29,10 @@ class BuildCreateArgs {
       const schema = model.schema()
       const data = args.data
 
+
       if (Array.isArray(data)) {
          for (let d of data) {
-            const build = new BuildCreateArgs({ data: d }, model)
+            const build = new BuildCreateArgs({ data: d }, model, isSubquery)
             await build.results()
          }
       } else {
@@ -108,13 +111,7 @@ class BuildCreateArgs {
             }
 
             if (!isSubquery && insertId) {
-               let sargs: SelectArgs = {}
-               if (!args.select) {
-                  for (let col in relations) {
-                     sargs[col] = true
-                  }
-               }
-               sargs = args.select ?? sargs
+               let sargs: SelectArgs = !args.select ? this.makeSelectArgs(data, model) : args.select
 
                const buildFind = new BuildFindArgs({
                   select: sargs,
@@ -131,6 +128,38 @@ class BuildCreateArgs {
             throw error
          }
       }
+   }
+
+   private makeSelectArgs(data: CreateArgs<any>['data'], model: Model<any>) {
+      let args: any = {}
+      const schema = model.schema()
+      const xansql = model.xansql
+
+      if (Array.isArray(data)) {
+         for (let d of data) {
+            const a = this.makeSelectArgs(d, model)
+            args = deepMerge(args, a)
+         }
+      } else {
+         for (let col in data) {
+            const field = schema[col] as any
+            if (field.type === "relation-many") {
+               const RModel = xansql.model(field.model)
+               const childargs = this.makeSelectArgs(data[col] as any, RModel)
+               if (Object.keys(childargs).length) {
+                  args[col] = {
+                     select: childargs
+                  }
+               } else {
+                  args[col] = true
+               }
+            }
+         }
+      }
+
+
+
+      return args
    }
 
    private validateData(data: any) {

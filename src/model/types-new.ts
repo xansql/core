@@ -34,15 +34,7 @@ export type IsRelationOne<F extends XqlField> = F extends XqlRelationOne<any> ? 
 export type IsRelationMany<F extends XqlField> = F extends XqlRelationMany<any> ? true : false
 
 
-export type AggregateFunctions = "count" | "sum" | "avg" | "min" | "max"
-export type AggregateArgsValue = {
-   [func in AggregateFunctions]?: boolean | {
-      orderBy?: "asc" | "desc";
-      round?: number;
-      distinct?: boolean;
-   }
-}
-export type GropuByArgs<S extends SchemaShape> = Normalize<(keyof SchemaAllColumns<S>)[]>
+
 
 export type LimitArgs = {
    take: number;
@@ -72,8 +64,6 @@ export type WhereSubConditionArgs<T> = {
    contains?: T extends string ? string : never;
    startsWith?: T extends string ? string : never;
    endsWith?: T extends string ? string : never;
-
-
 }
 
 export type InferWhereValue<T extends XVType<any>> = T extends { _type: infer R } ? R : never
@@ -90,15 +80,31 @@ export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{
 
 
 // AGGREGATE ARGS
+
+export type AggregateFunctions = "count" | "sum" | "avg" | "min" | "max"
+export type AggregateArgsValue = {
+   [func in AggregateFunctions]?: boolean | {
+      alias?: string;
+      orderBy?: "asc" | "desc";
+      round?: number;
+      distinct?: boolean;
+   }
+}
+
 export type AggregateSelectArgs<S extends SchemaShape> = {
    [C in keyof S  as S[C] extends { isRelation: true } ? never : C]?: AggregateArgsValue
 }
 
 export type AggregateGroupByArgs<S extends SchemaShape> = (keyof SchemaAllColumns<S>)[]
 
-export type AggregateArgs<S extends SchemaShape> = {
+export type AggregateOrderBy<G extends AggregateGroupByArgs<any> | undefined> =
+   G extends Array<keyof any>
+   ? { [K in G[number]]?: "asc" | "desc" }
+   : never;
+
+export type AggregateArgs<S extends SchemaShape, T extends AggregateArgs<any, any>> = {
    groupBy?: AggregateGroupByArgs<S>;
-   orderBy?: OrderByArgs<S>;
+   orderBy?: AggregateOrderBy<T['groupBy']>;
    limit?: LimitArgs;
    where?: WhereArgs<S>;
    select: AggregateSelectArgs<S>
@@ -111,10 +117,8 @@ export type FindAggregateArgs<S extends SchemaShape> = Normalize<{
 
 
 // FIND ARGS
-
 export type FindArgs<S extends SchemaShape> = {
    distinct?: boolean;
-   groupBy?: GropuByArgs<S>
    where?: WhereArgs<S>
    select?: SelectArgs<S>
    limit?: LimitArgs

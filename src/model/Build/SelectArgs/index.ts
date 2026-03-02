@@ -1,6 +1,5 @@
 import Model from "../..";
 import XansqlError from "../../../core/XansqlError";
-import { quote } from "../../../utils";
 import { FindArgs, SelectArgs } from "../../types-new";
 
 class BuildSelectArgs {
@@ -49,7 +48,6 @@ class BuildSelectArgs {
                      params: RArgs
                   })
                }
-               // RArgs.select[relationInfo.target.relation] = true
             }
 
             this.relations[col] = RArgs as any

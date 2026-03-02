@@ -1,8 +1,10 @@
 import Model from "../..";
-import { iof } from "../../../utils";
+import { isObject } from "../../../utils";
+import { chunkArray } from "../../../utils/chunker";
 import XqlRelationMany from "../../../xt/fields/RelationMany";
 import XqlRelationOne from "../../../xt/fields/RelationOne";
-import { FindArgs, Normalize } from "../../types-new";
+import { FindArgs } from "../../types-new";
+import BuildAggregateArgs from "../AggregateArgs";
 import BuildLimitArgs from "../LimitArgs";
 import BuildOrderByArgs from "../OrderByArgs";
 import BuildSelectArgs from "../SelectArgs";
@@ -42,18 +44,18 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
       if (subQueryInfo && largs.sql) {
          const orderBySql = oargs.sql ? oargs.sql : `ORDER BY ${model.alias}.${model.IDColumn}`
          sql = `
-            SELECT ${sargs.sql}
+            SELECT ${sargs.columns.join(", ")}
             FROM (
                 SELECT
                    ${sargs.sql},
                     ROW_NUMBER() OVER (
                         PARTITION BY ${model.alias}.${subQueryInfo.column}
                         ${orderBySql}
-                    ) AS ${model.alias}_rank
+                    ) AS rn
                 FROM ${model.table} ${model.alias}
                 ${wargs.sql}
             ) AS ${model.alias}
-            WHERE ${model.alias}.${model.alias}_rank > ${largs.skip} AND ${model.alias}.${model.alias}_rank <= ${largs.take + largs.skip}
+            WHERE rn > ${largs.skip} AND rn <= ${largs.take + largs.skip}
          `
       }
 
@@ -62,6 +64,76 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
       const results = execute.results
 
       if (results.length && Object.keys(sargs.relations).length) {
+
+         // aggregate
+         if (args.aggregate) {
+            for (let col in args.aggregate) {
+               const field = schema[col] as any
+               const isMany = field.type === 'relation-many'
+               const rinfo = field.relationInfo
+               const RModel = xansql.model(field.model)
+               const agselect = args.aggregate[col]
+               if (!agselect || !Object.keys(agselect).length) continue
+               const in_ids: number[] = []
+               const indexes: { [id: number]: number } = {}
+
+               for (let i = 0; i < results.length; i++) {
+                  const row = results[i]
+                  const id = row[rinfo.self.relation]
+                  if (id) {
+                     indexes[id] = i
+                     in_ids.push(id)
+                  }
+               }
+
+               // make alias
+               // for (let agcol in agselect) {
+               //    const funcs = agselect[agcol]
+               //    for (let func in funcs) {
+               //       const v = (funcs as any)[func]
+               //       if (isObject(v)) {
+               //          (agselect as any)[agcol][func] = {
+               //             ...v,
+               //             alias: v.alias || `${func}_${rinfo.target.column}_${col}_${agcol}`
+               //          }
+               //       } else {
+               //          (agselect as any)[agcol][func] = {
+               //             alias: v.alias || `${func}_${rinfo.target.column}_${col}_${agcol}`
+               //          }
+               //       }
+               //    }
+               // }
+
+
+               const agargs = new BuildAggregateArgs({
+                  select: agselect,
+                  groupBy: [rinfo.target.column],
+                  where: {
+                     [rinfo.target.column]: {
+                        [rinfo.self.relation]: {
+                           in: in_ids
+                        }
+                     }
+                  }
+               }, RModel)
+
+               const agresults = await agargs.results()
+               if (agresults.length) {
+                  for (let { chunk } of chunkArray(agresults)) {
+                     for (let ares of chunk) {
+                        const id = ares[rinfo.target.relation]
+                        const index = indexes[id]
+                        delete ares[rinfo.target.column]
+                        if (!(results as any)[index]["aggregate"]) {
+                           (results as any)[index]["aggregate"] = {}
+                        }
+                        (results as any)[index]["aggregate"][col] = ares
+                     }
+                  }
+               }
+            }
+         }
+
          for (let col in sargs.relations) {
 
             const field = schema[col] as XqlRelationMany<any> | XqlRelationOne<any>
@@ -92,6 +164,7 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
             const RModel = xansql.model(field.model)
             const rargs = sargs.relations[col]
 
+
             const f = new BuildFindArgs(rargs as any, RModel, {
                column: rel_column,
                ins: in_ids
@@ -99,21 +172,24 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
             const rel_results = await f.results()
 
             if (rel_results.length) {
-               for (let rres of rel_results) {
-                  const id = rres[rinfo.target.relation]
-                  const index = indexes[id]
+               for (let { chunk } of chunkArray(rel_results)) {
+                  for (let rres of chunk) {
+                     const id = rres[rinfo.target.relation]
+                     const index = indexes[id]
 
-                  if (isMany) {
-                     if (!results[index][rinfo.self.column]) {
-                        results[index][rinfo.self.column] = []
+                     if (isMany) {
+                        if (!results[index][rinfo.self.column]) {
+                           results[index][rinfo.self.column] = []
+                        }
+                        results[index][rinfo.self.column].push(rres)
+                        delete rres[rinfo.target.column]
+                     } else {
+                        results[index][rinfo.target.column] = rres
                      }
-                     results[index][rinfo.self.column].push(rres)
-                     delete rres[rinfo.target.column]
-                  } else {
-                     results[index][rinfo.target.column] = rres
                   }
                }
             }
+
          }
       }
 

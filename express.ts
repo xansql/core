@@ -75,6 +75,18 @@ const server = async (app: Express) => {
    app.get('/create', async (req: any, res: any) => {
       const start = Date.now()
       const results = await User.create({
+         // select: {
+         //    name: true,
+         //    products: {
+         //       select: {
+         //          categories: {
+         //             select: {
+         //                sub_categories: true
+         //             }
+         //          }
+         //       }
+         //    }
+         // },
          data: {
             name: "nax",
             email: Math.random() + "@gmail.com",
@@ -116,6 +128,17 @@ const server = async (app: Express) => {
    app.get('/find', async (req: any, res: any) => {
       const start = Date.now()
       const results = await User.find({
+         aggregate: {
+            products: {
+               pid: {
+                  count: true,
+                  sum: true
+               },
+               name: {
+                  count: true
+               }
+            }
+         },
          where: {
             // uid: 1
          },
@@ -126,6 +149,13 @@ const server = async (app: Express) => {
             email: true,
             customer: true,
             products: {
+               aggregate: {
+                  categories: {
+                     id: {
+                        count: true
+                     }
+                  }
+               },
                // orderBy: {
                //    name: "desc"
                // },
@@ -163,12 +193,30 @@ const server = async (app: Express) => {
       res.json({ results })
 
    });
+   app.get('/aggregate', async (req: any, res: any) => {
+      const results = await User.aggregate({
+         groupBy: ['email', "age"],
+         limit: {
+            take: 10
+         },
+         orderBy: {
+            email: "asc"
+         },
+         select: {
+            uid: {
+               count: true,
+            },
+            email: {
+               count: true
+            }
+         }
+      })
 
-   app.get("/aggregate", async (req: any, res: any) => {
-      const start = Date.now()
+      res.json({ results })
 
-      res.json("result")
-   })
+   });
+
+
    app.get("/count", async (req: any, res: any) => {
 
    })

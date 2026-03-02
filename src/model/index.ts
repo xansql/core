@@ -3,11 +3,12 @@ import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
+import { AggregateArgs, CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
 import BuildFindArgs from "./Build/FindArgs";
 import BuildCreateArgs from "./Build/CreateArgs";
 import xt from "../xt";
+import BuildAggregateArgs from "./Build/AggregateArgs";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -170,6 +171,12 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
       const build = new BuildFindArgs(args as any, this as any)
+      const results = await build.results()
+      return results as any
+   }
+
+   async aggregate<T extends AggregateArgs<S, any>>(args: ExactArgs<T, AggregateArgs<S, T>>) {
+      const build = new BuildAggregateArgs(args as any, this as any)
       const results = await build.results()
       return results as any
    }

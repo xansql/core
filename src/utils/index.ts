@@ -28,12 +28,6 @@ export const freezeObject = (obj: any) => {
    return Object.freeze(obj);
 }
 
-
-// export const iof = (field: any, ...instances: any[]) => {
-//    return instances.some(instance => field instanceof instance || field?.constructor === instance.constructor);
-// }
-
-
 type Constructor<T = any> = new (...args: any[]) => T;
 
 export function iof<
@@ -49,4 +43,40 @@ export const quote = (engine: XansqlDialectEngine, identifier: string) => {
    if (engine === 'mysql') return `\`${identifier}\``;
    if (engine === 'postgresql' || engine === 'sqlite') return `"${identifier}"`;
    return identifier;
+}
+
+
+
+type AnyObject = Record<string, any>;
+
+export function deepMerge<T extends AnyObject, S extends AnyObject>(
+   target: T,
+   source: S
+): T & S {
+   const output = { ...target } as T & S;
+
+   for (const key in source) {
+      if (source.hasOwnProperty(key)) {
+         const sourceValue = source[key];
+         const targetValue = target[key as keyof T];
+
+         if (
+            sourceValue &&
+            typeof sourceValue === "object" &&
+            !Array.isArray(sourceValue) &&
+            targetValue &&
+            typeof targetValue === "object" &&
+            !Array.isArray(targetValue)
+         ) {
+            (output as any)[key] = deepMerge(
+               targetValue as AnyObject,
+               sourceValue as AnyObject
+            );
+         } else {
+            (output as any)[key] = sourceValue;
+         }
+      }
+   }
+
+   return output;
 }
