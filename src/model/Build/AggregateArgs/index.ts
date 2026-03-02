@@ -8,7 +8,7 @@ import BuildWhereArgs from "../WhereArgs";
 
 class BuildAggregateArgs {
 
-   constructor(private args: AggregateArgs<any, any>, private model: Model) {
+   constructor(private args: AggregateArgs<any, any>, private model: Model<any>) {
    }
 
    async results() {

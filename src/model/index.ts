@@ -9,6 +9,7 @@ import BuildFindArgs from "./Build/FindArgs";
 import BuildCreateArgs from "./Build/CreateArgs";
 import xt from "../xt";
 import BuildAggregateArgs from "./Build/AggregateArgs";
+import BuildUpdateArgs from "./Build/UpdateArgs";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -170,13 +171,13 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
    }
 
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
-      const build = new BuildFindArgs(args as any, this as any)
+      const build = new BuildFindArgs(args as any, this)
       const results = await build.results()
       return results as any
    }
 
    async aggregate<T extends AggregateArgs<S, any>>(args: ExactArgs<T, AggregateArgs<S, T>>) {
-      const build = new BuildAggregateArgs(args as any, this as any)
+      const build = new BuildAggregateArgs(args as any, this)
       const results = await build.results()
       return results as any
    }
@@ -186,9 +187,13 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       const results = await build.results()
       return results
    }
-   update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) { }
-   upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
-   delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) { }
+   async update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) {
+      const build = new BuildUpdateArgs(args, this)
+      const results = await build.results()
+      return results
+   }
+   async upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
+   async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) { }
 
 }
 

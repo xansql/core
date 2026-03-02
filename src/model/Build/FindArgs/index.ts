@@ -18,7 +18,7 @@ type SubQueryInfo = {
 }
 
 class BuildFindArgs<A extends FindArgs<any> = any> {
-   constructor(private args: A, private model: Model, private subQueryInfo?: SubQueryInfo) {
+   constructor(private args: A, private model: Model<any>, private subQueryInfo?: SubQueryInfo) {
    }
 
    async results() {

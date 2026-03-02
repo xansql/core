@@ -203,6 +203,9 @@ const server = async (app: Express) => {
             email: "asc"
          },
          select: {
+            name: {
+               count: true
+            },
             uid: {
                count: true,
             },
@@ -216,12 +219,23 @@ const server = async (app: Express) => {
 
    });
 
+   app.get('/update', async (req: any, res: any) => {
+
+      const results = await User.update({
+         data: {
+            name: "asdasdasd",
+         },
+         where: {
+            uid: 1,
+         }
+      })
+
+      res.json({ results })
+   });
 
    app.get("/count", async (req: any, res: any) => {
 
    })
-
-
 
    app.get('/delete', async (req: any, res: any) => {
 
@@ -229,9 +243,6 @@ const server = async (app: Express) => {
    });
 
 
-   app.get('/update', async (req: any, res: any) => {
-
-   });
 
    app.get('/models', async (req: any, res: any) => {
 

@@ -6,18 +6,40 @@ import { XqlField } from "../xt/types"
 import XqlIDField from "../xt/fields/IDField"
 
 
+// export type ExactArgs<T, Shape> =
+//    T extends object
+//    ? Shape extends object
+//    ? Exclude<keyof T, keyof Shape> extends never
+//    ? {
+//       [K in keyof T]: K extends keyof Shape
+//       ? T[K] extends object
+//       ? Shape[K] extends object
+//       ? ExactArgs<T[K], Shape[K]>
+//       : T[K]
+//       : T[K]
+//       : never
+//    }
+//    : never
+//    : never
+//    : T;
+
 export type ExactArgs<T, Shape> =
    T extends object
    ? Shape extends object
    ? Exclude<keyof T, keyof Shape> extends never
    ? {
-      [K in keyof T]: K extends keyof Shape
-      ? T[K] extends object
+      [K in keyof T]:
+      K extends keyof Shape
+      ? K extends "where"   // 👈 stop recursion here
+      ? T[K]
+      : T[K] extends object
+      ? Shape[K] extends object
       ? ExactArgs<T[K], Shape[K]>
+      : T[K]
       : T[K]
       : never
    }
-   : Shape
+   : never
    : never
    : T;
 
@@ -69,9 +91,18 @@ export type WhereSubConditionArgs<T> = {
 export type InferWhereValue<T extends XVType<any>> = T extends { _type: infer R } ? R : never
 export type WhereColumnArgs<F extends XqlField> = InferWhereValue<F> | WhereSubConditionArgs<InferWhereValue<F>> | WhereSubConditionArgs<InferWhereValue<F>>[];
 
-export type WhereArgs<S extends SchemaShape> = Normalize<{
-   [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
-}> | WhereArgs<S>[]
+// export type WhereArgs<S extends SchemaShape> = Normalize<{
+//    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
+// }> | WhereArgs<S>[]
+
+type WhereObject<S extends SchemaShape> = Normalize<{
+   [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape }
+   ? WhereObject<S[C]['schema']> | WhereObject<S[C]['schema']>[]
+   : WhereColumnArgs<S[C]>
+}>
+
+export type WhereArgs<S extends SchemaShape> =
+   WhereObject<S> | WhereObject<S>[]
 
 // SELECT ARGS
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{
@@ -209,10 +240,10 @@ export type UpdateDataArgs<S extends SchemaShape> = Normalize<{
    ]?: UpdateDataValue<S[C]>
 }>
 
-export type UpdateArgs<S extends SchemaShape> = {
+export type UpdateArgs<S extends SchemaShape> = Normalize<{
    data: UpdateDataArgs<S>;
-   where: WhereArgs<S>
-}
+   where: Normalize<WhereArgs<S>>
+}>
 
 // UPSERT
 export type UpsertArgs<S extends SchemaShape> = {

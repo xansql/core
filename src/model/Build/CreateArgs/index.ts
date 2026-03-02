@@ -82,13 +82,13 @@ class BuildCreateArgs {
             const field = schema[col]
             if (iof(field, XqlDate) && (field.meta.createAt || field.meta.updateAt)) {
                const v = field.value.toSql(new Date())
-               values[col] = v
+               values[quote(xansql.dialect.engine, col)] = v
             }
          }
 
-         let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
 
          try {
+            let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
             const results = await model.execute(sql)
             const insertId = results?.insertId
             if (insertId && Object.keys(relations).length) {
@@ -157,8 +157,6 @@ class BuildCreateArgs {
          }
       }
 
-
-
       return args
    }
 
@@ -169,18 +167,17 @@ class BuildCreateArgs {
       if (!isObject(data)) {
          throw new XansqlError({
             code: "VALIDATION_ERROR",
-            message: `data must be an object`,
+            message: `Expected "data" to be an object, received ${typeof data}`,
             model: model.table,
             params: data
          })
       }
 
-
       // check if idColumn exists
       if (model.IDColumn in data) {
          throw new XansqlError({
             code: "VALIDATION_ERROR",
-            message: `Cannot set value for ${model.table}.${model.IDColumn}.`,
+            message: `You cannot set a value for the primary key "${model.IDColumn}" in table "${model.table}".`,
             model: model.table,
             field: model.IDColumn,
          })
@@ -194,7 +191,7 @@ class BuildCreateArgs {
             if (col in data) {
                throw new XansqlError({
                   code: "VALIDATION_ERROR",
-                  message: `Cannot set value for ${model.table}.${col}. It is automatically managed.`,
+                  message: `Cannot set a value for "${col}" in table "${model.table}" — this field is automatically managed.`,
                   model: model.table,
                   field: col,
                })
@@ -204,7 +201,7 @@ class BuildCreateArgs {
          if (field.type === "relation-one" && !isNumber(value)) {
             throw new XansqlError({
                code: "VALIDATION_ERROR",
-               message: `Invalid value for foreign key column ${model.table}.${col}. Expected number, got ${typeof value}`,
+               message: `Invalid value for foreign key "${col}" in table "${model.table}". Expected a number, got ${typeof value}.`,
                model: model.table,
                field: col,
             })
@@ -213,7 +210,7 @@ class BuildCreateArgs {
          if (iof(field, XqlFile) && !iof(value, File)) {
             throw new XansqlError({
                code: "VALIDATION_ERROR",
-               message: `Value should be a File receved ${typeof value}`,
+               message: `Invalid value for "${col}" in table "${model.table}". Expected a File, received ${typeof value}.`,
                model: model.table,
                field: col
             })
