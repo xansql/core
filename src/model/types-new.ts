@@ -103,18 +103,18 @@ export type WhereSubConditionArgs<F extends XqlField> =
 export type InferWhereValue<F extends XVType<any>> = F extends { _type: infer R } ? R : never
 export type WhereColumnArgs<F extends XqlField> = InferWhereValue<F> | WhereSubConditionArgs<F> | WhereSubConditionArgs<F>[];
 
-// export type WhereArgs<S extends SchemaShape> = Normalize<{
-//    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
-// }> | WhereArgs<S>[]
-
 type WhereObject<S extends SchemaShape> = Normalize<{
-   [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape }
-   ? WhereObject<S[C]['schema']> | WhereObject<S[C]['schema']>[]
-   : WhereColumnArgs<S[C]>
+   [C in keyof S]?:
+   S[C] extends { type: "relation-many", schema: SchemaShape } ? (
+      WhereObject<S[C]['schema']> | WhereObject<S[C]['schema']>[]
+   ) :
+   S[C] extends { type: "relation-one", schema: SchemaShape } ? (
+      WhereSubConditionArgs<S[C]> | WhereObject<S[C]['schema']> | (WhereSubConditionArgs<S[C]> | WhereObject<S[C]['schema']>)[]
+   ) :
+   WhereColumnArgs<S[C]>
 }>
 
-export type WhereArgs<S extends SchemaShape> =
-   WhereObject<S> | WhereObject<S>[]
+export type WhereArgs<S extends SchemaShape> = WhereObject<S> | WhereObject<S>[]
 
 // SELECT ARGS
 export type SelectArgs<S extends SchemaShape = SchemaShape> = Normalize<{

@@ -1,4 +1,5 @@
 import Model from "../..";
+import { chunkArray } from "../../../utils/chunker";
 import { DeleteArgs, SchemaShape } from "../../types-new";
 import BuildFindArgs from "../FindArgs";
 import BuildSelectArgs from "../SelectArgs";
@@ -31,20 +32,48 @@ class BuildDeleteArgs {
                const isNullable = field.meta.nullable
                const isSameModel = m.table === model.table
                if (isNullable) {
-                  // update
-                  let where: any = {
-                     [col]: args.where
-                  }
                   if (isSameModel) {
-                     where = args.where
+                     const fargs = new BuildFindArgs({
+                        select: {
+                           [model.IDColumn]: true
+                        },
+                        where: args.where
+                     }, model)
+                     const res = await fargs.results()
+
+                     let ids: number[] = []
+                     if (res?.length) {
+                        for (let r of res) {
+                           ids.push(r[m.IDColumn])
+                        }
+                     }
+                     if (ids.length) {
+                        for (let { chunk } of chunkArray(ids)) {
+                           const build = new BuildUpdateArgs({
+                              data: {
+                                 [col]: null
+                              },
+                              where: {
+                                 [col]: {
+                                    in: chunk
+                                 }
+                              }
+                           }, model)
+                           await build.results()
+                        }
+                     }
+                  } else {
+                     const build = new BuildUpdateArgs({
+                        data: {
+                           [col]: null
+                        },
+                        where: {
+                           [col]: args.where
+                        }
+                     }, m)
+                     await build.results()
                   }
-                  const build = new BuildUpdateArgs({
-                     data: {
-                        [col]: null
-                     },
-                     where
-                  }, m)
-                  await build.results()
+
                } else {
                   // delete
                   const build = new BuildDeleteArgs({

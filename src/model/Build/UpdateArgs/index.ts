@@ -76,6 +76,7 @@ class BuildUpdateArgs {
 
       try {
          let sql = `UPDATE ${model.table} as ${model.alias} SET ${values.join(", ")} ${wargs.sql}`.trim()
+         sql = sql.replace(/\s+/gi, " ")
          console.log(sql);
 
          const execute = await model.execute(sql)

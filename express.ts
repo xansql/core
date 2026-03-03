@@ -141,50 +141,52 @@ const server = async (app: Express) => {
             }
          },
          where: {
-
+            customer: {
+               in: [1],
+            }
          },
          orderBy: {
             uid: "desc"
          },
          select: {
             // email: true,
-            // customer: true,
-            products: {
-               aggregate: {
-                  categories: {
-                     id: {
-                        count: true
-                     }
-                  }
-               },
-               limit: {
-                  take: 2,
-               },
-               select: {
-                  name: true,
-                  metas: {
-                     select: {
-                        key: true,
-                     }
-                  },
-                  categories: {
-                     // where: {
-                     //    value: "Electronics"
-                     // },
-                     // limit: { take: 1 },
-                     orderBy: {
-                        id: "desc"
-                     },
-                     select: {
-                        sub_categories: {
-                           select: {
-                              group: true
-                           }
-                        }
-                     }
-                  }
-               }
-            }
+            customer: true,
+            // products: {
+            //    aggregate: {
+            //       categories: {
+            //          id: {
+            //             count: true
+            //          }
+            //       }
+            //    },
+            //    limit: {
+            //       take: 2,
+            //    },
+            //    select: {
+            //       name: true,
+            //       metas: {
+            //          select: {
+            //             key: true,
+            //          }
+            //       },
+            //       categories: {
+            //          // where: {
+            //          //    value: "Electronics"
+            //          // },
+            //          // limit: { take: 1 },
+            //          orderBy: {
+            //             id: "desc"
+            //          },
+            //          select: {
+            //             sub_categories: {
+            //                select: {
+            //                   group: true
+            //                }
+            //             }
+            //          }
+            //       }
+            //    }
+            // }
          }
       })
 

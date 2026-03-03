@@ -12,6 +12,7 @@ import BuildAggregateArgs from "./Build/AggregateArgs";
 import BuildUpdateArgs from "./Build/UpdateArgs";
 import BuildDeleteArgs from "./Build/DeleteArgs";
 import ModelWhere from "./ModelWhere";
+import ReserveKeywords from "./ReserveKeywords";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -62,6 +63,15 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       let migration_columns = []
       let index_sqls = []
       for (let column in fields) {
+         if (ReserveKeywords.includes(column)) {
+            throw new XansqlError({
+               code: "INVALID_ARGUMENTS",
+               message: `Invalid column name "${column}" in table "${this.table}". "${column}" is a reserved keyword.`,
+               model: this.table,
+               field: column
+            })
+         }
+
          const field = fields[column]
 
          // check field is valid XqlField

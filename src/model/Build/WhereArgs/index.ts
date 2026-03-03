@@ -5,10 +5,11 @@ import { RelationManyInfo } from "../../../xt/fields/RelationMany";
 import ModelWhere from "../../ModelWhere";
 import { SchemaShape, WhereArgs, WhereSubConditionArgs } from "../../types-new";
 
-
 type Aliases = {
    [table: string]: number
 }
+
+const sub_keys = ["is", "not", "lt", "lte", "gt", "gte", "in", "notIn", "between", "contains", "startsWith", "endsWith"]
 
 class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
    readonly parts: string[];
@@ -45,6 +46,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
       } else {
          for (const col in args) {
             const val = args[col];
+
             if (!(col in schema)) {
                throw new XansqlError({
                   code: "NOT_FOUND",
@@ -54,111 +56,64 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                });
             }
 
-
             const field = schema[col];
             if (field.isRelation) {
-               const relArgs = val as WhereArgs<any>;
-               const RModel = xansql.model(field.model);
-
-               aliases[RModel.table] = RModel.table in aliases ? aliases[RModel.table] + 1 : 0
-               const ralias = `${RModel.alias}${aliases[RModel.table] || ""}`
-
-               const rinfo = field.relationInfo as RelationManyInfo
-               const relationSql = `${alias}.${rinfo.self.relation}=${ralias}.${rinfo.target.relation}`
-               const relParts: string[] = [];
-
-               if (Array.isArray(relArgs)) {
-                  const parts = []
-                  for (const rargs of relArgs) {
-                     if (!isObject(rargs)) continue;
-                     const relWhere = new BuildWhereArgs(rargs, RModel, { ...aliases });
-                     const relSql = relWhere.parts.join(" AND ");
-                     if (relSql) {
-                        const keys = Object.keys(rargs);
+               const br = this.buildRelation(field, col, val, alias, aliases)
+               br && parts.push(br)
+            } else {
+               // Array of subconditions → OR
+               if (Array.isArray(val)) {
+                  const subParts: string[] = [];
+                  for (const subargs of val as any) {
+                     if (!isObject(subargs)) {
+                        throw new XansqlError({
+                           message: "Invalid argument",
+                           code: "VALIDATION_ERROR",
+                           model: model.table,
+                           field: col,
+                           params: subargs
+                        })
+                     }
+                     const cond = this.condition(col, subargs, alias, aliases);
+                     if (cond) {
+                        const keys = Object.keys(subargs);
                         if (keys.length > 1) {
-                           parts.push(`(${relSql})`)
+                           subParts.push(`(${cond})`);
                         } else {
-                           parts.push(relSql)
+                           subParts.push(cond);
                         }
                      }
                   }
-                  if (parts.length) {
-                     const sql = `(${parts.join(" OR ")})`
-                     relParts.push(
-                        `EXISTS (SELECT 1 FROM ${RModel.table} as ${ralias} WHERE ${relationSql}${sql ? ` AND ${sql}` : ""})`
-                     );
-                  }
-               } else {
-                  const relWhere = new BuildWhereArgs(relArgs, RModel, aliases);
-                  const relSql = relWhere.parts.join(" AND ");
-                  relParts.push(
-                     `EXISTS (SELECT 1 FROM ${RModel.table} as ${ralias} WHERE ${relationSql}${relSql ? ` AND ${relSql}` : ""})`
-                  );
-               }
-               if (relParts.length === 1) parts.push(relParts[0]);
-               else if (relParts.length > 1) parts.push(`(${relParts.join(" OR ")})`);
-               continue;
-            }
 
-            // Array of subconditions → OR
-            if (Array.isArray(val)) {
-               const subParts: string[] = [];
-               for (const subargs of val as any) {
-                  if (!isObject(subargs)) {
-                     throw new XansqlError({
-                        message: "Invalid argument",
-                        code: "VALIDATION_ERROR",
-                        model: model.table,
-                        field: col,
-                        params: subargs
-                     })
-                  }
-                  const cond = this.condition(col, subargs, alias, aliases);
-                  if (cond) {
-                     const keys = Object.keys(subargs);
+                  if (subParts.length) {
+                     const keys = Object.keys(val);
                      if (keys.length > 1) {
-                        subParts.push(`(${cond})`);
+                        parts.push(`(${subParts.join(" OR ")})`);
                      } else {
-                        subParts.push(cond);
+                        parts.push(`${subParts.join(" OR ")}`);
                      }
                   }
-               }
-
-               if (subParts.length) {
-                  const keys = Object.keys(val);
-                  if (keys.length > 1) {
-                     parts.push(`(${subParts.join(" OR ")})`);
-                  } else {
-                     parts.push(`${subParts.join(" OR ")}`);
+               } else if (isObject(val)) {
+                  const cond = this.condition(col, val, alias, aliases);
+                  if (cond) {
+                     const keys = Object.keys(val);
+                     if (keys.length > 1) {
+                        parts.push(`(${cond})`);
+                     } else {
+                        parts.push(cond);
+                     }
                   }
+               } else {
+                  parts.push(`${alias}.${col}=${this.format(col, val)}`);
                }
-
-               continue;
             }
-
-            // Subcondition object
-            if (isObject(val)) {
-               const keys = Object.keys(val);
-               const cond = this.condition(col, val, alias, aliases);
-               if (cond) {
-                  if (keys.length > 1) {
-                     parts.push(`(${cond})`);
-                  } else {
-                     parts.push(cond);
-                  }
-               }
-
-               continue;
-            }
-            // Direct primitive
-            parts.push(`${alias}.${col}=${this.format(col, val)}`);
          }
       }
       aliases[model.table] = aliases[model.table] + 1
       this.parts = parts;
    }
 
-   condition(column: string, subargs: WhereSubConditionArgs<any>, alias: string, aliases: Aliases) {
+   private condition(column: string, subargs: WhereSubConditionArgs<any>, alias: string, aliases: Aliases) {
       const parts: string[] = [];
       const col_name = `${alias}.${column}`
       const model = this.model
@@ -276,7 +231,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
 
             case "contains":
                let csql = `${col_name} LIKE ${this.format(column, `%${val}%`, false)}`
-               if (subargs.mode === "insensitive") {
+               if ((subargs as any).mode === "insensitive") {
                   if (engin === "postgresql") {
                      csql = `${col_name} ILIKE ${this.format(column, `%${val}%`, false)}`
                   } else {
@@ -288,7 +243,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
 
             case "startsWith":
                let ssql = `${col_name} LIKE ${this.format(column, `${val}%`, false)}`
-               if (subargs.mode === "insensitive") {
+               if ((subargs as any).mode === "insensitive") {
                   if (engin === "postgresql") {
                      ssql = `${col_name} ILIKE ${this.format(column, `${val}%`, false)}`
                   } else {
@@ -300,7 +255,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
 
             case "endsWith":
                let esql = `${col_name} LIKE ${this.format(column, `%${val}`, false)}`
-               if (subargs.mode === "insensitive") {
+               if ((subargs as any).mode === "insensitive") {
                   if (engin === "postgresql") {
                      esql = `${col_name} ILIKE ${this.format(column, `%${val}`, false)}`
                   } else {
@@ -315,10 +270,81 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
       return parts.join(" AND ");
    }
 
+   private buildRelation(field: any, col: string, val: any, alias: string, aliases: Aliases) {
+      const model = this.model
+      const xansql = model.xansql
+      const relArgs = val as WhereArgs<any>;
+      const RModel = xansql.model(field.model);
+      const parts: string[] = [];
+      aliases[RModel.table] = RModel.table in aliases ? aliases[RModel.table] + 1 : 0
+      const ralias = `${RModel.alias}${aliases[RModel.table] || ""}`
+      const rinfo = field.relationInfo as RelationManyInfo
+      const relationSql = `${alias}.${rinfo.self.relation}=${ralias}.${rinfo.target.relation}`
+
+      if (Array.isArray(relArgs)) {
+         const _parts = []
+         for (const rargs of relArgs) {
+            if (!isObject(rargs)) { }
+            const b = this.buildRelation(field, col, rargs, alias, aliases)
+            _parts.push(`(${b})`)
+         }
+
+         if (_parts.length) {
+            parts.push(_parts.join(" OR "))
+         }
+      } else {
+         const _sparts: string[] = []
+         let _args: { [col: string]: any } = {}
+         if (field.type === "relation-one") {
+            const _subargs: { [col: string]: any } = {}
+            for (let col in relArgs) {
+               const val = relArgs[col]
+               if (sub_keys.includes(col)) {
+                  _subargs[col] = val
+               } else {
+                  _args[col] = val
+               }
+            }
+
+            if (Object.keys(_subargs).length) {
+               const cond = this.condition(col, _subargs, alias, aliases);
+               if (cond) {
+                  _sparts.push(cond)
+               }
+            }
+         } else {
+            _args = relArgs
+         }
+
+         if (Object.keys(_args).length) {
+            const relWhere = new BuildWhereArgs(_args, RModel, aliases);
+            const relSql = relWhere.parts.join(" AND ");
+            _sparts.push(
+               `EXISTS (SELECT 1 FROM ${RModel.table} as ${ralias} WHERE ${relationSql}${relSql ? ` AND ${relSql}` : ""})`
+            );
+         }
+         parts.push(_sparts.join(" AND "))
+      }
+      return parts.join(" AND ")
+   }
+
    private format(column: string, value: any, parse = true) {
       const model = this.model;
       const schema = model.schema()
       const field = schema[column];
+
+      if (field.type === 'relation-one') {
+         if (typeof value == "number" || value === null) {
+            return value
+         } else {
+            throw new XansqlError({
+               code: "VALIDATION_ERROR",
+               message: `Invalid value for relation field "${column}" in table "${model.table}". Expected a number or null, received ${typeof value}.`,
+               model: model.table,
+               field: column
+            })
+         }
+      }
 
       if (parse) {
          try {

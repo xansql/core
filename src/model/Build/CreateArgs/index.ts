@@ -89,6 +89,7 @@ class BuildCreateArgs {
 
          try {
             let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
+            sql = sql.replace(/\s+/gi, " ")
             const results = await model.execute(sql)
             const insertId = results?.insertId
             if (insertId && Object.keys(relations).length) {

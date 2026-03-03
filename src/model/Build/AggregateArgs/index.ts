@@ -14,7 +14,6 @@ class BuildAggregateArgs {
    async results() {
       const args = this.args
       const model = this.model
-      const xansql = model.xansql
       const schema = model.schema()
 
       const wargs = new BuildWhereArgs(args.where || {}, model)
@@ -59,12 +58,13 @@ class BuildAggregateArgs {
          }
       }
 
-      const sql = `SELECT ${columns.length ? columns.join(", ") + "," : ""} ${sargs.sql} 
+      let sql = `SELECT ${columns.length ? columns.join(", ") + "," : ""} ${sargs.sql} 
                      FROM ${model.table} as ${model.alias}
                      ${wargs.sql} ${groupBySql}
                      ${oargs.sql} 
                      ${args.groupBy?.length ? largs.sql : ""}
                   `.trim()
+      sql = sql.replace(/\s+/gi, " ")
       const execute = await model.execute(sql)
       return execute.results
    }

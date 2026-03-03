@@ -1,5 +1,4 @@
 import Model from "../..";
-import { isObject } from "../../../utils";
 import { chunkArray } from "../../../utils/chunker";
 import XqlRelationMany from "../../../xt/fields/RelationMany";
 import XqlRelationOne from "../../../xt/fields/RelationOne";
@@ -9,8 +8,6 @@ import BuildLimitArgs from "../LimitArgs";
 import BuildOrderByArgs from "../OrderByArgs";
 import BuildSelectArgs from "../SelectArgs";
 import BuildWhereArgs from "../WhereArgs";
-
-
 
 type SubQueryInfo = {
    column: string,
@@ -58,9 +55,12 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
          `
       }
 
+      sql = sql.replace(/\s+/gi, " ")
+
       // execute model
       const execute = await model.execute(sql)
       const results = execute.results
+
 
       if (results.length && Object.keys(sargs.relations).length) {
 
@@ -68,7 +68,6 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
          if (args.aggregate) {
             for (let col in args.aggregate) {
                const field = schema[col] as any
-               const isMany = field.type === 'relation-many'
                const rinfo = field.relationInfo
                const RModel = xansql.model(field.model)
                const agselect = args.aggregate[col]
@@ -163,7 +162,6 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
             const RModel = xansql.model(field.model)
             const rargs = sargs.relations[col]
 
-
             const f = new BuildFindArgs(rargs as any, RModel, {
                column: rel_column,
                ins: in_ids
@@ -183,12 +181,11 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
                         results[index][rinfo.self.column].push(rres)
                         delete rres[rinfo.target.column]
                      } else {
-                        results[index][rinfo.target.column] = rres
+                        results[index][rinfo.self.column] = rres
                      }
                   }
                }
             }
-
          }
       }
 
