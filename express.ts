@@ -12,7 +12,8 @@ import { XansqlFileMeta, xt } from './src';
 import fs from 'fs'
 import path from 'path'
 import { Infer } from 'xanv';
-import { User } from './example/db';
+import { Product, User } from './example/db';
+import ModelWhere from './src/model/ModelWhere';
 
 
 
@@ -140,14 +141,14 @@ const server = async (app: Express) => {
             }
          },
          where: {
-            // uid: 1
+
          },
          orderBy: {
             uid: "desc"
          },
          select: {
-            email: true,
-            customer: true,
+            // email: true,
+            // customer: true,
             products: {
                aggregate: {
                   categories: {
@@ -156,9 +157,6 @@ const server = async (app: Express) => {
                      }
                   }
                },
-               // orderBy: {
-               //    name: "desc"
-               // },
                limit: {
                   take: 2,
                },
@@ -170,10 +168,10 @@ const server = async (app: Express) => {
                      }
                   },
                   categories: {
-                     where: {
-                        value: "Electronics"
-                     },
-                     limit: { take: 1 },
+                     // where: {
+                     //    value: "Electronics"
+                     // },
+                     // limit: { take: 1 },
                      orderBy: {
                         id: "desc"
                      },
@@ -223,10 +221,24 @@ const server = async (app: Express) => {
 
       const results = await User.update({
          data: {
-            name: "asdasdasd",
+            name: "ssd",
+            age: 20,
+            products: {
+               data: {
+                  name: "Updated",
+                  categories: {
+                     data: {
+                        name: "Telephone"
+                     },
+                     where: {
+                        value: "mobile"
+                     }
+                  }
+               }
+            }
          },
          where: {
-            uid: 1,
+            uid: 2,
          }
       })
 
@@ -238,7 +250,13 @@ const server = async (app: Express) => {
    })
 
    app.get('/delete', async (req: any, res: any) => {
+      const results = await User.delete({
+         where: {
+            uid: 1
+         }
+      })
 
+      res.json({ results })
 
    });
 

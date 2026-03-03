@@ -3,6 +3,7 @@ import { XansqlDialectEngine } from "../../core/types"
 import XqlFieldInfo from "../XqlFieldInfo"
 
 class XqlIDField extends XVNumber {
+   type = "IDField"
    table!: string
    column_name!: string
    engine!: XansqlDialectEngine

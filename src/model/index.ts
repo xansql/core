@@ -3,13 +3,15 @@ import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { AggregateArgs, CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs } from "./types-new";
+import { AggregateArgs, CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs, WhereArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
 import BuildFindArgs from "./Build/FindArgs";
 import BuildCreateArgs from "./Build/CreateArgs";
 import xt from "../xt";
 import BuildAggregateArgs from "./Build/AggregateArgs";
 import BuildUpdateArgs from "./Build/UpdateArgs";
+import BuildDeleteArgs from "./Build/DeleteArgs";
+import ModelWhere from "./ModelWhere";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -166,9 +168,14 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       }
    }
 
+   where(inColumn: string, where?: WhereArgs<S>) {
+      return new ModelWhere<S>(this, inColumn, where)
+   }
+
    async execute(sql: string) {
       return this.xansql.execute(sql)
    }
+
 
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
       const build = new BuildFindArgs(args as any, this)
@@ -193,7 +200,10 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       return results
    }
    async upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
-   async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) { }
+   async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) {
+      const build = new BuildDeleteArgs(args as any, this as any)
+      return await build.results()
+   }
 
 }
 

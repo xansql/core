@@ -38,7 +38,6 @@ class BuildFindArgs<A extends FindArgs<any> = any> {
          }
          wargs.parts.push(`${model.alias}.${subQueryInfo.column} IN (${subQueryInfo.ins.join(",")})`)
       }
-
       let sql = `SELECT  ${args.distinct ? "DISTINCT" : ""} ${sargs.sql} FROM ${model.table} as ${model.alias} ${wargs.sql} ${largs.sql} ${oargs.sql}`
 
       if (subQueryInfo && largs.sql) {

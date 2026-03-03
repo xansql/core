@@ -4,6 +4,10 @@ import XqlRelationMany from "../xt/fields/RelationMany"
 import XqlRelationOne from "../xt/fields/RelationOne"
 import { XqlField } from "../xt/types"
 import XqlIDField from "../xt/fields/IDField"
+import ModelWhere from "./ModelWhere"
+import XqlNumber from "../xt/fields/Number"
+import XqlDate from "../xt/fields/Date"
+import XqlString from "../xt/fields/String"
 
 
 // export type ExactArgs<T, Shape> =
@@ -69,27 +73,35 @@ export type OrderByArgs<S extends SchemaShape> = Normalize<{
 
 
 // WHERE 
-export type WhereSubConditionArgs<T> = {
-   is?: T | null;
-   not?: T | null | WhereSubConditionArgs<T> | WhereSubConditionArgs<T>[];
+type WhereSubConditionComparableArgs<F extends XqlField> = F extends XVType<number> ? {
+   lt?: number | Date
+   lte?: number | Date
+   gt?: number | Date
+   gte?: number | Date
+   between?: [number | Date, number | Date]
+} : {}
 
-   lt?: T extends number | Date ? T : never;
-   lte?: T extends number | Date ? T : never;
-   gt?: T extends number | Date ? T : never;
-   gte?: T extends number | Date ? T : never;
+type WhereSubConditionStringArgs<F extends XqlField> = F extends XVType<string> ? {
+   contains?: string
+   startsWith?: string
+   endsWith?: string
+   mode?: "default" | "insensitive"
+} : {}
 
-   in?: T[];
-   notIn?: T[];
+export type WhereSubConditionArgs<F extends XqlField> =
+   {
+      is?: InferWhereValue<F> | null
+      not?: InferWhereValue<F> | null | WhereSubConditionArgs<F> | WhereSubConditionArgs<F>[]
 
-   between?: T extends number | Date ? [T, T] : never;
+      in?: readonly InferWhereValue<F>[] | ModelWhere<any>
+      notIn?: readonly InferWhereValue<F>[] | ModelWhere<any>
+   }
+   & WhereSubConditionComparableArgs<F>
+   & WhereSubConditionStringArgs<F>
 
-   contains?: T extends string ? string : never;
-   startsWith?: T extends string ? string : never;
-   endsWith?: T extends string ? string : never;
-}
 
-export type InferWhereValue<T extends XVType<any>> = T extends { _type: infer R } ? R : never
-export type WhereColumnArgs<F extends XqlField> = InferWhereValue<F> | WhereSubConditionArgs<InferWhereValue<F>> | WhereSubConditionArgs<InferWhereValue<F>>[];
+export type InferWhereValue<F extends XVType<any>> = F extends { _type: infer R } ? R : never
+export type WhereColumnArgs<F extends XqlField> = InferWhereValue<F> | WhereSubConditionArgs<F> | WhereSubConditionArgs<F>[];
 
 // export type WhereArgs<S extends SchemaShape> = Normalize<{
 //    [C in keyof S]?: S[C] extends { isRelation: true, schema: SchemaShape } ? (Normalize<WhereArgs<S[C]['schema']>> | Normalize<WhereArgs<S[C]['schema']>>[]) : Normalize<WhereColumnArgs<S[C]>>
@@ -198,7 +210,9 @@ export type FindResult<T extends FindArgs<any>, S extends SchemaShape> =
 
 // CREATE ARGS
 export type CreateDataValue<F extends XqlField> =
-   F extends XqlRelationOne<any> ? number :
+   F extends XqlRelationOne<any> ? (
+      F extends { meta: { nullable: true } } ? number | null : number
+   ) :
    F extends { type: "relation-many", schema: SchemaShape, targetColumn: string } ? CreateArgs<Omit<F['schema'], F['targetColumn']>>['data'] :
    Infer<F>
 
@@ -226,9 +240,15 @@ export type CreateArgs<S extends SchemaShape> = {
 
 
 // UPDATE ARGS
+export type UpdateRelationArgs<S extends SchemaShape> = Normalize<{
+   data: UpdateDataArgs<S>;
+   where?: Normalize<WhereArgs<S>>
+}>
 export type UpdateDataValue<F extends XqlField> =
-   F extends XqlRelationOne<any> ? number :
-   F extends { type: "relation-many", schema: SchemaShape } ? UpdateArgs<F['schema']> :
+   F extends XqlRelationOne<any> ? (
+      F extends { meta: { nullable: true } } ? number | null : number
+   ) :
+   F extends { type: "relation-many", schema: SchemaShape } ? UpdateRelationArgs<F['schema']> :
    Infer<F>
 
 export type UpdateDataArgs<S extends SchemaShape> = Normalize<{

@@ -2,6 +2,7 @@ import Model from "../..";
 import XansqlError from "../../../core/XansqlError";
 import { isObject } from "../../../utils";
 import { RelationManyInfo } from "../../../xt/fields/RelationMany";
+import ModelWhere from "../../ModelWhere";
 import { SchemaShape, WhereArgs, WhereSubConditionArgs } from "../../types-new";
 
 
@@ -112,7 +113,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                         params: subargs
                      })
                   }
-                  const cond = this.condition(col, subargs, alias);
+                  const cond = this.condition(col, subargs, alias, aliases);
                   if (cond) {
                      const keys = Object.keys(subargs);
                      if (keys.length > 1) {
@@ -138,7 +139,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             // Subcondition object
             if (isObject(val)) {
                const keys = Object.keys(val);
-               const cond = this.condition(col, val, alias);
+               const cond = this.condition(col, val, alias, aliases);
                if (cond) {
                   if (keys.length > 1) {
                      parts.push(`(${cond})`);
@@ -157,9 +158,12 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
       this.parts = parts;
    }
 
-   condition(column: string, subargs: WhereSubConditionArgs<any>, alias: string) {
+   condition(column: string, subargs: WhereSubConditionArgs<any>, alias: string, aliases: Aliases) {
       const parts: string[] = [];
       const col_name = `${alias}.${column}`
+      const model = this.model
+      const engin = model.xansql.dialect.engine
+
       for (const key in subargs) {
          const val = (subargs as any)[key];
 
@@ -183,7 +187,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                            model: this.model.table,
                         })
                      }
-                     const cond = this.condition(column, v as WhereSubConditionArgs<any>, alias);
+                     const cond = this.condition(column, v as WhereSubConditionArgs<any>, alias, aliases);
                      if (cond) {
                         const keys = Object.keys(v);
                         if (keys.length > 1) {
@@ -197,7 +201,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                      parts.push(`NOT (${notParts.join(" OR ")})`);
                   }
                } else if (isObject(val)) {
-                  parts.push(`NOT (${this.condition(column, val, alias)})`);
+                  parts.push(`NOT (${this.condition(column, val, alias, aliases)})`);
                } else if (val === null) {
                   parts.push(`${col_name} IS NOT NULL`)
                } else {
@@ -222,7 +226,21 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                break;
 
             case "in":
-               if (val?.length) {
+               if (val instanceof ModelWhere) {
+                  const RModel = val.model
+                  aliases[RModel.table] = RModel.table in aliases ? aliases[RModel.table] + 1 : 0
+                  const ralias = `${RModel.alias}${aliases[RModel.table] || ""}`
+                  const wargs = new BuildWhereArgs(val.where || {}, RModel, aliases)
+
+                  parts.push(
+                     `EXISTS (
+                       SELECT 1
+                       FROM ${val.model.table} AS ${ralias}
+                       ${wargs.sql ? wargs.sql + " AND " : "WHERE "}
+                       ${ralias}.${String(val.inColumn)} = ${col_name}
+                     )`
+                  );
+               } else if (val?.length) {
                   parts.push(
                      `${col_name} IN (${val.map((v: any) => this.format(column, v)).join(", ")})`
                   );
@@ -230,7 +248,20 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                break;
 
             case "notIn":
-               if (val?.length) {
+               if (val instanceof ModelWhere) {
+                  const RModel = val.model
+                  aliases[RModel.table] = RModel.table in aliases ? aliases[RModel.table] + 1 : 0
+                  const ralias = `${RModel.alias}${aliases[RModel.table] || ""}`
+                  const wargs = new BuildWhereArgs(val.where || {}, RModel, aliases)
+                  parts.push(
+                     `NOT EXISTS (
+                       SELECT 1
+                       FROM ${val.model.table} AS ${ralias}
+                       ${wargs.sql ? wargs.sql + " AND " : "WHERE "}
+                       ${ralias}.${String(val.inColumn)} = ${col_name}
+                     )`
+                  );
+               } else if (val?.length) {
                   parts.push(
                      `${col_name} NOT IN (${val.map((v: any) => this.format(column, v)).join(", ")})`
                   );
@@ -244,15 +275,39 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
                break;
 
             case "contains":
-               parts.push(`${col_name} LIKE ${this.format(column, `%${val}%`, false)}`);
+               let csql = `${col_name} LIKE ${this.format(column, `%${val}%`, false)}`
+               if (subargs.mode === "insensitive") {
+                  if (engin === "postgresql") {
+                     csql = `${col_name} ILIKE ${this.format(column, `%${val}%`, false)}`
+                  } else {
+                     csql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `%${val}%`, false)})`
+                  }
+               }
+               parts.push(csql);
                break;
 
             case "startsWith":
-               parts.push(`${col_name} LIKE ${this.format(column, `${val}%`, false)}`);
+               let ssql = `${col_name} LIKE ${this.format(column, `${val}%`, false)}`
+               if (subargs.mode === "insensitive") {
+                  if (engin === "postgresql") {
+                     ssql = `${col_name} ILIKE ${this.format(column, `${val}%`, false)}`
+                  } else {
+                     ssql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `${val}%`, false)})`
+                  }
+               }
+               parts.push(ssql);
                break;
 
             case "endsWith":
-               parts.push(`${col_name} LIKE ${this.format(column, `%${val}`, false)}`);
+               let esql = `${col_name} LIKE ${this.format(column, `%${val}`, false)}`
+               if (subargs.mode === "insensitive") {
+                  if (engin === "postgresql") {
+                     esql = `${col_name} ILIKE ${this.format(column, `%${val}`, false)}`
+                  } else {
+                     esql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `%${val}`, false)})`
+                  }
+               }
+               parts.push(esql);
                break;
          }
       }

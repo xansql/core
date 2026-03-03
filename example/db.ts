@@ -37,7 +37,7 @@ class UserModel extends Model {
       return {
          uid: xt.id(),
          name: xt.string(),
-         age: xt.number().nullable(),
+         age: xt.number(),
          email: xt.string().email().unique().nullable(),
          create_at: xt.date().createAt(),
          update_at: xt.date().updateAt(),

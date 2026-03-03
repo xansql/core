@@ -1,7 +1,7 @@
 import Model from "../..";
 import { XansqlFileMeta } from "../../../core/types";
 import XansqlError from "../../../core/XansqlError";
-import { deepMerge, iof, isNumber, isObject, quote } from "../../../utils";
+import { iof, isNumber, isObject, quote } from "../../../utils";
 import XqlDate from "../../../xt/fields/Date";
 import XqlFile from "../../../xt/fields/File";
 import { SchemaShape, SelectArgs, UpdateArgs } from "../../types-new";
@@ -21,8 +21,8 @@ class BuildUpdateArgs {
       const isSubquery = this.isSubquery
       const schema = model.schema()
       const data = args.data
-      const wargs = new BuildWhereArgs(args.where, model)
 
+      const wargs = new BuildWhereArgs(args.where, model)
       const values: string[] = []
       const relations: { [col: string]: UpdateArgs<any>['data'] } = {}
       const fileMetas: { [col: string]: XansqlFileMeta } = {}
@@ -75,18 +75,22 @@ class BuildUpdateArgs {
       }
 
       try {
-         let sql = `UPDATE ${model.table} SET ${values.join(", ")} ${wargs.sql}`.trim()
+         let sql = `UPDATE ${model.table} as ${model.alias} SET ${values.join(", ")} ${wargs.sql}`.trim()
+         console.log(sql);
+
          const execute = await model.execute(sql)
          if (execute?.affectedRows && Object.keys(relations).length) {
             for (let col in relations) {
-               const rdata = relations[col]
+               const rargs = relations[col] as UpdateArgs<any>
                const field = schema[col]
                const rinfo = field.relationInfo
                const RModel = xansql.model(field.model)
+
                const build = new BuildUpdateArgs({
-                  data: rdata,
+                  ...rargs,
                   where: {
-                     [rinfo.self.column]: args.where
+                     ...rargs.where,
+                     [rinfo.target.column]: args.where
                   }
                }, RModel, true)
                await build.results()
@@ -97,7 +101,9 @@ class BuildUpdateArgs {
             let sargs: SelectArgs = this.makeSelectArgs(data, model)
             const buildFind = new BuildFindArgs({
                select: sargs,
-               where: args.where
+               where: {
+                  ...args.where,
+               }
             }, model)
             return await buildFind.results()
          }
@@ -118,14 +124,20 @@ class BuildUpdateArgs {
          const field = schema[col] as any
          if (field.type === "relation-many") {
             const RModel = xansql.model(field.model)
-            const childargs = this.makeSelectArgs(data[col] as any, RModel)
+            const sub_args = data[col] as UpdateArgs<any>
+            const childargs = this.makeSelectArgs(sub_args.data as any, RModel)
             if (Object.keys(childargs).length) {
                args[col] = {
-                  select: childargs
+                  select: childargs,
+                  where: sub_args.where
                }
             } else {
-               args[col] = true
+               args[col] = {
+                  where: sub_args.where
+               }
             }
+         } else {
+            args[col] = true
          }
       }
 
@@ -170,7 +182,7 @@ class BuildUpdateArgs {
             }
          }
 
-         if (field.type === "relation-one" && !isNumber(value)) {
+         if (field.type === "relation-one" && !(isNumber(value) || value === null)) {
             throw new XansqlError({
                code: "VALIDATION_ERROR",
                message: `Invalid value for foreign key "${col}" in table "${model.table}". Expected a number, got ${typeof value}.`,
