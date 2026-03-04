@@ -3,7 +3,7 @@ import { iof } from "../utils";
 import XqlIDField from "../xt/fields/IDField";
 import XqlRelationMany from "../xt/fields/RelationMany";
 import XqlRelationOne from "../xt/fields/RelationOne";
-import { AggregateArgs, CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, SchemaShape, UpdateArgs, UpsertArgs, WhereArgs } from "./types-new";
+import { AggregateArgs, CreateArgs, DeleteArgs, ExactArgs, FindArgs, FindResult, ModelClass, PaginateArgs, SchemaShape, UpdateArgs, UpsertArgs, WhereArgs } from "./types-new";
 import XansqlError from "../core/XansqlError";
 import BuildFindArgs from "./Build/FindArgs";
 import BuildCreateArgs from "./Build/CreateArgs";
@@ -13,6 +13,7 @@ import BuildUpdateArgs from "./Build/UpdateArgs";
 import BuildDeleteArgs from "./Build/DeleteArgs";
 import ModelWhere from "./ModelWhere";
 import ReserveKeywords from "./ReserveKeywords";
+import BuildUpsertArgs from "./Build/UpsertArgs";
 
 
 abstract class Model<S extends SchemaShape = SchemaShape> {
@@ -188,33 +189,201 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
 
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
-      const build = new BuildFindArgs(args as any, this)
-      const results = await build.results()
-      return results as any
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildFindArgs(args as any, this)
+         const results = await build.results()
+         await this.xansql.XansqlTransaction.commit()
+         return results as any
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
    }
 
    async aggregate<T extends AggregateArgs<S, any>>(args: ExactArgs<T, AggregateArgs<S, T>>) {
-      const build = new BuildAggregateArgs(args as any, this)
-      const results = await build.results()
-      return results as any
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildAggregateArgs(args as any, this)
+         const results = await build.results()
+         await this.xansql.XansqlTransaction.commit()
+         return results as any
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
    }
 
-   async create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>) {
-      const build = new BuildCreateArgs(args as any, this)
-      const results = await build.results()
-      return results
+   async create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>): Promise<FindResult<T, S>[] | null> {
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildCreateArgs(args as any, this)
+         const results = await build.results() as any
+         await this.xansql.XansqlTransaction.commit()
+         return results
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
    }
+
    async update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) {
-      const build = new BuildUpdateArgs(args, this)
-      const results = await build.results()
-      return results
-   }
-   async upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) { }
-   async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) {
-      const build = new BuildDeleteArgs(args as any, this as any)
-      return await build.results()
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildUpdateArgs(args, this)
+         const results = await build.results()
+         await this.xansql.XansqlTransaction.commit()
+         return results
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
    }
 
+   async upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) {
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildUpsertArgs(args, this)
+         const results = await build.results()
+         await this.xansql.XansqlTransaction.commit()
+         return results
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
+   }
+
+   async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) {
+      try {
+         await this.xansql.XansqlTransaction.begin()
+         const build = new BuildDeleteArgs(args as any, this as any)
+         const results = await build.results()
+         await this.xansql.XansqlTransaction.commit()
+         return results
+      } catch (error) {
+         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
+   }
+
+   // Helper Methods
+   async paginate(args: PaginateArgs<S>) {
+      const page = args.page
+      const perpage = args?.perpage || 20;
+      const skip = (page - 1) * perpage;
+      const results = await this.find({
+         ...args as any,
+         limit: {
+            take: perpage,
+            skip
+         }
+      })
+      const total = await this.count(args?.where || {} as WhereArgs<S>)
+      return {
+         results,
+         total,
+         page,
+         perpage,
+         pages: Math.ceil(total / perpage)
+      }
+   }
+
+   async exists(where: WhereArgs<S>): Promise<boolean> {
+      return !!(await this.count(where))
+   }
+
+   // Aggregate Methods
+   async count(where: WhereArgs<S>): Promise<number> {
+      const res: any = await this.aggregate({
+         where,
+         select: {
+            [this.IDColumn]: {
+               count: true
+            }
+         } as any
+      })
+      return res?.length ? res[0][`count_${this.IDColumn}`] : 0
+   }
+
+   async min(column: string, where: WhereArgs<S>): Promise<number> {
+      if (!(column in this.schema)) {
+         throw new XansqlError({
+            code: "INVALID_ARGUMENTS",
+            message: `Column "${column}" does not exist in table "${this.table}"`,
+            model: this.table,
+            field: column
+         });
+      }
+      const res: any = await this.aggregate({
+         where,
+         select: {
+            [column]: {
+               min: true
+            }
+         } as any
+      })
+      return res?.length ? res[0][`min_${column}`] : 0
+   }
+
+   async max(column: string, where: WhereArgs<S>): Promise<number> {
+      if (!(column in this.schema)) {
+         throw new XansqlError({
+            code: "INVALID_ARGUMENTS",
+            message: `Column "${column}" does not exist in table "${this.table}"`,
+            model: this.table,
+            field: column
+         });
+      }
+      const res: any = await this.aggregate({
+         where,
+         select: {
+            [column]: {
+               max: true
+            }
+         } as any
+      })
+      return res?.length ? res[0][`max_${column}`] : 0
+   }
+
+   async sum(column: string, where: WhereArgs<S>): Promise<number> {
+      if (!(column in this.schema)) {
+         throw new XansqlError({
+            code: "INVALID_ARGUMENTS",
+            message: `Column "${column}" does not exist in table "${this.table}"`,
+            model: this.table,
+            field: column
+         });
+      }
+      const res: any = await this.aggregate({
+         where,
+         select: {
+            [column]: {
+               sum: true
+            }
+         } as any
+      })
+      return res?.length ? res[0][`sum_${column}`] : 0
+   }
+
+   async avg(column: string, where: WhereArgs<S>): Promise<number> {
+      if (!(column in this.schema)) {
+         throw new XansqlError({
+            code: "INVALID_ARGUMENTS",
+            message: `Column "${column}" does not exist in table "${this.table}"`,
+            model: this.table,
+            field: column
+         });
+      }
+      const res: any = await this.aggregate({
+         where,
+         select: {
+            [column]: {
+               avg: true
+            }
+         } as any
+      })
+      return res?.length ? res[0][`avg_${column}`] : 0
+   }
 }
 
 export default Model

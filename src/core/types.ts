@@ -1,11 +1,14 @@
 import Model from "../model";
-import { AggregateArgsType, CreateArgsType, DeleteArgsType, FindArgsType, UpdateArgsType } from "../model/types";
-import { XqlSchemaShape, XT } from "../xt/types";
+import { AggregateArgs, CreateArgs, DeleteArgs, FindArgs, SchemaShape, UpdateArgs } from "../model/types-new";
 import Xansql from "./Xansql";
 
-export type ModelType = Model<Xansql, string, XqlSchemaShape>;
-type NoInfer<T> = [T][T extends any ? 0 : never]
-export type ModelCallback<C extends object> = (xt: any) => NoInfer<C>
+// type NoInfer<T> = [T][T extends any ? 0 : never]
+// export type ModelCallback<C extends object> = (xt: any) => NoInfer<C>
+
+export type XansqlFilUploadArgs = File | {
+   chunk: Uint8Array;
+   meta: XansqlFileMeta
+}
 
 export type RowObject = {
    [key: string]: any;
@@ -20,18 +23,6 @@ export type ExecuterResult<Row = RowObject> = {
 }
 
 export type XansqlDialectEngine = 'mysql' | 'postgresql' | 'sqlite'
-export type XansqlDialectSchemaColumn = {
-   name: string;
-   type: string;
-   notnull: boolean;
-   default_value: any;
-   pk: boolean;
-   index: boolean;
-   unique: boolean;
-}
-export type XansqlDialectSchemaType = {
-   [table: string]: XansqlDialectSchemaColumn[]
-}
 
 export type XansqlFileMeta = {
    fileId: string;
@@ -43,21 +34,9 @@ export type XansqlFileMeta = {
    isFinish: boolean;
 };
 
-export type XansqlFileConfig = {
-   deleteFileOnMigration?: boolean;
-   maxFilesize?: number; // in KB
-   checkFileType?: boolean;
-   chunkSize?: number; // in KB
-   upload: (file: File, xansql: Xansql) => Promise<XansqlFileMeta>;
-   delete: (fileId: string, xansql: Xansql) => Promise<void>;
-}
-
-
 export type XansqlDialect = {
    execute: (sql: string, xansql: Xansql) => Promise<ExecuterResult | null>;
-   getSchema: (xansql: Xansql) => Promise<XansqlDialectSchemaType | void>;
    engine: XansqlDialectEngine;
-   file?: XansqlFileConfig
 }
 
 export type XansqlSocket = {
@@ -67,48 +46,47 @@ export type XansqlSocket = {
 }
 
 export type XansqlCache<Row = object> = {
-   cache: (sql: string, model: ModelType) => Promise<Row[] | void>;
-   clear: (model: ModelType) => Promise<void>;
-   onFind: (sql: string, model: ModelType, data: Row) => Promise<void>;
-   onCreate: (model: ModelType, insertId: number) => Promise<void>;
-   onUpdate: (model: ModelType, rows: Row[]) => Promise<void>;
-   onDelete: (model: ModelType, rows: Row[]) => Promise<void>;
+   cache: (sql: string, model: Model) => Promise<Row[] | void>;
+   clear: (model: Model) => Promise<void>;
+   onFind: (sql: string, model: Model, data: Row) => Promise<void>;
+   onCreate: (model: Model, insertId: number) => Promise<void>;
+   onUpdate: (model: Model, rows: Row[]) => Promise<void>;
+   onDelete: (model: Model, rows: Row[]) => Promise<void>;
 }
 
 
 export type XansqlHooks = {
-   beforeExcute?: (model: ModelType, sql: string) => Promise<string | void>
-   afterExcute?: (model: ModelType, result: ExecuterResult) => Promise<ExecuterResult | void>
-   beforeFind?: (model: ModelType, args: FindArgsType) => Promise<FindArgsType | void>;
-   afterFind?: (model: ModelType, result: ResultData, args: FindArgsType) => Promise<ResultData | void>;
-   beforeCreate?: (model: ModelType, args: CreateArgsType) => Promise<CreateArgsType | void>
-   afterCreate?: (model: ModelType, result: ResultData, args: CreateArgsType) => Promise<ResultData | void>;
-   beforeUpdate?: (model: ModelType, args: UpdateArgsType) => Promise<UpdateArgsType | void>;
-   afterUpdate?: (model: ModelType, result: ResultData, args: UpdateArgsType) => Promise<ResultData | void>;
-   beforeDelete?: (model: ModelType, args: DeleteArgsType) => Promise<DeleteArgsType | void>;
-   afterDelete?: (model: ModelType, result: ResultData, args: DeleteArgsType) => Promise<ResultData | void>;
-   beforeAggregate?: (model: ModelType, args: AggregateArgsType) => Promise<AggregateArgsType | void>;
-   afterAggregate?: (model: ModelType, result: ResultData, args: AggregateArgsType) => Promise<ResultData | void>;
+   beforeExcute?: (model: Model, sql: string) => Promise<string | void>
+   afterExcute?: (model: Model, result: ExecuterResult) => Promise<ExecuterResult | void>
+   beforeFind?: (model: Model, args: FindArgs<SchemaShape>) => Promise<FindArgs<SchemaShape> | void>;
+   afterFind?: (model: Model, result: ResultData, args: FindArgs<SchemaShape>) => Promise<ResultData | void>;
+   beforeCreate?: (model: Model, args: CreateArgs<SchemaShape>) => Promise<CreateArgs<SchemaShape> | void>
+   afterCreate?: (model: Model, result: ResultData, args: CreateArgs<SchemaShape>) => Promise<ResultData | void>;
+   beforeUpdate?: (model: Model, args: UpdateArgs<SchemaShape>) => Promise<UpdateArgs<SchemaShape> | void>;
+   afterUpdate?: (model: Model, result: ResultData, args: UpdateArgs<SchemaShape>) => Promise<ResultData | void>;
+   beforeDelete?: (model: Model, args: DeleteArgs<SchemaShape>) => Promise<DeleteArgs<SchemaShape> | void>;
+   afterDelete?: (model: Model, result: ResultData, args: DeleteArgs<SchemaShape>) => Promise<ResultData | void>;
+   beforeAggregate?: (model: Model, args: AggregateArgs<SchemaShape, any>) => Promise<AggregateArgs<SchemaShape, any> | void>;
+   afterAggregate?: (model: Model, result: ResultData, args: AggregateArgs<SchemaShape, any>) => Promise<ResultData | void>;
 
-   transform?: (model: ModelType, row: RowObject) => Promise<RowObject | void>
+   transform?: (model: Model, row: RowObject) => Promise<RowObject | void>
 }
+
+export type XansqlFileConfig = {
+   maxFilesize?: number;
+   checkFileType?: boolean;
+   chunkSize?: number;
+   upload: (chunk: Uint8Array, filemeta: XansqlFileMeta) => Promise<void>;
+   delete: (fileId: string) => Promise<void>;
+};
 
 export type XansqlConfigType = {
    dialect: XansqlDialect;
+   file?: XansqlFileConfig
    socket?: XansqlSocket;
    cache?: XansqlCache;
    debug?: boolean;
-
-   maxLimit?: {
-      find?: number;
-      create?: number;
-      update?: number;
-      delete?: number;
-   },
-
    hooks?: XansqlHooks
 }
 
-export type XansqlConfigTypeRequired = Required<XansqlConfigType> & {
-   maxLimit: Required<XansqlConfigType['maxLimit']>;
-}
+export type XansqlConfigTypeRequired = Required<XansqlConfigType>

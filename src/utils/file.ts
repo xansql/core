@@ -1,10 +1,4 @@
 
-/**
- * 
- * @param fileSize in bytes
- * @returns 
- */
-
 export function getChunkSize(fileSize: number): number {
    // fileSize in bytes
    const MB = 1024 * 1024;
@@ -30,20 +24,8 @@ export function getChunkSize(fileSize: number): number {
    }
 }
 
+export const totalChunks = (file: File, chunkSize?: number) => Math.ceil(file.size / (chunkSize || getChunkSize(file.size)));
 
-/**
- * 
- * @param file File object
- * @param chunkSize in bytes
- * @returns number of chunks
- */
-export const countFileChunks = (file: File, chunkSize?: number) => Math.ceil(file.size / (chunkSize || getChunkSize(file.size)));
-
-/**
- * Generate file chunks as Uint8Array
- * @param file File object
- * @param chunkSize 
- */
 export async function* chunkFile(file: File, chunkSize?: number) {
    const fileSize = file.size;
    chunkSize = chunkSize || getChunkSize(fileSize);
@@ -55,4 +37,24 @@ export async function* chunkFile(file: File, chunkSize?: number) {
       yield { chunk: buffer, chunkIndex: Math.floor(offset / chunkSize) };
       offset += chunkSize;
    }
+}
+
+
+export async function getFileId(file: File): Promise<string> {
+   let data: any[] = [];
+   if (typeof window !== 'undefined') {
+      data = [
+         navigator.userAgent,
+         navigator.language,
+         screen.width,
+         screen.height,
+         screen.colorDepth,
+         new Date().getTimezoneOffset(),
+         Intl.DateTimeFormat().resolvedOptions().timeZone || ""
+      ]
+   }
+
+   const id = `${file.name}||${file.size}||${file.lastModified}||${data.join("||")}`
+   const ext = file.name.split('.').pop() || ''
+   return `${id}.${ext}`;
 }

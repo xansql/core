@@ -5,27 +5,35 @@ import XqlRelationOne from "../xt/fields/RelationOne"
 import { XqlField } from "../xt/types"
 import XqlIDField from "../xt/fields/IDField"
 import ModelWhere from "./ModelWhere"
-import XqlNumber from "../xt/fields/Number"
-import XqlDate from "../xt/fields/Date"
-import XqlString from "../xt/fields/String"
+import { ExecuterResult } from "../core/types"
 
+export type ModelRowObject<S extends SchemaShape> = {
+   [column in keyof S as S[column] extends XqlRelationMany<any> ? never : column]: S[column]
+}
 
-// export type ExactArgs<T, Shape> =
-//    T extends object
-//    ? Shape extends object
-//    ? Exclude<keyof T, keyof Shape> extends never
-//    ? {
-//       [K in keyof T]: K extends keyof Shape
-//       ? T[K] extends object
-//       ? Shape[K] extends object
-//       ? ExactArgs<T[K], Shape[K]>
-//       : T[K]
-//       : T[K]
-//       : never
-//    }
-//    : never
-//    : never
-//    : T;
+export type ModelHooks<S extends SchemaShape = any> = {
+   beforeExcute?: (sql: string) => Promise<string | void>
+   afterExcute?: (result: ExecuterResult) => Promise<ExecuterResult | void>
+   beforeFind?: (args: FindArgs<S>) => Promise<FindArgs<S> | void>
+   afterFind?: (results: FindResult<SchemaShape, S>, args: FindArgs<S>) => Promise<FindResult<SchemaShape, S> | void>
+   beforeCreate?: (args: CreateArgs<S>) => Promise<CreateArgs<S> | void>
+   afterCreate?: (result: FindResult<SchemaShape, S>, args: CreateArgs<S>) => Promise<FindResult<SchemaShape, S> | void>
+   beforeUpdate?: (args: UpdateArgs<S>) => Promise<UpdateArgs<S> | void>
+   afterUpdate?: (result: FindResult<SchemaShape, S>, args: UpdateArgs<S>) => Promise<FindResult<SchemaShape, S> | void>
+   beforeDelete?: (args: DeleteArgs<S>) => Promise<DeleteArgs<S> | void>
+   afterDelete?: (result: FindResult<SchemaShape, S>, args: DeleteArgs<S>) => Promise<FindResult<SchemaShape, S> | void>
+   beforeAggregate?: (args: AggregateArgs<S, any>) => Promise<AggregateArgs<S, any> | void>
+   afterAggregate?: (result: FindResult<SchemaShape, S>, args: AggregateArgs<S, any>) => Promise<FindResult<SchemaShape, S> | void>
+}
+
+export type ModelOptions<S extends SchemaShape = any> = {
+   hooks: ModelHooks<S>,
+   transform?: (row: ModelRowObject<S>) => Promise<ModelRowObject<S> | void>;
+   softDelete?: {
+      field: String;
+      retentionDays?: number;
+   }
+}
 
 export type ExactArgs<T, Shape> =
    T extends object
@@ -207,7 +215,6 @@ export type FindResult<T extends FindArgs<any>, S extends SchemaShape> =
 
 
 
-
 // CREATE ARGS
 export type CreateDataValue<F extends XqlField> =
    F extends XqlRelationOne<any> ? (
@@ -276,4 +283,10 @@ export type UpsertArgs<S extends SchemaShape> = {
 export type DeleteArgs<S extends SchemaShape> = {
    where: WhereArgs<S>;
    select?: SelectArgs<S>;
+}
+
+
+export type PaginateArgs<S extends SchemaShape> = Omit<FindArgs<S>, "limit"> & {
+   page: number,
+   perpage?: number
 }

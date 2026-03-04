@@ -29,7 +29,6 @@ class BuildCreateArgs {
       const schema = model.schema()
       const data = args.data
 
-
       if (Array.isArray(data)) {
          for (let d of data) {
             const build = new BuildCreateArgs({ data: d }, model, isSubquery)
@@ -86,47 +85,47 @@ class BuildCreateArgs {
             }
          }
 
-
+         let insertId
          try {
             let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
             sql = sql.replace(/\s+/gi, " ")
             const results = await model.execute(sql)
-            const insertId = results?.insertId
-            if (insertId && Object.keys(relations).length) {
-               for (let col in relations) {
-                  const rdata = relations[col]
-                  const field = schema[col]
-                  const rinfo = field.relationInfo
-                  const RModel = xansql.model(field.model)
-                  if (Array.isArray(rdata)) {
-                     for (let d of rdata) {
-                        d[rinfo.target.relation] = insertId
-                     }
-                  } else {
-                     rdata[rinfo.target.relation] = insertId
-                  }
-
-                  const build = new BuildCreateArgs({ data: rdata }, RModel, true)
-                  await build.results()
-               }
-            }
-
-            if (!isSubquery && insertId) {
-               let sargs: SelectArgs = !args.select ? this.makeSelectArgs(data, model) : args.select
-
-               const buildFind = new BuildFindArgs({
-                  select: sargs,
-                  where: {
-                     [model.IDColumn]: insertId
-                  }
-               }, model)
-               return await buildFind.results()
-            }
+            insertId = results?.insertId
          } catch (error) {
             for (let col in fileMetas) {
                await xansql.deleteFile(fileMetas[col].fileId)
             }
             throw error
+         }
+
+         if (insertId && Object.keys(relations).length) {
+            for (let col in relations) {
+               const rdata = relations[col]
+               const field = schema[col]
+               const rinfo = field.relationInfo
+               const RModel = xansql.model(field.model)
+               if (Array.isArray(rdata)) {
+                  for (let d of rdata) {
+                     d[rinfo.target.relation] = insertId
+                  }
+               } else {
+                  rdata[rinfo.target.relation] = insertId
+               }
+
+               const build = new BuildCreateArgs({ data: rdata }, RModel, true)
+               await build.results()
+            }
+         }
+
+         if (!isSubquery && insertId) {
+            let sargs: SelectArgs = !args.select ? this.makeSelectArgs(data, model) : args.select
+            const buildFind = new BuildFindArgs({
+               select: sargs,
+               where: {
+                  [model.IDColumn]: insertId
+               }
+            }, model)
+            return await buildFind.results()
          }
       }
    }

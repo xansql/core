@@ -74,45 +74,72 @@ class BuildUpdateArgs {
          }
       }
 
+      // taking old filemetas
+      let oldFileResults
+      if (Object.keys(fileMetas).length) {
+         let select: any = {}
+         for (let col in fileMetas) {
+            select[col] = true
+         }
+         const build = new BuildFindArgs({
+            select,
+            where: args.where
+         }, model)
+         oldFileResults = await build.results()
+      }
+
+      let execute
       try {
          let sql = `UPDATE ${model.table} as ${model.alias} SET ${values.join(", ")} ${wargs.sql}`.trim()
-         sql = sql.replace(/\s+/gi, " ")
-         console.log(sql);
-
-         const execute = await model.execute(sql)
-         if (execute?.affectedRows && Object.keys(relations).length) {
-            for (let col in relations) {
-               const rargs = relations[col] as UpdateArgs<any>
-               const field = schema[col]
-               const rinfo = field.relationInfo
-               const RModel = xansql.model(field.model)
-
-               const build = new BuildUpdateArgs({
-                  ...rargs,
-                  where: {
-                     ...rargs.where,
-                     [rinfo.target.column]: args.where
-                  }
-               }, RModel, true)
-               await build.results()
-            }
-         }
-
-         if (!isSubquery && execute?.affectedRows) {
-            let sargs: SelectArgs = this.makeSelectArgs(data, model)
-            const buildFind = new BuildFindArgs({
-               select: sargs,
-               where: {
-                  ...args.where,
-               }
-            }, model)
-            return await buildFind.results()
-         }
+         execute = await model.execute(sql.replace(/\s+/gi, " "))
       } catch (error) {
          for (let col in fileMetas) {
             await xansql.deleteFile(fileMetas[col].fileId)
          }
          throw error
+      }
+
+      if (execute?.affectedRows && Object.keys(relations).length) {
+
+         // delete Old files
+         if (oldFileResults) {
+            for (let row of oldFileResults) {
+               for (let col in fileMetas) {
+                  const field = schema[col]
+                  const meta = field.value.fromSql(row[col]) as XansqlFileMeta
+                  if (meta) {
+                     await xansql.deleteFile(meta.fileId)
+                  }
+               }
+            }
+         }
+
+         for (let col in relations) {
+            const rargs = relations[col] as UpdateArgs<any>
+            const field = schema[col]
+            const rinfo = field.relationInfo
+            const RModel = xansql.model(field.model)
+
+            const build = new BuildUpdateArgs({
+               ...rargs,
+               where: {
+                  ...rargs.where,
+                  [rinfo.target.column]: args.where
+               }
+            }, RModel, true)
+            await build.results()
+         }
+      }
+
+      if (!isSubquery && execute?.affectedRows) {
+         let sargs: SelectArgs = this.makeSelectArgs(data, model)
+         const buildFind = new BuildFindArgs({
+            select: sargs,
+            where: {
+               ...args.where,
+            }
+         }, model)
+         return await buildFind.results()
       }
    }
 

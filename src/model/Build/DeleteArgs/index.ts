@@ -1,5 +1,8 @@
 import Model from "../..";
+import { XansqlFileMeta } from "../../../core/types";
+import { iof } from "../../../utils";
 import { chunkArray } from "../../../utils/chunker";
+import XqlFile from "../../../xt/fields/File";
 import { DeleteArgs, SchemaShape } from "../../types-new";
 import BuildFindArgs from "../FindArgs";
 import BuildSelectArgs from "../SelectArgs";
@@ -19,11 +22,7 @@ class BuildDeleteArgs {
       const xansql = model.xansql
       const models = xansql.models
 
-      const sargs = new BuildSelectArgs(args.select || {}, model)
-      const wargs = new BuildWhereArgs(args.where, model)
-
-
-      models.forEach(async (m) => {
+      for (let m of Array.from(models.values())) {
          const mschema = m.schema()
          for (let col in mschema) {
             const field = mschema[col] as any
@@ -31,34 +30,43 @@ class BuildDeleteArgs {
             if (field.type === "relation-one" && field.model == model.constructor) {
                const isNullable = field.meta.nullable
                const isSameModel = m.table === model.table
-               if (isNullable) {
-                  if (isSameModel) {
-                     const fargs = new BuildFindArgs({
-                        select: {
-                           [model.IDColumn]: true
-                        },
-                        where: args.where
-                     }, model)
-                     const res = await fargs.results()
 
-                     let ids: number[] = []
-                     if (res?.length) {
-                        for (let r of res) {
-                           ids.push(r[m.IDColumn])
+               let ids: number[] = []
+               if (isSameModel) {
+                  const fargs = new BuildFindArgs({
+                     select: {
+                        [m.IDColumn]: true,
+                        [col]: {
+                           select: {
+                              [m.IDColumn]: true,
+                           }
+                        }
+                     },
+                     where: args.where
+                  }, m)
+                  const res = await fargs.results()
+                  if (res?.length) {
+                     for (let r of res) {
+                        if (r[col] && r[col][m.IDColumn]) {
+                           ids.push(r[col][m.IDColumn])
                         }
                      }
-                     if (ids.length) {
+                  }
+               }
+               if (isNullable) {
+                  if (isSameModel) {
+                     if (ids?.length) {
                         for (let { chunk } of chunkArray(ids)) {
                            const build = new BuildUpdateArgs({
                               data: {
                                  [col]: null
                               },
                               where: {
-                                 [col]: {
+                                 [model.IDColumn]: {
                                     in: chunk
                                  }
                               }
-                           }, model)
+                           }, m)
                            await build.results()
                         }
                      }
@@ -73,41 +81,79 @@ class BuildDeleteArgs {
                      }, m)
                      await build.results()
                   }
-
                } else {
-                  // delete
-                  const build = new BuildDeleteArgs({
-                     where: {
-                        [col]: args.where
+                  if (isSameModel) {
+                     if (ids.length) {
+                        for (let { chunk } of chunkArray(ids)) {
+                           const build = new BuildDeleteArgs({
+                              where: {
+                                 [model.IDColumn]: {
+                                    in: chunk
+                                 }
+                              }
+                           }, m, true)
+
+                           await build.results()
+                        }
                      }
-                  }, m)
-                  await build.results()
+                  } else {
+                     const build = new BuildDeleteArgs({
+                        where: {
+                           [col]: args.where
+                        }
+                     }, m, true)
+                     await build.results()
+                  }
                }
             }
          }
-      })
-
-      // let results = await fargs.results()
-      // return results
+      }
 
 
-      // for (let col in schema) {
-      //    const field = schema[col] as any
-      //    if (field.type === 'relation-many') {
-      //       const RModel = xansql.model(field.model)
-      //       const _args = sargs.relations[col]
-      //       const dargs = new BuildDeleteArgs({}, RModel)
-      //    } else if (iof(field, XqlFile)) {
+      const wargs = new BuildWhereArgs(args.where, model)
+      const _select: any = {}
+      for (let col in schema) {
+         const field = schema[col] as any
+         if (iof(field, XqlFile)) {
+            _select[col] = true
+         }
+      }
 
-      //    }
-      // }
+      const fargs = new BuildFindArgs({
+         select: {
+            [model.IDColumn]: true,
+            ..._select
+         },
+         where: args.where
+      }, model)
+      const fileRows = await fargs.results()
+
+      let results
+      if (!isSubquery) {
+         const build = new BuildFindArgs(args, model)
+         results = await build.results()
+      }
 
       const sql = `DELETE FROM ${model.table} as ${model.alias} ${wargs.sql}`.trim()
-      // console.log(sql);
+      const execute = await model.execute(sql)
 
-      // await model.execute(sql)
-      // return results
+      if (execute.affectedRows && fileRows?.length) {
+         for (let { chunk } of chunkArray(fileRows)) {
+            for (let frow of chunk) {
+               for (let col in frow) {
+                  const field = schema[col]
+                  if (iof(field, XqlFile)) {
+                     const fileMeta: XansqlFileMeta = field.value.fromSql(frow[col]) as any
+                     if (fileMeta) {
+                        await xansql.deleteFile(fileMeta.fileId)
+                     }
+                  }
+               }
+            }
+         }
+      }
 
+      return results
    }
 }
 

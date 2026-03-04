@@ -1,5 +1,5 @@
 import Model from "../model";
-import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired } from "./types";
+import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired, XansqlFileMeta, XansqlFilUploadArgs } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
 import ModelFactory from "./classes/ModelFactory";
@@ -7,6 +7,7 @@ import XansqlMigration from "./classes/XansqlMigrartion";
 import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
 import { ModelClass, SchemaShape } from "../model/types-new";
+import { chunkFile, getFileId, totalChunks } from "../utils/file";
 
 
 class Xansql {
@@ -14,8 +15,8 @@ class Xansql {
    private XansqlConfig: XansqlConfig;
    readonly config: XansqlConfigTypeRequired;
    readonly XansqlTransaction: XansqlTransaction;
-   readonly EventManager: EventManager
-   readonly XansqlMigration: XansqlMigration
+   // readonly EventManager: EventManager
+   // readonly XansqlMigration: XansqlMigration
    readonly models = new Map<ModelClass<any>, Model>()
 
    constructor(config: XansqlConfigType) {
@@ -24,8 +25,8 @@ class Xansql {
       this.XansqlTransaction = new XansqlTransaction(this);
       this.ModelFactory = new ModelFactory();
 
-      this.XansqlMigration = new XansqlMigration(this);
-      this.EventManager = new EventManager();
+      // this.XansqlMigration = new XansqlMigration(this);
+      // this.EventManager = new EventManager();
    }
 
    get dialect() {
@@ -71,29 +72,58 @@ class Xansql {
       }
    }
 
-
-   async getRawSchema() {
-      return await this.dialect.getSchema(this);
-   }
-
-   async uploadFile(file: File) {
-      if (!this.dialect.file?.upload) {
+   async uploadFile(file: XansqlFilUploadArgs) {
+      const fileConfig = this.config.file
+      if (!fileConfig?.upload) {
          throw new XansqlError({
             code: "INTERNAL_ERROR",
             message: `File upload is not supported by the current dialect.`
          });
       }
-      return await this.dialect.file.upload(file, this);
+      if (file instanceof File) {
+         // make chunk
+         const fileId = await getFileId(file);
+
+         const maxFileSize = fileConfig?.maxFilesize
+         if (maxFileSize && file.size > maxFileSize * 1024) {
+            throw new Error(`File size exceeds the limit of ${maxFileSize / 1024} MB`)
+         }
+
+         const chunkSize = fileConfig?.chunkSize
+
+         // send metadata
+         const filemeta: XansqlFileMeta = {
+            fileId: fileId,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            totalChunks: totalChunks(file, chunkSize),
+            chunkIndex: 0,
+            isFinish: false
+         }
+         for await (let { chunk, chunkIndex } of chunkFile(file, chunkSize)) {
+            filemeta.chunkIndex = chunkIndex;
+            filemeta.isFinish = chunkIndex + 1 === filemeta.totalChunks;
+            filemeta.chunkIndex = chunkIndex
+            await this.uploadFile({
+               chunk,
+               meta: filemeta
+            })
+         }
+         return
+      }
+
+      return await this.config.file.upload(file.chunk, file.meta);
    }
 
    async deleteFile(fileId: string) {
-      if (!this.dialect.file?.delete) {
+      if (!this.config.file?.delete) {
          throw new XansqlError({
             code: "INTERNAL_ERROR",
             message: `File delete is not supported by the current dialect.`
          });
       }
-      return await this.dialect.file.delete(fileId, this);
+      return await this.config.file.delete(fileId);
    }
 
    async transaction(callback: () => Promise<any>) {
@@ -101,13 +131,8 @@ class Xansql {
    }
 
    async migrate(force?: boolean) {
-      await this.XansqlMigration.migrate(force);
+      // await this.XansqlMigration.migrate(force);
    }
-
-   on<K extends keyof EventPayloads>(event: K, handler: EventHandler<K>) {
-      this.EventManager.on(event, handler);
-   }
-
 }
 
 class XansqlClone extends Xansql { }

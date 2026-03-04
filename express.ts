@@ -2,26 +2,12 @@ import dotenv from 'dotenv'
 dotenv.config()
 import fakeData from './faker'
 import express, { Express } from 'express';
-import { db } from './example/DBServer'
-import WhereArgsQuery from './src/model/Args/WhereArgs';
-import SelectArgs from './src/model/Executer/Find/SelectArgs';
-import UpdateDataArgs from './src/model/Executer/Update/UpdateDataArgs';
 import XansqlBridgeServer from '@xansql/bridge/server';
 
-import { XansqlFileMeta, xt } from './src';
+import { XansqlFileMeta } from './src';
 import fs from 'fs'
 import path from 'path'
-import { Infer } from 'xanv';
-import { Product, User } from './example/db';
-import ModelWhere from './src/model/ModelWhere';
-
-
-
-
-const o = xt.array(xt.number())
-
-type T = Infer<typeof o>
-
+import { db, Product, User } from './example/db';
 
 let dir = 'uploads';
 
@@ -142,7 +128,7 @@ const server = async (app: Express) => {
          },
          where: {
             customer: {
-               in: [1],
+               // in: [1],
             }
          },
          orderBy: {
@@ -150,7 +136,9 @@ const server = async (app: Express) => {
          },
          select: {
             // email: true,
-            customer: true,
+            customer: {
+
+            },
             // products: {
             //    aggregate: {
             //       categories: {
@@ -195,13 +183,13 @@ const server = async (app: Express) => {
    });
    app.get('/aggregate', async (req: any, res: any) => {
       const results = await User.aggregate({
-         groupBy: ['email', "age"],
+         // groupBy: ['email', "age"],
          limit: {
             take: 10
          },
-         orderBy: {
-            email: "asc"
-         },
+         // orderBy: {
+         //    email: "asc"
+         // },
          select: {
             name: {
                count: true
@@ -254,7 +242,7 @@ const server = async (app: Express) => {
    app.get('/delete', async (req: any, res: any) => {
       const results = await User.delete({
          where: {
-            uid: 1
+            uid: 7
          }
       })
 

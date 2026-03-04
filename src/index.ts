@@ -13,5 +13,4 @@ export {
 };
 
 export * from "./core/types";
-export * from "./model/types";
 export * from "./xt/types";
