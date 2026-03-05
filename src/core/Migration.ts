@@ -3,6 +3,9 @@ import Model from "../model";
 import xt from "../xt";
 import Xansql from "./Xansql";
 import { XqlFieldInfoSchema } from "../xt/XqlFieldInfo";
+import XqlRelationMany from "../xt/fields/RelationMany";
+import { iof } from "../utils";
+import XansqlError from "./XansqlError";
 
 class MigrationModel extends Model {
    get table() {
@@ -31,26 +34,59 @@ class Migration {
    model
    constructor(private xansql: Xansql) {
       this.model = xansql.model(MigrationModel)
+      this.migrate(this.model)
    }
 
-   async migrate(model: Model) {
+   async migrate<M extends Model<any>>(model: M) {
+      if (typeof window !== "undefined") {
+         return
+      }
+
       const schema = model.schema()
-      let info: { [column: string]: XqlFieldInfoSchema } = {}
-      for (let col in schema) {
-         const field = schema[col]
-         info[col] = field.info.schema
-      }
+      let column_sqls = []
+      let index_sqls = []
+      let migrate_schema: { [column: string]: XqlFieldInfoSchema } = {}
 
-      const has = await this.has(model)
-      if (has) {
 
-      }
 
-      return await this.model.create({
-         data: {
-            model: model.table,
-            schema: info
+      for (let column in schema) {
+         const field = schema[column]
+         if (!iof(field, XqlRelationMany)) {
+            const info = field.info
+            column_sqls.push(info.sql.column)
+            if (info.sql.create_index) {
+               index_sqls.push(info.sql.create_index)
+            }
+            migrate_schema[column] = field.info.schema
          }
+      }
+
+      const sql = `CREATE TABLE IF NOT EXISTS ${model.table}(${column_sqls.join(",")})`
+      const execute = await this.xansql.execute(sql)
+      for (let idxql of index_sqls) {
+         try {
+            await this.xansql.execute(idxql)
+         } catch (error) { }
+      }
+
+      if (model.table === this.model.table) {
+         return
+      }
+
+      const prev_migration = await this.migrateSchema(model)
+      // console.log(prev_migration);
+      return await this.model.upsert({
+         create: {
+            model: model.table,
+            schema: migrate_schema
+         },
+         update: {
+            schema: migrate_schema
+         },
+         where: {
+            model: model.table
+         },
+         useTransection: false
       })
    }
 
@@ -60,6 +96,17 @@ class Migration {
             model: model.table
          }
       })
+   }
+
+   async migrateSchema(model: Model) {
+      const get = await this.get(model)
+      if (!get) {
+         throw new XansqlError({
+            code: "INVALID_ARGUMENTS",
+            message: `invalid model provided`
+         })
+      }
+      return JSON.parse(get.schema as string)
    }
 
    async has(model: Model) {

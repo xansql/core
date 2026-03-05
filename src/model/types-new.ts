@@ -242,7 +242,8 @@ export type CreateDataArgs<S extends SchemaShape> = Normalize<{
 
 export type CreateArgs<S extends SchemaShape> = {
    data: CreateDataArgs<S> | CreateDataArgs<S>[];
-   select?: SelectArgs<S>
+   select?: SelectArgs<S>;
+   useTransection?: boolean;
 }
 
 
@@ -269,20 +270,23 @@ export type UpdateDataArgs<S extends SchemaShape> = Normalize<{
 
 export type UpdateArgs<S extends SchemaShape> = Normalize<{
    data: UpdateDataArgs<S>;
-   where: Normalize<WhereArgs<S>>
+   where: Normalize<WhereArgs<S>>;
+   useTransection?: boolean;
 }>
 
 // UPSERT
 export type UpsertArgs<S extends SchemaShape> = {
    create: CreateDataArgs<S>;
-   update: CreateDataArgs<S>;
-   where: WhereArgs<S>
+   update: UpdateDataArgs<S>;
+   where: WhereArgs<S>;
+   useTransection?: boolean;
 }
 
 // DELETE ARGS
 export type DeleteArgs<S extends SchemaShape> = {
    where: WhereArgs<S>;
    select?: SelectArgs<S>;
+   useTransection?: boolean;
 }
 
 

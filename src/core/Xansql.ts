@@ -5,8 +5,8 @@ import XansqlConfig from "./classes/XansqlConfig";
 import XansqlError from "./XansqlError";
 import { ModelClass, SchemaShape } from "../model/types-new";
 import { chunkFile, getFileId, totalChunks } from "../utils/file";
-import { fileScaner } from "securequ";
 import Migration from "./Migration";
+import fileScaner from "../utils/fileScaner";
 
 
 class Xansql {
@@ -14,7 +14,7 @@ class Xansql {
    readonly config: XansqlConfigTypeRequired;
    readonly XansqlTransaction: XansqlTransaction;
    readonly models = new Map<ModelClass<any>, Model>()
-   readonly Migration
+   readonly Migration: Migration
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
@@ -120,14 +120,6 @@ class Xansql {
          });
       }
       return await this.config.file.delete(fileId, this);
-   }
-
-   async transaction(callback: () => Promise<any>) {
-      return await this.XansqlTransaction.transaction(callback);
-   }
-
-   async migrate(force?: boolean) {
-      // await this.XansqlMigration.migrate(force);
    }
 }
 

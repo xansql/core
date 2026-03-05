@@ -150,8 +150,9 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       this.schema = (() => fields).bind(this)
 
       // migration server only
-      if (typeof window === "undefined") {
-         this.migrationInit()
+      // xansql.Migration.migrate(this)
+      if (this.table !== "_xansql_migration") {
+         xansql.Migration.migrate(this)
       }
 
    }
@@ -226,53 +227,57 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
    }
 
    async create<T extends CreateArgs<S>>(args: ExactArgs<T, CreateArgs<S>>): Promise<FindResult<T, S>[] | null> {
+      const useTransection = args.useTransection ?? true
       try {
-         await this.xansql.XansqlTransaction.begin()
+         useTransection && await this.xansql.XansqlTransaction.begin()
          const build = new BuildCreateArgs(args as any, this)
          const results = await build.results() as any
-         await this.xansql.XansqlTransaction.commit()
+         useTransection && await this.xansql.XansqlTransaction.commit()
          return results
       } catch (error) {
-         await this.xansql.XansqlTransaction.rollback()
+         useTransection && await this.xansql.XansqlTransaction.rollback()
          throw error
       }
    }
 
    async update<T extends UpdateArgs<S>>(args: ExactArgs<T, UpdateArgs<S>>) {
+      const useTransection = args.useTransection ?? true
       try {
-         await this.xansql.XansqlTransaction.begin()
+         useTransection && await this.xansql.XansqlTransaction.begin()
          const build = new BuildUpdateArgs(args, this)
          const results = await build.results()
-         await this.xansql.XansqlTransaction.commit()
+         useTransection && await this.xansql.XansqlTransaction.commit()
          return results
       } catch (error) {
-         await this.xansql.XansqlTransaction.rollback()
+         useTransection && await this.xansql.XansqlTransaction.rollback()
          throw error
       }
    }
 
    async upsert<T extends UpsertArgs<S>>(args: ExactArgs<T, UpsertArgs<S>>) {
+      const useTransection = args.useTransection ?? true
       try {
-         await this.xansql.XansqlTransaction.begin()
+         useTransection && await this.xansql.XansqlTransaction.begin()
          const build = new BuildUpsertArgs(args, this)
          const results = await build.results()
-         await this.xansql.XansqlTransaction.commit()
+         useTransection && await this.xansql.XansqlTransaction.commit()
          return results
       } catch (error) {
-         await this.xansql.XansqlTransaction.rollback()
+         useTransection && await this.xansql.XansqlTransaction.rollback()
          throw error
       }
    }
 
    async delete<T extends DeleteArgs<S>>(args: ExactArgs<T, DeleteArgs<S>>) {
+      const useTransection = args.useTransection ?? true
       try {
-         await this.xansql.XansqlTransaction.begin()
+         useTransection && await this.xansql.XansqlTransaction.begin()
          const build = new BuildDeleteArgs(args as any, this as any)
          const results = await build.results()
-         await this.xansql.XansqlTransaction.commit()
+         useTransection && await this.xansql.XansqlTransaction.commit()
          return results
       } catch (error) {
-         await this.xansql.XansqlTransaction.rollback()
+         useTransection && await this.xansql.XansqlTransaction.rollback()
          throw error
       }
    }
