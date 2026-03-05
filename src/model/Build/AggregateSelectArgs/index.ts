@@ -1,5 +1,4 @@
 import Model from "../..";
-import Foreign from "../../../core/classes/ForeignInfo";
 import XansqlError from "../../../core/XansqlError";
 import { iof } from "../../../utils";
 import XqlIDField from "../../../xt/fields/IDField";
@@ -15,7 +14,7 @@ class BuildAggregateSelectArgs {
       const sqls = []
 
       for (let column in args) {
-         const field = schema[column];
+         const field = schema[column] as any
          if (!field) {
             throw new XansqlError({
                code: "VALIDATION_ERROR",
@@ -24,7 +23,7 @@ class BuildAggregateSelectArgs {
                field: column
             });
          }
-         if (Foreign.is(field)) {
+         if (field.isRelation) {
             throw new XansqlError({
                code: "VALIDATION_ERROR",
                message: `Cannot perform aggregate functions on foreign key column ${column} in model ${model.table}`,

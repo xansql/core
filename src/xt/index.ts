@@ -67,7 +67,7 @@ const xt = {
       ])
    ),
    ip: () => new XqlIP,
-   key: () => xt.string().max(100).index().unique(),
+   key: () => xt.string().max(100).index(),
    value: () => xt.string().max(1000),
    token: () => xt.string(64).index().unique(),
 }

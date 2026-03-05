@@ -24,8 +24,6 @@ class XqlString extends XVString {
       return new XqlFieldInfo(this)
    }
 
-
-
    optional(): any {
       throw new Error("optional not supported")
    }

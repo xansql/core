@@ -4,6 +4,7 @@ import XansqlError from "../../../core/XansqlError";
 import { deepMerge, iof, isNumber, isObject, quote } from "../../../utils";
 import XqlDate from "../../../xt/fields/Date";
 import XqlFile from "../../../xt/fields/File";
+import XqlIDField from "../../../xt/fields/IDField";
 import { CreateArgs, SchemaShape, SelectArgs } from "../../types-new";
 import BuildFindArgs from "../FindArgs";
 
@@ -38,32 +39,71 @@ class BuildCreateArgs {
          const values: { [col: string]: any } = {}
          const relations: { [col: string]: CreateArgs<any>['data'] } = {}
          const fileMetas: { [col: string]: XansqlFileMeta } = {}
-         for (let col in data) {
-            const value = data[col]
+
+         // set create and update
+         for (let col in schema) {
             const field = schema[col]
-            if (field.isRelation) {
-               if (field.type === "relation-one") {
-                  values[quote(xansql.dialect.engine, col)] = value
+
+            if (iof(field, XqlIDField)) {
+               continue
+            }
+            if (iof(field, XqlDate) && (field.meta.createAt || field.meta.updateAt)) {
+               const v = field.value.toSql(new Date())
+               values[quote(xansql.dialect.engine, col)] = v
+               continue
+            }
+
+            if (col in data) {
+               const value = data[col]
+               if (field.isRelation) {
+                  if (field.type === "relation-one") {
+                     values[quote(xansql.dialect.engine, col)] = value
+                  } else {
+                     relations[col] = value
+                  }
                } else {
-                  relations[col] = value
+                  if (iof(field, XqlFile)) {
+                     try {
+                        const filemeta = await xansql.uploadFile(value);
+                        if (!filemeta) {
+                           throw new XansqlError({
+                              code: "VALIDATION_ERROR",
+                              message: `Failed to upload file for field "${col}" in table "${model.table}".`,
+                              model: model.table,
+                              field: col
+                           })
+                        };
+                        (fileMetas as any)[col] = filemeta
+                        values[quote(xansql.dialect.engine, col)] = `'${JSON.stringify(filemeta)}'`
+                     } catch (error: any) {
+                        throw error
+                     }
+                  } else {
+                     try {
+                        values[quote(xansql.dialect.engine, col)] = field.value.toSql(value)
+                     } catch (error: any) {
+                        throw new XansqlError({
+                           code: "VALIDATION_ERROR",
+                           message: error.message,
+                           model: model.table,
+                           field: col
+                        })
+                     }
+                  }
                }
             } else {
-               if (iof(field, XqlFile)) {
-                  try {
-                     const filemeta = await xansql.uploadFile(value)
-                     fileMetas[col] = filemeta
-                     values[quote(xansql.dialect.engine, col)] = `'${JSON.stringify(filemeta)}'`
-                  } catch (error: any) {
+               if (field.isRelation) {
+                  if (field.type === "relation-one" && !field.meta.nullable) {
                      throw new XansqlError({
-                        code: "FILE_ERROR",
-                        message: error.message,
+                        code: "VALIDATION_ERROR",
+                        message: `Field "${col}" in table "${model.table}" is a non-nullable relation-one field and cannot be left empty.`,
                         model: model.table,
-                        field: col
-                     })
+                        field: col,
+                     });
                   }
                } else {
                   try {
-                     values[quote(xansql.dialect.engine, col)] = field.value.toSql(value)
+                     values[quote(xansql.dialect.engine, col)] = field.value.toSql(undefined)
                   } catch (error: any) {
                      throw new XansqlError({
                         code: "VALIDATION_ERROR",
@@ -76,21 +116,17 @@ class BuildCreateArgs {
             }
          }
 
-         // set create and update
-         for (let col in schema) {
-            const field = schema[col]
-            if (iof(field, XqlDate) && (field.meta.createAt || field.meta.updateAt)) {
-               const v = field.value.toSql(new Date())
-               values[quote(xansql.dialect.engine, col)] = v
-            }
-         }
-
          let insertId
          try {
+            const engine = xansql.dialect.engine
             let sql = `INSERT INTO ${model.table} (${Object.keys(values).join(', ')}) VALUES (${Object.values(values).join(", ")})`
+            if (engine === "postgres") sql += ` RETURNING ${model.IDColumn}`
             sql = sql.replace(/\s+/gi, " ")
             const results = await model.execute(sql)
             insertId = results?.insertId
+            if (results.results?.length && engine === "postgres") {
+               insertId = results.results[0][model.IDColumn]
+            }
          } catch (error) {
             for (let col in fileMetas) {
                await xansql.deleteFile(fileMetas[col].fileId)

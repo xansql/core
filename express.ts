@@ -2,34 +2,12 @@ import dotenv from 'dotenv'
 dotenv.config()
 import fakeData from './faker'
 import express, { Express } from 'express';
-import XansqlBridgeServer from '@xansql/bridge/server';
-
-import { XansqlFileMeta } from './src';
-import fs from 'fs'
-import path from 'path'
+import XansqlBridgeServer from './src/dialects/Bridge/server'
 import { db, Product, User } from './example/db';
-
-let dir = 'uploads';
 
 const bridge = new XansqlBridgeServer(db as any, {
    basepath: "/data",
    mode: "development",
-   file: {
-      upload: async (chunk: Uint8Array, filemeta: XansqlFileMeta) => {
-         const uploadDir = path.join(process.cwd(), dir);
-         if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
-         const filePath = path.join(uploadDir, filemeta.fileId);
-         fs.appendFileSync(filePath, Buffer.from(chunk));
-      },
-      delete: async (fileId: string) => {
-         const fs = await import('fs');
-         const path = await import('path');
-         const filePath = path.join(process.cwd(), dir, fileId);
-         if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-         }
-      }
-   },
    isAuthorized: async (info) => {
       return true;
    }

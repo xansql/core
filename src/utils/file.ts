@@ -39,6 +39,30 @@ export async function* chunkFile(file: File, chunkSize?: number) {
    }
 }
 
+export function generateFileId(str: string) {
+   let h1 = 0xdeadbeef ^ str.length
+   let h2 = 0x41c6ce57 ^ str.length
+
+   for (let i = 0; i < str.length; i++) {
+      const ch = str.charCodeAt(i)
+      h1 = Math.imul(h1 ^ ch, 2654435761)
+      h2 = Math.imul(h2 ^ ch, 1597334677)
+   }
+
+   h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507)
+   h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+
+   h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507)
+   h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+
+   const hex =
+      (h1 >>> 0).toString(16).padStart(8, "0") +
+      (h2 >>> 0).toString(16).padStart(8, "0") +
+      ((h1 ^ h2) >>> 0).toString(16).padStart(8, "0") +
+      ((h1 + h2) >>> 0).toString(16).padStart(8, "0")
+
+   return hex.slice(0, 32)
+}
 
 export async function getFileId(file: File): Promise<string> {
    let data: any[] = [];
@@ -54,7 +78,8 @@ export async function getFileId(file: File): Promise<string> {
       ]
    }
 
-   const id = `${file.name}||${file.size}||${file.lastModified}||${data.join("||")}`
+   const meta = `${file.name}||${file.size}||${file.lastModified}||${data.join("||")}`
    const ext = file.name.split('.').pop() || ''
+   const id = generateFileId(meta);
    return `${id}.${ext}`;
 }

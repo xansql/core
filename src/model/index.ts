@@ -24,7 +24,7 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
    get table() {
       const name = this.constructor.name.replaceAll("_", "")
-      let table = name.split(/(?=[A-Z])/).filter(l => l.toLowerCase() !== 'model').join("_").toLowerCase()
+      let table = name.split(/(?=[A-Z])/).filter((l: string) => l.toLowerCase() !== 'model').join("_").toLowerCase()
       table = table.endsWith("y") ? table.slice(0, -1) + "ies" : table + "s"
       return table
    }
@@ -149,8 +149,10 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
       }
       this.schema = (() => fields).bind(this)
 
-      // migration
-      this.migrationInit()
+      // migration server only
+      if (typeof window === "undefined") {
+         this.migrationInit()
+      }
 
    }
 

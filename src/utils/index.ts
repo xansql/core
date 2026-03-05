@@ -7,15 +7,28 @@ export const isObject = (v: unknown): v is Record<string, unknown> => {
 export const isString = (v: any) => typeof v === 'string'
 export const isNumber = (v: any) => typeof v === 'number' && !isNaN(v)
 
-export const escapeSqlValue = (value: string): string => {
-   if (value === null || value === undefined) {
-      return ""
+// export const escapeSqlValue = (value: string): string => {
+//    if (value === null || value === undefined) {
+//       return ""
+//    }
+//    const str = String(value)
+//    const escaped = str.replace(/'/g, "''")
+//    return escaped
+// }
+
+export const escapeSqlValue = (value: any): string => {
+   if (value === null || value === undefined) return "NULL";
+
+   if (typeof value === "string") {
+      return value.replace(/'/g, "''"); // wrap in quotes
    }
 
-   const str = String(value)
-   const escaped = str.replace(/'/g, "''")
+   if (typeof value === "number") return value.toString();
+   if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
 
-   return escaped
+   // if (value instanceof Date) return value.toISOString();
+
+   throw new Error(`Cannot escape value of type ${typeof value}`);
 }
 
 export const freezeObject = (obj: any) => {
@@ -41,7 +54,7 @@ export function iof<
 
 export const quote = (engine: XansqlDialectEngine, identifier: string) => {
    if (engine === 'mysql') return `\`${identifier}\``;
-   if (engine === 'postgresql' || engine === 'sqlite') return `"${identifier}"`;
+   if (engine === 'postgres' || engine === 'sqlite') return `"${identifier}"`;
    return identifier;
 }
 

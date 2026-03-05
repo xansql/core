@@ -6,6 +6,7 @@ export class UserModel extends Model {
          uid: xt.id(),
          name: xt.string(),
          age: xt.number(),
+         photo: xt.photo(),
          email: xt.string().email().unique().nullable(),
          create_at: xt.date().createAt(),
          update_at: xt.date().updateAt(),

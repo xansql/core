@@ -1,40 +1,27 @@
 import Model from "../model";
-import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired, XansqlFileMeta, XansqlFilUploadArgs } from "./types";
+import { ExecuterResult, XansqlConfigType, XansqlConfigTypeRequired, XansqlFileMeta, XansqlFileUploadArgs } from "./types";
 import XansqlTransaction from "./classes/XansqlTransaction";
 import XansqlConfig from "./classes/XansqlConfig";
-import ModelFactory from "./classes/ModelFactory";
-import XansqlMigration from "./classes/XansqlMigrartion";
-import EventManager, { EventHandler, EventPayloads } from "./classes/EventManager";
 import XansqlError from "./XansqlError";
 import { ModelClass, SchemaShape } from "../model/types-new";
 import { chunkFile, getFileId, totalChunks } from "../utils/file";
+import { fileScaner } from "securequ";
 
 
 class Xansql {
-   private ModelFactory: ModelFactory;
    private XansqlConfig: XansqlConfig;
    readonly config: XansqlConfigTypeRequired;
    readonly XansqlTransaction: XansqlTransaction;
-   // readonly EventManager: EventManager
-   // readonly XansqlMigration: XansqlMigration
    readonly models = new Map<ModelClass<any>, Model>()
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
       this.config = this.XansqlConfig.parse()
       this.XansqlTransaction = new XansqlTransaction(this);
-      this.ModelFactory = new ModelFactory();
-
-      // this.XansqlMigration = new XansqlMigration(this);
-      // this.EventManager = new EventManager();
    }
 
    get dialect() {
       return this.config.dialect;
-   }
-
-   get aliases() {
-      return this.ModelFactory.aliases
    }
 
    model<M extends Model<any>>(model: ModelClass<M>, hooks?: any) {
@@ -72,11 +59,11 @@ class Xansql {
       }
    }
 
-   async uploadFile(file: XansqlFilUploadArgs) {
+   async uploadFile(file: XansqlFileUploadArgs) {
       const fileConfig = this.config.file
       if (!fileConfig?.upload) {
          throw new XansqlError({
-            code: "INTERNAL_ERROR",
+            code: "NOT_FOUND",
             message: `File upload is not supported by the current dialect.`
          });
       }
@@ -110,10 +97,16 @@ class Xansql {
                meta: filemeta
             })
          }
-         return
+         return filemeta
       }
 
-      return await this.config.file.upload(file.chunk, file.meta);
+      if (file.meta.chunkIndex === 0 && !fileScaner(file.chunk).valid) {
+         throw new XansqlError({
+            code: "FILE_ERROR",
+            message: `Failed to process file "${file.meta.name}".`
+         });
+      }
+      return await this.config.file.upload(file.chunk, file.meta, this);
    }
 
    async deleteFile(fileId: string) {
@@ -123,7 +116,7 @@ class Xansql {
             message: `File delete is not supported by the current dialect.`
          });
       }
-      return await this.config.file.delete(fileId);
+      return await this.config.file.delete(fileId, this);
    }
 
    async transaction(callback: () => Promise<any>) {

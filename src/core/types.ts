@@ -5,7 +5,7 @@ import Xansql from "./Xansql";
 // type NoInfer<T> = [T][T extends any ? 0 : never]
 // export type ModelCallback<C extends object> = (xt: any) => NoInfer<C>
 
-export type XansqlFilUploadArgs = File | {
+export type XansqlFileUploadArgs = File | {
    chunk: Uint8Array;
    meta: XansqlFileMeta
 }
@@ -22,7 +22,7 @@ export type ExecuterResult<Row = RowObject> = {
    insertId: number | null;
 }
 
-export type XansqlDialectEngine = 'mysql' | 'postgresql' | 'sqlite'
+export type XansqlDialectEngine = 'mysql' | 'postgres' | 'sqlite'
 
 export type XansqlFileMeta = {
    fileId: string;
@@ -76,8 +76,8 @@ export type XansqlFileConfig = {
    maxFilesize?: number;
    checkFileType?: boolean;
    chunkSize?: number;
-   upload: (chunk: Uint8Array, filemeta: XansqlFileMeta) => Promise<void>;
-   delete: (fileId: string) => Promise<void>;
+   upload: (chunk: Uint8Array, filemeta: XansqlFileMeta, xansql: Xansql) => Promise<XansqlFileMeta>;
+   delete: (fileId: string, xansql: Xansql) => Promise<void>;
 };
 
 export type XansqlConfigType = {

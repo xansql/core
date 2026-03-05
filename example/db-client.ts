@@ -1,11 +1,11 @@
 import { Model, Xansql, xt } from "../src";
-import { XansqlBridgeDialect } from "@xansql/bridge";
 import { ProductMetaModel, ProductModel, UserMetaModel, UserModel } from "./Schema";
-
-const bridge = XansqlBridgeDialect("http://localhost:1234/data") as any
+import XansqlBridgeDialect from '../src/dialects/Bridge/dialect'
+const bridge = XansqlBridgeDialect("http://localhost:1234/data")
 
 export const db = new Xansql({
-   dialect: bridge
+   dialect: bridge.dialect,
+   file: bridge.file
 })
 
 export const User = db.model(UserModel)

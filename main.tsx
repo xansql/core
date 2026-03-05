@@ -1,7 +1,5 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { db } from './example/DBClient'
-import { Model, xt } from './src';
 import { Product, User } from './example/db-client';
 
 const Button = ({ label, onClick }: any) => {
@@ -29,16 +27,44 @@ const App = () => {
         <Button label="Find" onClick={async () => {
           const results = await User.find({
             where: {
-              uid: 10
+              // uid: 10
+            },
+            select: {
+              products: {
+                select: {
+                  categories: {
+                    select: {
+                      sub_categories: true
+                    }
+                  }
+                }
+              }
+            }
+          })
+          console.log(results);
+        }} />
+        <Button label="Create" onClick={async () => {
+          // const file = new File([new Uint8Array([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])], "image.png", { type: "image/png" });
+
+          const results = await User.create({
+            data: {
+              name: "asdasd",
+              age: 20,
+              email: Math.random() + "asd@gmail.com",
+              photo: file as any
             }
           })
           console.log(results);
 
         }} />
-        <Button label="Create" onClick={async () => {
-
-        }} />
         <Button label="Delete" onClick={async () => {
+          const del = await User.delete({
+            where: {
+              uid: 2
+            }
+          })
+
+          console.log(del);
 
         }} />
       </div>

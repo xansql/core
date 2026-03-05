@@ -232,7 +232,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             case "contains":
                let csql = `${col_name} LIKE ${this.format(column, `%${val}%`, false)}`
                if ((subargs as any).mode === "insensitive") {
-                  if (engin === "postgresql") {
+                  if (engin === "postgres") {
                      csql = `${col_name} ILIKE ${this.format(column, `%${val}%`, false)}`
                   } else {
                      csql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `%${val}%`, false)})`
@@ -244,7 +244,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             case "startsWith":
                let ssql = `${col_name} LIKE ${this.format(column, `${val}%`, false)}`
                if ((subargs as any).mode === "insensitive") {
-                  if (engin === "postgresql") {
+                  if (engin === "postgres") {
                      ssql = `${col_name} ILIKE ${this.format(column, `${val}%`, false)}`
                   } else {
                      ssql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `${val}%`, false)})`
@@ -256,7 +256,7 @@ class BuildWhereArgs<S extends SchemaShape, M extends Model<any>> {
             case "endsWith":
                let esql = `${col_name} LIKE ${this.format(column, `%${val}`, false)}`
                if ((subargs as any).mode === "insensitive") {
-                  if (engin === "postgresql") {
+                  if (engin === "postgres") {
                      esql = `${col_name} ILIKE ${this.format(column, `%${val}`, false)}`
                   } else {
                      esql = `LOWER(${col_name}) LIKE LOWER(${this.format(column, `%${val}`, false)})`

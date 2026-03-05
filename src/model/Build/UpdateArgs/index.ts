@@ -39,8 +39,8 @@ class BuildUpdateArgs {
          } else {
             if (iof(field, XqlFile)) {
                try {
-                  const filemeta = await xansql.uploadFile(value)
-                  fileMetas[col] = filemeta
+                  const filemeta = await xansql.uploadFile(value) as any
+                  (fileMetas as any)[col] = filemeta
                   values.push(`${quote(xansql.dialect.engine, col)}='${JSON.stringify(filemeta)}'`)
                } catch (error: any) {
                   throw new XansqlError({
