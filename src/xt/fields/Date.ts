@@ -61,12 +61,12 @@ class XqlDate extends XVDate {
       return this.set("unique", () => { }, true)
    }
 
-   createAt(): XVOptional<this> & { meta: { createAt: true } } {
-      return this.index().set("createAt", () => { }, true) as any
+   createdAt(): XVOptional<this> & { meta: { createdAt: true } } {
+      return this.index().set("createdAt", () => { }, true) as any
    }
 
-   updateAt(): XVOptional<this> & { meta: { updateAt: true } } {
-      return this.set("updateAt", () => { }, true) as any
+   updatedAt(): XVOptional<this> & { meta: { updatedAt: true } } {
+      return this.set("updatedAt", () => { }, true) as any
    }
 }
 

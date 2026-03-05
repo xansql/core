@@ -65,10 +65,10 @@ class BuildUpdateArgs {
          }
       }
 
-      // set updateAt and update
+      // set updatedAt and update
       for (let col in schema) {
          const field = schema[col]
-         if (iof(field, XqlDate) && field.meta.updateAt) {
+         if (iof(field, XqlDate) && field.meta.updatedAt) {
             const v = field.value.toSql(new Date())
             values.push(`${quote(xansql.dialect.engine, col)}=${v}`)
          }

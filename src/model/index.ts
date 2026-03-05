@@ -192,13 +192,22 @@ abstract class Model<S extends SchemaShape = SchemaShape> {
 
    async find<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S>[] | null> {
       try {
-         await this.xansql.XansqlTransaction.begin()
          const build = new BuildFindArgs(args as any, this)
          const results = await build.results()
-         await this.xansql.XansqlTransaction.commit()
          return results as any
       } catch (error) {
-         await this.xansql.XansqlTransaction.rollback()
+         throw error
+      }
+   }
+
+   async findOne<T extends FindArgs<S>>(args: ExactArgs<T, FindArgs<S>>): Promise<FindResult<T, S> | null> {
+      try {
+         const results = await this.find(args)
+         if (results?.length) {
+            return results[0]
+         }
+         return null
+      } catch (error) {
          throw error
       }
    }

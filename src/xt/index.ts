@@ -40,8 +40,8 @@ const xt = {
    many: <M extends Model, T extends string>(m: ModelClass<M>, targetColum: T) => new RelationMany(m, targetColum),
    one: <M extends Model, T extends string>(m: ModelClass<M>, targetColum: T) => new RelationOne(m, targetColum),
 
-   createdAt: () => xt.date().createAt(),
-   updatedAt: () => xt.date().updateAt(),
+   createdAt: () => xt.date().createdAt(),
+   updatedAt: () => xt.date().updatedAt(),
    // Custom Types
    name: () => new XqlName,
    password: () => new XqlPassword,

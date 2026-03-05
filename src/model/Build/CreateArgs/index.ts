@@ -47,7 +47,7 @@ class BuildCreateArgs {
             if (iof(field, XqlIDField)) {
                continue
             }
-            if (iof(field, XqlDate) && (field.meta.createAt || field.meta.updateAt)) {
+            if (iof(field, XqlDate) && (field.meta.createdAt || field.meta.updatedAt)) {
                const v = field.value.toSql(new Date())
                values[quote(xansql.dialect.engine, col)] = v
                continue

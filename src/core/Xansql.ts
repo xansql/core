@@ -6,6 +6,7 @@ import XansqlError from "./XansqlError";
 import { ModelClass, SchemaShape } from "../model/types-new";
 import { chunkFile, getFileId, totalChunks } from "../utils/file";
 import { fileScaner } from "securequ";
+import Migration from "./Migration";
 
 
 class Xansql {
@@ -13,11 +14,13 @@ class Xansql {
    readonly config: XansqlConfigTypeRequired;
    readonly XansqlTransaction: XansqlTransaction;
    readonly models = new Map<ModelClass<any>, Model>()
+   readonly Migration
 
    constructor(config: XansqlConfigType) {
       this.XansqlConfig = new XansqlConfig(this, config);
       this.config = this.XansqlConfig.parse()
       this.XansqlTransaction = new XansqlTransaction(this);
+      this.Migration = new Migration(this)
    }
 
    get dialect() {
